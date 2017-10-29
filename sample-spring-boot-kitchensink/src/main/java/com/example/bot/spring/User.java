@@ -27,7 +27,7 @@ public class User {
     
     private int id;
     private String name;
-    private String gender;
+    private String status;
     private int age;
     private float weight;
     private float height;
@@ -37,7 +37,7 @@ public class User {
         
         id = Integer.parseInt(list[0]);
         name=new String(list[1]);
-        gender=new String(list[2]);
+        status=new String(list[2]);
         age=Integer.parseInt(list[3]);
         height = Float.parseFloat(list[4]);
         weight=Float.parseFloat(list[5]);
@@ -53,13 +53,23 @@ public class User {
     public float getUserHeight () { return height;}
     public Goal getUserGoal () { return goal;}
     public void userSetWeight (String newWeight){
-        if (weight = Float.parseFloat(newWeight))
-            return;
         
+        try {
+            
+            if (userAdapter.updateWeight(id, weight)){
+                weight =Float.parseFloat(newWeight)
+                return;
+            }
+        }catch (Exception e){
+            log.info("SQLException while updating weight: {}", e.toString());
+        }fnally{
+            return;
+        }
     }
     
+    
     public float getDailyIntake () {
-        return Float.parseFloat(userAdapter.searchRecord(id)[userAdapter.searchRecord.size()-1].get(3));
+        return Float.parseFloat(userAdapter.searchRecord(id).get(userAdapter.searchRecord(id).size()-1).get(3));
     }
     
     public float getIdealDailyIntake (){
@@ -67,25 +77,25 @@ public class User {
         float maintain = weight*40;
         float gain_weight = weight*50;
         float daily_loss = 3500*3/7;
-        float change_per_day = (goal.getGoalTarget - weight)/goal.getGoalDay;
+        float change_per_day = (goal.getGoalTarget() - weight)/goal.getGoalDay();
         float intake_calories = change_per_day*daily_loss;
-        
+        float BMR=0;
         
         if (gender.equalsIgnoreCase("man")){
-            float BMR = 88.362 + ( 13.397*weight) + (4.799*height) - (5.677*age);
+            BMR = 88.362 + ( 13.397*weight) + (4.799*height) - (5.677*age);
     
             
         }
-        if (gender.equalsIgnoreCase("woman")){
-            float BMR = 447.593 + ( 9.247*weight) + ( 3.098*height) - (4.33*age);
+        else if (gender.equalsIgnoreCase("woman")){
+            BMR = 447.593 + ( 9.247*weight) + ( 3.098*height) - (4.33*age);
         }
         
         
-        if (goal.getGoalTarget==0){
+        if (goal.getGoalTarget()==0){
             return BMR;
         }
         else
-            return BMR+intake_calories;
+            return BMR + intake_calories;
     }
     
     
@@ -101,8 +111,8 @@ public class User {
         for (int i = 0; i < number_of_date; i++){
             ArrayList<String> Line = new ArrayList<String>();
             
-            for (String obj: j<userAdapter.searchRecord(id)[i]){
-                line.add(obj);
+            for (String obj: userAdapter.searchRecord(id).get(i)){
+                Line.add(obj);
             }
             Record.add(Line);
         }
@@ -112,7 +122,7 @@ public class User {
         
         for (int i=0;i<number_of_date;i++){
             for(int j=1; j<3; j++){
-                float_Record[i][j] = Float.parseFloat(Record[i].get(j+2));
+                float_Record[i][j] = Float.parseFloat(Record.get(i).get(j+2));
             }
         }
         
@@ -137,8 +147,8 @@ public class User {
         for (int i = 0; i < number_of_date; i++){
             ArrayList<String> Line = new ArrayList<String>();
             
-            for (String obj: j<userAdapter.searchUser(id)[i]){
-                line.add(obj);
+            for (String obj: userAdapter.searchUser(id).get(i)){
+                Line.add(obj);
             }
             Record.add(Line);
         }
@@ -149,7 +159,10 @@ public class User {
         int number_of_date = Record.size();
         
         for (int i = 0; i < 7; i++){
-            System.arraycopy(pass7Record[i],0,Record.get(number_of_date-7+i),0,4);
+            for (int j=0; j<4; j++){
+                pass7Record[i][j] = Record.get(number_of_date-7+i).get(j);
+            }
+        
         }//pass 7 days record
         
         float[][] pass7summary = new float[7][4] ;  // weight, calories, sodium, fat
