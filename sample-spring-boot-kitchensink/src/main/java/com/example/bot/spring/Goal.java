@@ -15,7 +15,10 @@ public class Goal {
     
     public Goal (String Target_weight, String Target_day ){
         day = Integer.parseInt(Target_day);
-        target = Float.parseFloat(Target_weight);
+        if (Target_weight.equalsIgnoreCase("no")){
+            target=0;
+        }
+        else target = Float.parseFloat(Target_weight);
     }
     
     public int getGoalDay () {
