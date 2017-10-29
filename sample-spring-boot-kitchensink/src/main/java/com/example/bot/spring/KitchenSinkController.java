@@ -92,6 +92,21 @@ public class KitchenSinkController {
 
 	@Autowired
 	private LineMessagingClient lineMessagingClient;
+	
+	// modification starts
+	private Queue< String > contextQ;
+	
+	public void promptUser(@NonNull String replyToken) {
+		String message = "1. Update personal info\n"
+						+"2. Get recommendation from menu\n"
+						+"3. Get food quality data\n"
+						+"4. Show Dieting Summary\n"
+						+"5. Generate weekly progress chart\n"
+						+"6. Bye~\n"
+						+"\nPlease select an option";
+		this.replyText(replyToken, message);
+	}
+	//modification ends
 
 	@EventMapping
 	public void handleTextMessageEvent(MessageEvent<TextMessageContent> event) throws Exception {
@@ -210,9 +225,15 @@ public class KitchenSinkController {
 	private void handleTextContent(String replyToken, Event event, TextMessageContent content)
             throws Exception {
         String text = content.getText();
+        contextQ.add(text);
+        if (contextQ.size() > 10)
+        	contextQ.remove();
 
         log.info("Got text message from {}: {}", replyToken, text);
         switch (text) {
+        case "1": {
+        	
+        }
             case "profile": {
                 String userId = event.getSource().getUserId();
                 if (userId != null) {
@@ -269,6 +290,7 @@ public class KitchenSinkController {
                         replyToken,
                         itscLOGIN + " says " + reply
                 );
+                promptUser();
                 break;
         }
     }
