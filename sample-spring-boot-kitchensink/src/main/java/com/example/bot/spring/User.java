@@ -21,8 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class User {
     
-    
-    static int userCount = 0;
+
     static UserDBAdaptor userAdapter = new UserDBAdaptor();
     static FoodDBAdaptor foodAdapter = new FoodDBAdaptor();
     
@@ -34,16 +33,15 @@ public class User {
     private float height;
     private Goal goal;
     
-    public User (String NAME, String GENDER, int AGE, float WEIGHT, float HEIGHT, int DAY, float TARGET, String Puerpose ) {
+    public User (ArrayList<String> list){
         
-        id = userCount;
-        userCount ++;
-        
-        name=new String(NAME);
-        gender=new String(GENDER);
-        age=AGE;
-        weight=WEIGHT;
-        goal = new Goal(DAY,TARGET,Puerpose);
+        id = Integer.parseInt(list[0]);
+        name=new String(list[1]);
+        gender=new String(list[2]);
+        age=Integer.parseInt(list[3]);
+        height = Float.parseFloat(list[4]);
+        weight=Float.parseFloat(list[5]);
+        goal = new Goal(list[6],list[7]);
     }
     
     
@@ -54,23 +52,45 @@ public class User {
     public float getUserWeight (){ return weight;}
     public float getUserHeight () { return height;}
     public Goal getUserGoal () { return goal;}
- 
+    public void userSetWeight (String newWeight){
+        if (weight = Float.parseFloat(newWeight))
+            return;
+        
+    }
+    
+    public float getDailyIntake () {
+        return Float.parseFloat(userAdapter.searchRecord(id)[userAdapter.searchRecord.size()-1].get(3));
+    }
+    
+    public float getIdealDailyIntake (){
+        return 1.0
+    }
+    
+    
+    
+    
     
     public String generateSummary() {
         
-        String[][] Record = new String[userAdapter.searchUser(id).length][5];  // Record[numer_of_date][date, weight, calories, sodium, fat]
+        ArrayList<ArrayList<String>> Record = new ArrayList<ArrayList<String>>();
         
-        int number_of_date = userAdapter.searchUser(id).length;
+        int number_of_date = userAdapter.searchRecord(id).size();
         
         for (int i = 0; i < number_of_date; i++){
-            System.arraycopy(Record[i],0,adapter.searchUser(id)[i],0,5);
+            ArrayList<String> Line = new ArrayList<String>();
+            
+            for (String obj: j<userAdapter.searchRecord(id)[i]){
+                line.add(obj);
+            }
+            Record.add(Line);
         }
+        
         
         float[][] float_Record = new float[number_of_date][3];  // calories, sodium, fat
         
         for (int i=0;i<number_of_date;i++){
             for(int j=1; j<3; j++){
-                float_Record[i][j] = Float.parseFloat(Record[i][j+2]);
+                float_Record[i][j] = Float.parseFloat(Record[i].get(j+2));
             }
         }
         
@@ -88,12 +108,26 @@ public class User {
     }
     
     public File generateWeeklySummary () {
-       String[][] pass7Record = new String[adapter.searchUser(id).length][5];// Record[date][date, weight, calories, sodium, fat]
+        ArrayList<ArrayList<String>> Record = new ArrayList<ArrayList<String>>();
         
-        int number_of_date = userAdapter.searchUser(id).length;
+        int number_of_date = userAdapter.searchRecord(id).size();
+        
+        for (int i = 0; i < number_of_date; i++){
+            ArrayList<String> Line = new ArrayList<String>();
+            
+            for (String obj: j<userAdapter.searchUser(id)[i]){
+                line.add(obj);
+            }
+            Record.add(Line);
+        }
+        
+        
+       String[][] pass7Record = new String[adapter.searchRecord(id).size()][5];// Record[date][date, weight, calories, sodium, fat]
+        
+        int number_of_date = Record.size();
         
         for (int i = 0; i < 7; i++){
-            System.arraycopy(pass7Record[i],0,adapter.searchUser(id)[number_of_date-7+i],0,length);
+            System.arraycopy(pass7Record[i],0,Record.get(number_of_date-7+i),0,4);
         }//pass 7 days record
         
         float[][] pass7summary = new float[7][4] ;  // weight, calories, sodium, fat
