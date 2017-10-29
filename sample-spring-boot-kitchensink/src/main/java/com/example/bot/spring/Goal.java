@@ -10,14 +10,12 @@ import lombok.extern.slf4j.Slf4j;
 public class Goal {
     
     private int day;
-    private String purpose;
     private float target;
     
     
-    public Goal (int Day, float Target, String Purpose ){
-        day = Day;
-        target = Target;
-        purpost = new String(Purpose);
+    public Goal (String Target_weight, String Target_day ){
+        day = Integer.parseInt(Target_day);
+        target = Float.parseFloat(Target_weight);
     }
     
     public int getGoalDay () {
@@ -28,7 +26,4 @@ public class Goal {
         return target;
     }
     
-    public String getPurpose (){
-        return purpose;
-    }
 }
