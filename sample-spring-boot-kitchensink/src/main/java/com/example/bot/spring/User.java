@@ -28,19 +28,19 @@ public class User {
     
     private int id;
     private String name;
-    private String status;
+    private String gender;
     private int age;
     private float weight;
     private float height;
     private Goal goal;
     
-    public User (String NAME, String STATUS, int AGE, float WEIGHT, float HEIGHT, int DAY, float TARGET, String Puerpose ) {
+    public User (String NAME, String GENDER, int AGE, float WEIGHT, float HEIGHT, int DAY, float TARGET, String Puerpose ) {
         
         id = userCount;
         userCount ++;
         
         name=new String(NAME);
-        status=new String(STATUS);
+        gender=new String(GENDER);
         age=AGE;
         weight=WEIGHT;
         goal = new Goal(DAY,TARGET,Puerpose);
