@@ -17,8 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Slf4j
 public class UserDBAdaptor extends SQLDatabaseEngine{
 	
-	@Autowired
-	private SQLDatabaseEngine databaseEngine;
+//    @Autowired
+//    private SQLDatabaseEngine databaseEngine;
     
 	public boolean insert(User user)
     {
@@ -40,7 +40,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         
         
         try {
-            connection = databaseEngine.getConnection();
+            connection = this.getConnection();
             stmt = connection.prepareStatement("SELECT * FROM user_list WHERE uid=?");
             stmt.setInt(1,uid);
             rs = stmt.executeQuery();
@@ -106,7 +106,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         int x = 0;
         
         try{
-            connection = databaseEngine.getConnection();
+            connection = this.getConnection();
             stmt = connection.prepareStatement("drop table ?");
             stmt.setString(1,tableName);
             rs = stmt.executeQuery();
@@ -114,7 +114,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
                 x++;
             stmt = null;
             rs = null;
-            connection = databaseEngine.getConnection();
+            connection = this.getConnection();
             stmt = connection.prepareStatement("DELETE FROM user_list WHERE uid=?");
             stmt.setInt(1,id);
             rs = stmt.executeQuery();
@@ -160,7 +160,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         float weight = a.getUserWeight();
         
         try{
-            connection = databaseEngine.getConnection();
+            connection = this.getConnection();
             stmt = connection.prepareStatement("INSERT INTO ? (date, time, food_intake, weight, energy, sodium, fatty_acids_total_saturated) VALUES(?,?,?,?,?,?,?)");
             stmt.setString(1,tableName);
             stmt.setInt(2,date);
@@ -200,7 +200,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         boolean result = false;
         
         try{
-            connection = databaseEngine.getConnection();
+            connection = this.getConnection();
             stmt = connection.prepareStatement("update user_list set weight=? where uid=?");
             stmt.setFloat(1,weight);
             stmt.setInt(2,id);
@@ -237,7 +237,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         float day = goal.getGoalDay();
         
         try{
-            connection = databaseEngine.getConnection();
+            connection = this.getConnection();
             stmt = connection.prepareStatement("update user_list set target_weight=?,days_for_target=? where uid=?");
             stmt.setInt(1,id);
             stmt.setFloat(2,weight);
@@ -274,7 +274,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         
         
         try{
-            connection = databaseEngine.getConnection();
+            connection = this.getConnection();
             stmt = connection.prepareStatement("select * from user_list where uid=?");
             stmt.setInt(1,id);
             rs = stmt.executeQuery();
@@ -328,7 +328,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         String tableName = "user_" + id;
         
         try{
-            connection = databaseEngine.getConnection();
+            connection = this.getConnection();
             stmt = connection.prepareStatement("SELECT date, weight, energy, sodium, fatty_acids_total_saturated from ?");
             stmt.setString(1,tableName);
             rs = stmt.executeQuery();
@@ -405,7 +405,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         String tableName = "user_" + id;
         
         try{
-            connection = databaseEngine.getConnection();
+            connection = this.getConnection();
             stmt = connection.prepareStatement("SELECT date, weight, energy, sodium, fatty_acids_total_saturated from ? where date=?");
             stmt.setString(1,tableName);
             stmt.setInt(2,date);
@@ -454,5 +454,23 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         
         return result;
     }
+    
+    @Override
+    public Connection getConnection() throws URISyntaxException, SQLException {
+        Connection connection;
+        URI dbUri = new URI(System.getenv("DATABASE_URL"));
+        
+        String username = dbUri.getUserInfo().split(":")[0];
+        String password = dbUri.getUserInfo().split(":")[1];
+        String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath() +  "?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory";
+        
+        log.info("Username: {} Password: {}", username, password);
+        log.info ("dbUrl: {}", dbUrl);
+        
+        connection = DriverManager.getConnection(dbUrl, username, password);
+        
+        return connection;
+    }
+    
     
 }
