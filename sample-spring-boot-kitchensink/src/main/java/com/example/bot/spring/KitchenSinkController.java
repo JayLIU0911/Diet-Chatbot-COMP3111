@@ -96,7 +96,8 @@ public class KitchenSinkController {
 	// modification starts
 	private Queue< String > contextQ;
 	private String state;
-	private String[] user;
+	private ArrayList< String > userInit;
+	private ArrayList< User > userList = new ArrayList< User >();
 
 	public void promptUser(@NonNull String replyToken) {
 		String message = "1. Update weight\n"
@@ -169,41 +170,24 @@ public class KitchenSinkController {
 
 	@EventMapping
 	public void handleFollowEvent(FollowEvent event) {
+		userInit = new ArrayList< String >();
+		userInit.add(event.getSource().getUserId());
 		String replyToken = event.getReplyToken();
 
 		String imageUrl = createUri("/static/buttons/1040.jpg");
 		CarouselTemplate carouselTemplate = new CarouselTemplate(
 						Arrays.asList(
 										new CarouselColumn(imageUrl, "Welcome! This is a helpful chatbot. We would like to collect your personal information", Arrays.asList(
-														new PostbackAction("name",
-																							 "name",
-																							 "I want to input my name"),
-													  new PostbackAction("gender",
-			 																			   "gender",
-			 																			   "I want to input my gender"),
-													  new PostbackAction("age",
-																							 "age",
-																							 "I want to input my age"),
-														new PostbackAction("height",
-																							 "height",
-																							 "I want to input my height"),
-														new PostbackAction("weight",
-																							 "weight",
-																							 "I want to input my weight"),
-														new PostbackAction("goal",
-																							 "goal",
-																							 "I want to set my goal")
-										)),
-										new CarouselColumn(imageUrl, "Update daily record", Arrays.asList(
-														new PostbackAction("update weight",
-																							 "weight",
-																							 "I want to update my weight(kg)"),
-														new PostbackAction("update food record",
-																							 "food",
-																							 "I want to update my food record")
+														new PostbackAction("name", "name"),
+														new PostbackAction("gender", "gender"),
+														new PostbackAction("age", "age"),
+														new PostbackAction("height", "height"),
+														new PostbackAction("weight", "weight"),
+														new PostbackAction("target weight", "target weight"),
+														new PostbackAction("target time", "target time")
 										))
 						));
-		TemplateMessage templateMessage = new TemplateMessage("welcome carousel", carouselTemplate);
+		TemplateMessage templateMessage = new TemplateMessage("welcome", carouselTemplate);
 		this.reply(replyToken, templateMessage);
 	}
 
@@ -215,8 +199,45 @@ public class KitchenSinkController {
 
 	@EventMapping
 	public void handlePostbackEvent(PostbackEvent event) {
-		String replyToken = event.getReplyToken();
-		this.replyText(replyToken, "Got postback " + event.getPostbackContent().getData());
+			String replyToken = event.getReplyToken();
+			//this.replyText(replyToken, "Got postback " + event.getPostbackContent().getData());
+			String postback = event.getPostbackContent().getData();
+	    switch (postback) {
+					// state = welcome
+	        case "name": {
+						state = "welcome";
+	        	this.replyText(replyToken, "What is your name?");
+	        }
+	        case "gender": {
+	        	this.replyText(replyToken, "Please input your gender(male/female)");
+	        }
+	        case "age": {
+	        	this.replyText(replyToken, "How old are you?");
+	        }
+	        case "height": {
+	        	this.replyText(replyToken, "Please input your height(cm)");
+	        }
+	        case "weight": {
+	        	this.replyText(replyToken, "Please input your weight(kg)");
+	        }
+	        case "target weight": {
+	        	this.replyText(replyToken, "Can you tell me your target weight?(kg)");
+	        }
+	        case "target time": {
+	        	this.replyText(replyToken, "How long do you want to achieve your goal?(day)");
+	        	state=null;
+	        }
+
+					// state = Update daily record
+	        case "update weight": {
+						state = "Update daily record";
+	        	this.replyText(replyToken, "Please input your weight(kg)");
+	        }
+	        case "update food": {
+						state = null;
+	        	this.replyText(replyToken, "what did you eat?");
+	        }
+		}
 	}
 
 	@EventMapping
@@ -264,117 +285,156 @@ public class KitchenSinkController {
 
         log.info("Got text message from {}: {}", replyToken, text);
 
-        String option = contextQ.peek();
-        int len = contextQ.size();
-        switch (option) {
-        case "1": {
-        	if (len == 1) {
+        switch (state) {
+        case "welcome": {
+        	user.add(text);
 
-        	}
+					if (state.equals("welcome")) {
+						String imageUrl = createUri("/static/buttons/1040.jpg");
+						CarouselTemplate carouselTemplate = new CarouselTemplate(
+										Arrays.asList(
+														new CarouselColumn(imageUrl, "Welcome! This is a helpful chatbot. We would like to collect your personal information", Arrays.asList(
+																		new PostbackAction("name", "name"),
+																		new PostbackAction("gender", "gender"),
+																		new PostbackAction("age", "age"),
+																		new PostbackAction("height", "height"),
+																		new PostbackAction("weight", "weight"),
+																		new PostbackAction("target weight", "target weight"),
+																		new PostbackAction("target time", "target time")
+														))
+										));
+						TemplateMessage templateMessage = new TemplateMessage("welcome", carouselTemplate);
+						this.reply(replyToken, templateMessage);
+					} else {
+						userList.add(new User(userInit));
+						userInit = null;
+					}
         }
+        case "Update daily record": {
+					boolean success = false;
+					int id = Integer.parseInt(event.getSource().getUserId());
+					try {
+		        Integer.parseInt(text);
+						for (User u : userList) {
+							if (u.getUserId() == id) {
+								u.setWeight(text);
+								success = true;
+								break;
+							}
+						}
+						if (!success)
+							this.replyText(replyToken, "Weight update failed");
+						else {
+							String imageUrl = createUri("/static/buttons/1040.jpg");
+							CarouselTemplate carouselTemplate = new CarouselTemplate(
+											Arrays.asList(
+															new CarouselColumn(imageUrl, "Update daily record", Arrays.asList(
+																			new PostbackAction("weight", "update weight"),
+																			new PostbackAction("food", "update food")
+															))
+											));
+							TemplateMessage templateMessage = new TemplateMessage("general", carouselTemplate);
+							this.reply(replyToken, templateMessage);
+						}
+			    } catch(NumberFormatException e) {
+			      this.replyText(replyToken, "Please input your weight");
+			    }
+					break;
         }
-        switch (text) {
-        case "1": {
-        	contextQ.add(text);
-        	this.replyText(replyToken, "Please input your weight");
-        }
-        case "2": {
-        	contextQ.add(text);
-        	this.replyText(replyToken, "Please input your weight");
-        }
-        case "3": {
-        	contextQ.add(text);
-        	this.replyText(replyToken, "Please input your weight");
-        }
-        case "4": {
-        	contextQ.add(text);
-        	this.replyText(replyToken, "Please input your weight");
-        }
-        case "5": {
-        	contextQ.add(text);
-        	this.replyText(replyToken, "Please input your weight");
-        }
-        case "6": {
-        	contextQ = null;
-        	this.replyText(replyToken, "Bye~");
-        }
-            case "profile": {
-                String userId = event.getSource().getUserId();
-                if (userId != null) {
-                    lineMessagingClient
-                            .getProfile(userId)
-                            .whenComplete(new ProfileGetter (this, replyToken));
-                } else {
-                    this.replyText(replyToken, "Bot can't use profile API without user ID");
-                }
-                break;
-            }
-            case "confirm": {
-                ConfirmTemplate confirmTemplate = new ConfirmTemplate(
-                        "Do it?",
-                        new MessageAction("Yes", "Yes!"),
-                        new MessageAction("No", "No!")
-                );
-                TemplateMessage templateMessage = new TemplateMessage("Confirm alt text", confirmTemplate);
-                this.reply(replyToken, templateMessage);
-                break;
-            }
-            case "carousel": {
-                String imageUrl = createUri("/static/buttons/1040.jpg");
-                CarouselTemplate carouselTemplate = new CarouselTemplate(
-                        Arrays.asList(
-                                new CarouselColumn(imageUrl, "Update daily record", Arrays.asList(
-                                        new PostbackAction("update weight",
-                                                           "weight",
-																													 "I want to update my weight(kg)"),
-																			  new PostbackAction("update food record",
-                                                           "food",
-																													 "I want to update my food record")
-                                )),
-                                new CarouselColumn(imageUrl, "Update daily record", Arrays.asList(
-                                        new PostbackAction("update weight",
-                                                           "weight",
-																													 "I want to update my weight(kg)"),
-																			  new PostbackAction("update food record",
-                                                           "food",
-																													 "I want to update my food record")
-                                )),
-                                new CarouselColumn(imageUrl, "hoge", "fuga", Arrays.asList(
-                                        new URIAction("Go to line.me",
-                                                      "https://line.me"),
-                                        new PostbackAction("Say hello1",
-                                                           "hello ã�“ã‚“ã�«ã�¡ã�¯")
-                                )),
-                                new CarouselColumn(imageUrl, "hoge", "fuga", Arrays.asList(
-                                        new PostbackAction("è¨€ hello2",
-                                                           "hello ã�“ã‚“ã�«ã�¡ã�¯",
-                                                           "hello ã�“ã‚“ã�«ã�¡ã�¯"),
-                                        new MessageAction("Say message",
-                                                          "Rice=ç±³")
-                                ))
-                        ));
-                TemplateMessage templateMessage = new TemplateMessage("Carousel alt text", carouselTemplate);
-                this.reply(replyToken, templateMessage);
-                break;
-            }
+				default: {
+						String imageUrl = createUri("/static/buttons/1040.jpg");
+						CarouselTemplate carouselTemplate = new CarouselTemplate(
+										Arrays.asList(
+														new CarouselColumn(imageUrl, "Update daily record", Arrays.asList(
+																		new PostbackAction("weight", "update weight"),
+																		new PostbackAction("food", "update food")
+														))
+										));
+						TemplateMessage templateMessage = new TemplateMessage("general", carouselTemplate);
+						this.reply(replyToken, templateMessage);
+						break;
+				}
+			}
+			// +"3. Get food quality data\n"
+			// +"4. Show Dieting Summary\n"
+			// +"5. Generate weekly progress chart\n"
+            // case "profile": {
+            //     String userId = event.getSource().getUserId();
+            //     if (userId != null) {
+            //         lineMessagingClient
+            //                 .getProfile(userId)
+            //                 .whenComplete(new ProfileGetter (this, replyToken));
+            //     } else {
+            //         this.replyText(replyToken, "Bot can't use profile API without user ID");
+            //     }
+            //     break;
+            // }
+            // case "confirm": {
+            //     ConfirmTemplate confirmTemplate = new ConfirmTemplate(
+            //             "Do it?",
+            //             new MessageAction("Yes", "Yes!"),
+            //             new MessageAction("No", "No!")
+            //     );
+            //     TemplateMessage templateMessage = new TemplateMessage("Confirm alt text", confirmTemplate);
+            //     this.reply(replyToken, templateMessage);
+            //     break;
+            // }
+            // case "carousel": {
+            //     String imageUrl = createUri("/static/buttons/1040.jpg");
+            //     CarouselTemplate carouselTemplate = new CarouselTemplate(
+            //             Arrays.asList(
+            //                     new CarouselColumn(imageUrl, "Update daily record", Arrays.asList(
+            //                             new PostbackAction("update weight",
+            //                                                "weight",
+						// 																							 "I want to update my weight(kg)"),
+						// 													  new PostbackAction("update food record",
+            //                                                "food",
+						// 																							 "I want to update my food record")
+            //                     )),
+            //                     new CarouselColumn(imageUrl, "Update daily record", Arrays.asList(
+            //                             new PostbackAction("update weight",
+            //                                                "weight",
+						// 																							 "I want to update my weight(kg)"),
+						// 													  new PostbackAction("update food record",
+            //                                                "food",
+						// 																							 "I want to update my food record")
+            //                     )),
+            //                     new CarouselColumn(imageUrl, "hoge", "fuga", Arrays.asList(
+            //                             new URIAction("Go to line.me",
+            //                                           "https://line.me"),
+            //                             new PostbackAction("Say hello1",
+            //                                                "hello ã�“ã‚“ã�«ã�¡ã�¯")
+            //                     )),
+            //                     new CarouselColumn(imageUrl, "hoge", "fuga", Arrays.asList(
+            //                             new PostbackAction("è¨€ hello2",
+            //                                                "hello ã�“ã‚“ã�«ã�¡ã�¯",
+            //                                                "hello ã�“ã‚“ã�«ã�¡ã�¯"),
+            //                             new MessageAction("Say message",
+            //                                               "Rice=ç±³")
+            //                     ))
+            //             ));
+            //     TemplateMessage templateMessage = new TemplateMessage("Carousel alt text", carouselTemplate);
+            //     this.reply(replyToken, templateMessage);
+            //     break;
+            // }
 
-            default:
-            	String reply = null;
-            	try {
-            		reply = database.search(text);
-            	} catch (Exception e) {
-            		reply = text;
-            	}
-                log.info("Returns echo message {}: {}", replyToken, reply);
-                this.replyText(
-                        replyToken,
-                        itscLOGIN + " says " + reply
-                );
-                promptUser();
-                contextQ = null;
-                break;
-        }
-        contextQ.add(text);
+            // default:
+            // 	String reply = null;
+            // 	try {
+            // 		reply = database.search(text);
+            // 	} catch (Exception e) {
+            // 		reply = text;
+            // 	}
+            //     log.info("Returns echo message {}: {}", replyToken, reply);
+            //     this.replyText(
+            //             replyToken,
+            //             itscLOGIN + " says " + reply
+            //     );
+            //     promptUser();
+            //     contextQ = null;
+            //     break;
+
+        // contextQ.add(text);
     }
 
 	static String createUri(String path) {
