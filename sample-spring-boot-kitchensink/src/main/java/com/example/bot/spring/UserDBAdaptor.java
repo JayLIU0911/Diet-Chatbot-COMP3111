@@ -20,6 +20,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
 //    @Autowired
 //    private SQLDatabaseEngine databaseEngine;
     
+    
 	public boolean insert(User user)
     {
         Connection connection = null;
@@ -141,13 +142,16 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
     }
     
     
-    public boolean updateRecord(int id, Food food)
+    public boolean updateRecord(int id, String text)
     {
         String tableName = "user_" + id;
         Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         boolean result = false;
+        
+        Food food = new Food(text);
+        
         //int date =
         //int time =
         String intake = food.getUserName();
