@@ -67,6 +67,8 @@ public class User {
         float maintain = weight*40;
         float gain_weight = weight*50;
         float daily_loss = 3500*3/7;
+        float change_per_day = (goal.getGoalTarget - weight)/goal.getGoalDay;
+        float intake_calories = change_per_day*daily_loss;
         
         
         if (gender.equalsIgnoreCase("man")){
@@ -82,13 +84,8 @@ public class User {
         if (goal.getGoalTarget==0){
             return BMR;
         }
-        else if (goal.getGoalTarget>weight){
-            return gain_weight;
-        }
-        else if (goal.getGoalTarget<weight){
-            return lose_weight;
-        }
-        return 0;
+        else
+            return BMR+intake_calories;
     }
     
     
