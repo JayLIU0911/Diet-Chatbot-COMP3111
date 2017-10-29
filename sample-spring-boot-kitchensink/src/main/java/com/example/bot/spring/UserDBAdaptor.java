@@ -1,4 +1,4 @@
-package test;
+package com.example.bot.spring;
 
 import java.util.ArrayList;
 import java.util.HashMap;
