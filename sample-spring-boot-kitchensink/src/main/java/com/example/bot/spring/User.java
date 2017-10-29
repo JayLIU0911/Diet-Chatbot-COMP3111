@@ -63,7 +63,32 @@ public class User {
     }
     
     public float getIdealDailyIntake (){
-        return 1.0
+        float lose_weight = weight * 30;
+        float maintain = weight*40;
+        float gain_weight = weight*50;
+        float daily_loss = 3500*3/7;
+        
+        
+        if (gender.equalsIgnoreCase("man")){
+            float BMR = 88.362 + ( 13.397*weight) + (4.799*height) - (5.677*age);
+    
+            
+        }
+        if (gender.equalsIgnoreCase("woman")){
+            float BMR = 447.593 + ( 9.247*weight) + ( 3.098*height) - (4.33*age);
+        }
+        
+        
+        if (goal.getGoalTarget==0){
+            return BMR;
+        }
+        else if (goal.getGoalTarget>weight){
+            return gain_weight;
+        }
+        else if (goal.getGoalTarget<weight){
+            return lose_weight;
+        }
+        return 0;
     }
     
     
@@ -153,16 +178,16 @@ public class User {
         XYSeries series_fattyacid = new XYSeries("Fatty Acid");
          XYSeriesCollection dataset = new XYSeriesCollection();
         for (int i=0; i<4; i++){
-            series_weight.add(date[i], pass7summary[i][0])
+            series_weight.add(date[i], pass7summary[i][0]);
         }
         for (int i=0; i<4; i++){
-            series_energy.add(date[i], pass7summary[i][0])
+            series_energy.add(date[i], pass7summary[i][0]);
         }
         for (int i=0; i<4; i++){
-            series_sodium.add(date[i], pass7summary[i][0])
+            series_sodium.add(date[i], pass7summary[i][0]);
         }
         for (int i=0; i<4; i++){
-            series_fattyacid.add(date[i], pass7summary[i][0])
+            series_fattyacid.add(date[i], pass7summary[i][0]);
         }
         dataset.addSeries(series_weight);
         dataset.addSeries(series_energy);
