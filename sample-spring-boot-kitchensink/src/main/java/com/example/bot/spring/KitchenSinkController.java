@@ -87,17 +87,19 @@ import java.net.URI;
 @Slf4j
 @LineMessageHandler
 public class KitchenSinkController {
-	
+
 
 
 	@Autowired
 	private LineMessagingClient lineMessagingClient;
-	
+
 	// modification starts
 	private Queue< String > contextQ;
-	
+	private String state;
+	private String[] user;
+
 	public void promptUser(@NonNull String replyToken) {
-		String message = "1. Update personal info\n"
+		String message = "1. Update weight\n"
 						+"2. Get recommendation from menu\n"
 						+"3. Get food quality data\n"
 						+"4. Show Dieting Summary\n"
@@ -168,7 +170,41 @@ public class KitchenSinkController {
 	@EventMapping
 	public void handleFollowEvent(FollowEvent event) {
 		String replyToken = event.getReplyToken();
-		this.replyText(replyToken, "Got followed event");
+
+		String imageUrl = createUri("/static/buttons/1040.jpg");
+		CarouselTemplate carouselTemplate = new CarouselTemplate(
+						Arrays.asList(
+										new CarouselColumn(imageUrl, "Welcome! This is a helpful chatbot. We would like to collect your personal information", Arrays.asList(
+														new PostbackAction("name",
+																							 "name",
+																							 "I want to input my name"),
+													  new PostbackAction("gender",
+			 																			   "gender",
+			 																			   "I want to input my gender"),
+													  new PostbackAction("age",
+																							 "age",
+																							 "I want to input my age"),
+														new PostbackAction("height",
+																							 "height",
+																							 "I want to input my height"),
+														new PostbackAction("weight",
+																							 "weight",
+																							 "I want to input my weight"),
+														new PostbackAction("goal",
+																							 "goal",
+																							 "I want to set my goal")
+										)),
+										new CarouselColumn(imageUrl, "Update daily record", Arrays.asList(
+														new PostbackAction("update weight",
+																							 "weight",
+																							 "I want to update my weight(kg)"),
+														new PostbackAction("update food record",
+																							 "food",
+																							 "I want to update my food record")
+										))
+						));
+		TemplateMessage templateMessage = new TemplateMessage("welcome carousel", carouselTemplate);
+		this.reply(replyToken, templateMessage);
 	}
 
 	@EventMapping
@@ -225,14 +261,42 @@ public class KitchenSinkController {
 	private void handleTextContent(String replyToken, Event event, TextMessageContent content)
             throws Exception {
         String text = content.getText();
-        contextQ.add(text);
-        if (contextQ.size() > 10)
-        	contextQ.remove();
 
         log.info("Got text message from {}: {}", replyToken, text);
+
+        String option = contextQ.peek();
+        int len = contextQ.size();
+        switch (option) {
+        case "1": {
+        	if (len == 1) {
+
+        	}
+        }
+        }
         switch (text) {
         case "1": {
-        	
+        	contextQ.add(text);
+        	this.replyText(replyToken, "Please input your weight");
+        }
+        case "2": {
+        	contextQ.add(text);
+        	this.replyText(replyToken, "Please input your weight");
+        }
+        case "3": {
+        	contextQ.add(text);
+        	this.replyText(replyToken, "Please input your weight");
+        }
+        case "4": {
+        	contextQ.add(text);
+        	this.replyText(replyToken, "Please input your weight");
+        }
+        case "5": {
+        	contextQ.add(text);
+        	this.replyText(replyToken, "Please input your weight");
+        }
+        case "6": {
+        	contextQ = null;
+        	this.replyText(replyToken, "Bye~");
         }
             case "profile": {
                 String userId = event.getSource().getUserId();
@@ -259,6 +323,22 @@ public class KitchenSinkController {
                 String imageUrl = createUri("/static/buttons/1040.jpg");
                 CarouselTemplate carouselTemplate = new CarouselTemplate(
                         Arrays.asList(
+                                new CarouselColumn(imageUrl, "Update daily record", Arrays.asList(
+                                        new PostbackAction("update weight",
+                                                           "weight",
+																													 "I want to update my weight(kg)"),
+																			  new PostbackAction("update food record",
+                                                           "food",
+																													 "I want to update my food record")
+                                )),
+                                new CarouselColumn(imageUrl, "Update daily record", Arrays.asList(
+                                        new PostbackAction("update weight",
+                                                           "weight",
+																													 "I want to update my weight(kg)"),
+																			  new PostbackAction("update food record",
+                                                           "food",
+																													 "I want to update my food record")
+                                )),
                                 new CarouselColumn(imageUrl, "hoge", "fuga", Arrays.asList(
                                         new URIAction("Go to line.me",
                                                       "https://line.me"),
@@ -291,8 +371,10 @@ public class KitchenSinkController {
                         itscLOGIN + " says " + reply
                 );
                 promptUser();
+                contextQ = null;
                 break;
         }
+        contextQ.add(text);
     }
 
 	static String createUri(String path) {
@@ -334,7 +416,7 @@ public class KitchenSinkController {
 	}
 
 
-	
+
 
 
 	public KitchenSinkController() {
@@ -344,7 +426,7 @@ public class KitchenSinkController {
 
 	private SQLDatabaseEngine database;
 	private String itscLOGIN;
-	
+
 
 	//The annontation @Value is from the package lombok.Value
 	//Basically what it does is to generate constructor and getter for the class below
@@ -360,7 +442,7 @@ public class KitchenSinkController {
 	class ProfileGetter implements BiConsumer<UserProfileResponse, Throwable> {
 		private KitchenSinkController ksc;
 		private String replyToken;
-		
+
 		public ProfileGetter(KitchenSinkController ksc, String replyToken) {
 			this.ksc = ksc;
 			this.replyToken = replyToken;
@@ -380,7 +462,7 @@ public class KitchenSinkController {
         	);
     	}
     }
-	
-	
+
+
 
 }
