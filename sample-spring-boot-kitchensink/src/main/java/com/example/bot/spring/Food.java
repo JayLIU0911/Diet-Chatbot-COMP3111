@@ -65,15 +65,29 @@ public class Food{
 //        this(name,price,x);
 //    }
     
+    	public Food(String text) {
+    		Food x = new Food(text,0,null);
+    		this.name = x.getName();
+    		this.price = x.getPrice();
+    		this.quality = x.getQuality();
+    		this.components = x.getComponents();
+    	}
+    
     
     public float[] getQuality(){
         return quality;
     }
+    
     public String getName(){
         return name;
     }
+    
     public float getPrice(){
         return price;
+    }
+    
+    public ArrayList<Component> getComponents(){
+    		return components;
     }
     
 }

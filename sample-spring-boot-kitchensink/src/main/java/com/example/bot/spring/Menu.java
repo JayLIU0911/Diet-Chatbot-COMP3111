@@ -2,7 +2,9 @@ package com.example.bot.spring;
 
 import java.util.*;
 public class Menu{
+	
     private Food[] food;
+    
     public Menu(String txt){
         int items = 0;
         List<String> menu = new ArrayList<>();
@@ -12,7 +14,7 @@ public class Menu{
                 items ++;
             }
         }
-        Food [] f = new Food[items];
+        food = new Food[items];
         for (int i=0; i < items; i++){
             float p = 0;
             String[] c = menu.get(i).split("\\s");
@@ -27,9 +29,11 @@ public class Menu{
                 }
             }
             String name = String.join(" ",chart);
-            Food[i] = new Food(name,p);
+            //food[i] = new Food(name,p);
+            food[i] = new Food(name,p,null);
         }
     }
+    
     public Food findMinPrice(){
         int index = 0;
         float minprice = this.food[0].getPrice();

@@ -167,8 +167,8 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
             connection = this.getConnection();
             stmt = connection.prepareStatement("INSERT INTO ? (date, time, food_intake, weight, energy, sodium, fatty_acids_total_saturated) VALUES(?,?,?,?,?,?,?)");
             stmt.setString(1,tableName);
-            stmt.setInt(2,date);
-            stmt.setInt(3,time);
+            //stmt.setInt(2,date);
+            //stmt.setInt(3,time);
             stmt.setString(4,intake);
             stmt.setFloat(5,weight);
             stmt.setFloat(6,energy);
@@ -471,7 +471,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         return result;
     }
     
-    @Override
+    //@Override
     public Connection getConnection() throws URISyntaxException, SQLException {
         Connection connection;
         URI dbUri = new URI(System.getenv("DATABASE_URL"));

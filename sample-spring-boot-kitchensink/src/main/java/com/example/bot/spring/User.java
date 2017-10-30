@@ -37,13 +37,13 @@ public class User {
     
     public User (ArrayList<String> list){
         
-        id = Integer.parseInt(list[0]);
-        name=new String(list[1]);
-        status=new String(list[2]);
-        age=Integer.parseInt(list[3]);
-        height = Float.parseFloat(list[4]);
-        weight=Float.parseFloat(list[5]);
-        goal = new Goal(list[6],list[7]);
+        id = Integer.parseInt(list.get(0));
+        name=new String(list.get(1));
+        status=new String(list.get(2));
+        age=Integer.parseInt(list.get(3));
+        height = Float.parseFloat(list.get(4));
+        weight=Float.parseFloat(list.get(5));
+        goal = new Goal(Integer.parseInt(list.get(6)),Float.parseFloat(list.get(7)),list.get(8));
     }
     
     
@@ -54,7 +54,7 @@ public class User {
     public float getUserWeight (){ return weight;}
     public float getUserHeight () { return height;}
     public Goal getUserGoal () { return goal;}
-    public void userSetWeight (String newWeight){
+    public void setWeight (String newWeight){
         
         try {
             
@@ -63,10 +63,10 @@ public class User {
                 return;
             }
         }catch (Exception e){
-            log.info("SQLException while updating weight: {}", e.toString());
-        }finally{
-            return;
-        }
+            log.info("SQLException while updating weight: {}", e.toString());}
+//        }finally{
+//            return;
+//        }
     }
     
     
@@ -83,13 +83,13 @@ public class User {
         float intake_calories = change_per_day*daily_loss;
         float BMR=0;
         
-        if (gender.equalsIgnoreCase("man")){
-            BMR = 88.362 + ( 13.397*weight) + (4.799*height) - (5.677*age);
+        if (status.equalsIgnoreCase("man")){
+            BMR = (float)88.362 + ( (float)13.397*weight) + ((float)4.799*height) - ((float)5.677*age);
     
             
         }
-        else if (gender.equalsIgnoreCase("woman")){
-            BMR = 447.593 + ( 9.247*weight) + ( 3.098*height) - (4.33*age);
+        else if (status.equalsIgnoreCase("woman")){
+            BMR = (float)447.593 + ( (float)9.247*weight) + ( (float)3.098*height) - ((float)4.33*age);
         }
         
         
@@ -141,7 +141,7 @@ public class User {
         
     }
     
-    public File generateWeeklySummary () {
+    public File generateWeeklySummary () {return null;}
 //        ArrayList<ArrayList<String>> Record = new ArrayList<ArrayList<String>>();
 //        
 //        int number_of_date = userAdapter.searchRecord(id).size();
@@ -226,7 +226,7 @@ public class User {
 //            } catch (IOException e) {
 //                System.err.println("Problem occurred creating chart.");
 //            }
-   }
+//   }
     
     
         
