@@ -224,35 +224,44 @@ public class KitchenSinkController {
 	        case "name": {
 						state = "welcome";
 	        	this.replyText(replyToken, "What is your name?");
+	        	break;
 	        }
 	        case "gender": {
 	        	this.replyText(replyToken, "Please input your gender(male/female)");
+	        	break;
 	        }
 	        case "age": {
 	        	this.replyText(replyToken, "How old are you?");
+	        	break;
 	        }
 	        case "height": {
 	        	this.replyText(replyToken, "Please input your height(cm)");
+	        	break;
 	        }
 	        case "weight": {
 	        	this.replyText(replyToken, "Please input your weight(kg)");
+	        	break;
 	        }
 	        case "target weight": {
 	        	this.replyText(replyToken, "Can you tell me your target weight?(kg)");
+	        	break;
 	        }
 	        case "target time": {
 	        	this.replyText(replyToken, "How long do you want to achieve your goal?(day)");
 	        	state=null;
+	        	break;
 	        }
 
 					// state = Update daily record
 	        case "update weight": {
 						state = "Update daily record";
 	        	this.replyText(replyToken, "Please input your weight(kg)");
+	        	break;
 	        }
 	        case "update food": {
 						state = null;
 	        	this.replyText(replyToken, "what did you eat?");
+	        	break;
 	        }
 
 					// state = null
@@ -265,6 +274,7 @@ public class KitchenSinkController {
 								break;
 							}
 						}
+						break;
 	        }
 	        case "show Dieting Summary": {
 						String id = event.getSource().getUserId();
@@ -274,20 +284,29 @@ public class KitchenSinkController {
 								break;
 							}
 						}
+						break;
 	        }
 
 					// state = Get recommendation from menu
 	        case "text menu": {
 						state = "Get recommendation from menu";
 	        	this.replyText(replyToken, "Please upload a menu in text");
+	        	break;
 	        }
 	        case "json menu": {
 						state = "Get recommendation from menu";
 	        	this.replyText(replyToken, "Please upload a menu in json");
+	        	break;
 	        }
 	        case "jpeg menu": {
 						state = "Get recommendation from menu";
 	        	this.replyText(replyToken, "Please upload a menu in jpeg");
+	        	break;
+	        }
+	        
+	        default:{
+	        	this.replyText(replyToken, "Got postback " + event.getPostbackContent().getData());
+	        	break;
 	        }
 		}
 	}
@@ -362,6 +381,7 @@ public class KitchenSinkController {
 						userList.add(new User(userInit));
 						userInit = null;
 					}
+					break;
         }
         case "Update daily record": {
 					boolean success = false;
@@ -402,7 +422,7 @@ public class KitchenSinkController {
 					menu = new Menu(text);
 					for (User u : userList) {
 						if (u.getUserId() == id) {
-							this.replyText(replyToken, menu.findOptimal().getName());
+							this.replyText(replyToken, menu.findOptimal(u).getName());
 							success = true;
 							break;
 						}
@@ -559,11 +579,11 @@ public class KitchenSinkController {
 
 
 	public KitchenSinkController() {
-		database = new SQLDatabaseEngine();
+		database = new DatabaseEngine();
 		itscLOGIN = System.getenv("ITSC_LOGIN");
 	}
 
-	private SQLDatabaseEngine database;
+	private DatabaseEngine database;
 	private String itscLOGIN;
 
 
