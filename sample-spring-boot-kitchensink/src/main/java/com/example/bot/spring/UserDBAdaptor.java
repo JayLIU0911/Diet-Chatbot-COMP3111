@@ -142,7 +142,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
     }
     
     
-    public boolean updateRecord(int id, String text)
+    public boolean updateRecord(int id, String text)
     {
         String tableName = "user_" + id;
         Connection connection = null;
@@ -154,11 +154,11 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         
         //int date =
         //int time =
-        String intake = food.getUserName();
+        String intake = food.getName();
         //float weight = food.getWeight();
-        float energy = food.getEnergy();
-        float sodium = food.getSodium();
-        float fatty = food.getFatty();
+        float energy = food.getQuality()[0];
+        float sodium = food.getQuality()[1];
+        float fatty = food.getQuality()[2];
         
         User a = this.searchUser(id);
         float weight = a.getUserWeight();
@@ -276,6 +276,8 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         
         User result = null;
         
+        ArrayList<String> x = new ArrayList<String>();
+        
         
         try{
             connection = this.getConnection();
@@ -293,7 +295,17 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
                 float height = rs.getFloat(8);
                 int target_day = rs.getInt(9);
                 
-                result = new User(name,status,age,weight,height,target_day,target_weight,purpose);
+                x.add(name);
+                x.add(status);
+                x.add(Integer.toString(age));
+                x.add(Float.toString(weight));
+                x.add(Float.toString(height));
+                x.add(Integer.toString(target_day));
+                x.add(Float.toString(target_weight));
+                x.add(purpose);
+                
+                
+                result = new User(x);
             }
         } catch (Exception e){
             log.info("SQLException while searching user: {}", e.toString());

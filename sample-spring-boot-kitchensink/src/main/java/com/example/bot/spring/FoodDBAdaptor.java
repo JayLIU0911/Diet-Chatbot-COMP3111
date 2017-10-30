@@ -1,6 +1,8 @@
 package com.example.bot.spring;
 
 import lombok.extern.slf4j.Slf4j;
+import java.net.URISyntaxException;
+import java.net.URI;
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import java.sql.*;
@@ -9,9 +11,9 @@ import java.net.URI;
 import java.util.*;
 
 @Slf4j
-@Autowired
-public class FoodDBAdaptor{
-
+//@Autowired
+public class FoodDBAdaptor extends SQLDatabaseEngine{
+	
 	public Component searchIngredient(String ingredient) throws Exception{
 
 		Connection connection=null;
@@ -20,7 +22,7 @@ public class FoodDBAdaptor{
 		Component result = null;
 
 		try{
-			connection=this.getConnection();
+			connection=getConnection();
 			stmt = connection.prepareStatement("SELECT ndb_no, description, measure, weight, energy_per_measure, sodium_na_per_measure, fatty_acid_total_saturated_per_measure FROM nutrition1 where description like '%'||?||'%' ");
 
 			stmt.setString(1,ingredient); //the input
@@ -74,32 +76,44 @@ public class FoodDBAdaptor{
 
 		for(int i=0;i<words.length;i++)
 		{
-			Component a = searchIngredient(words[i]);//
-			if(a!=null)
-			{
-				if(i==0){
-					temp[0]=words[0];
-				}
-				else{
-					temp[i]=temp[i-1]+" "+words[i];
-					if(i==words.length-1){
-						Component b = searchIngredient(temp[i]);
-						result.add(b);
+			try{
+				Component a = searchIngredient(words[i]);
+				if(a!=null)
+				{
+					if(i==0){
+						temp[0]=words[0];
+					}
+					else{
+						temp[i]=temp[i-1]+" "+words[i];
+						if(i==words.length-1){
+							try{
+								Component b = searchIngredient(temp[i]);
+								result.add(b);
+							}catch(Exception e){
+								//do nothing so sad
+							}
+						}
 					}
 				}
+				else{
+					if(i==0||temp[i-1]==null){
+						continue;
+					}
+					try{
+							Component b = searchIngredient(temp[i-1]);
+							result.add(b);
+						}catch(Exception e){								
+							//do nothing so sad
+					}
+				}	
 			} 
-			else{
-				if(i==0||temp[i-1]==null){
-					continue;
-				}
-
-				Component b = searchIngredient(temp[i-1]);
-				result.add(b);
+			catch(Exception e){
+				//do nothing so sad
 			}
-		}
+			
+	}
 		return result;
 	}
-
 	// int fre=rs.getInt(2);
 	// fre++;
 	// stmt = connection.prepareStatement("UPDATE resH SET frequency = ? WHERE response = ?");
@@ -107,13 +121,14 @@ public class FoodDBAdaptor{
 	// stmt.setString(2, result);
 	// stmt.executeUpdate();
 	//result +=  "The weight of "+descrip+" is "+weight+"and the measure is "+measure; 
-	private Connection getConnection() throws URISyntaxException, SQLException {
+	//@Override
+	public Connection getConnection() throws URISyntaxException, SQLException {
 		Connection connection;
 		URI dbUri = new URI(System.getenv("DATABASE_URL"));
 
 		String username = dbUri.getUserInfo().split(":")[0];
 		String password = dbUri.getUserInfo().split(":")[1];
-		String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort()  +dbUri.getPath() +  "?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory";
+		String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath() +  "?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory";
 
 		log.info("Username: {} Password: {}", username, password);
 		log.info ("dbUrl: {}", dbUrl);
@@ -122,5 +137,5 @@ public class FoodDBAdaptor{
 
 		return connection;
 	}
-
+	
 }
