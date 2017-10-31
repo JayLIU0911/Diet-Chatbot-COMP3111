@@ -42,7 +42,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         
         try {
             connection = this.getConnection();
-            stmt = connection.prepareStatement("SELECT * FROM user_list WHERE uid like '\%?\%'");
+            stmt = connection.prepareStatement("SELECT * FROM user_list WHERE uid like concat '%'||?||'%'");
             stmt.setString(1,uid);
             rs = stmt.executeQuery();
             if(!rs.next()){
@@ -62,16 +62,16 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
             
             stmt = null;
             rs = null;
-            stmt = connection.prepareStatement("INSERT INTO user_list VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            stmt = connection.prepareStatement("INSERT INTO user_list VALUES(?, ?, ?, ?, ?, ?, ?, ?)");
             stmt.setString(1,uid);
             stmt.setString(2,name);
             stmt.setString(3,status);
             stmt.setInt(4,age);
             stmt.setFloat(5,weight);
-            stmt.setString(6,purpose);
-            stmt.setFloat(7,target_weight);
-            stmt.setFloat(8,height);
-            stmt.setInt(9,target_day);
+            //stmt.setString(6,purpose);
+            stmt.setFloat(6,target_weight);
+            stmt.setFloat(7,height);
+            stmt.setInt(8,target_day);
             rs = stmt.executeQuery();
             if(rs.next()){
                 x++;}
@@ -116,7 +116,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
             stmt = null;
             rs = null;
             connection = this.getConnection();
-            stmt = connection.prepareStatement("DELETE FROM user_list WHERE uid like '\%?\%'");
+            stmt = connection.prepareStatement("DELETE FROM user_list WHERE uid like concat '%'||?||'%'");
             stmt.setString(1,id);
             rs = stmt.executeQuery();
             if(rs.next())
@@ -205,7 +205,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         
         try{
             connection = this.getConnection();
-            stmt = connection.prepareStatement("update user_list set weight=? where uid like '\%?\%'");
+            stmt = connection.prepareStatement("update user_list set weight=? where uid like concat '%'||?||'%'");
             stmt.setFloat(1,weight);
             stmt.setString(2,id);
             rs = stmt.executeQuery();
@@ -242,7 +242,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         
         try{
             connection = this.getConnection();
-            stmt = connection.prepareStatement("update user_list set target_weight=?,days_for_target=? where uid=?");
+            stmt = connection.prepareStatement("update user_list set target_weight=?,days_for_target=? where uid like concat '%'||?||'%'");
             stmt.setString(1,id);
             stmt.setFloat(2,weight);
             stmt.setFloat(3,day);
@@ -281,7 +281,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         
         try{
             connection = this.getConnection();
-            stmt = connection.prepareStatement("select * from user_list where uid like '\%?\%'");
+            stmt = connection.prepareStatement("select * from user_list where uid like concat '%'||?||'%'");
             stmt.setString(1,id);
             rs = stmt.executeQuery();
             if(rs.next()){
@@ -290,7 +290,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
                 String status = rs.getString(3);
                 int age = rs.getInt(4);
                 float weight = rs.getFloat(5);
-                String purpose = rs.getString(6);
+                //String purpose = rs.getString(6);
                 float target_weight = rs.getFloat(7);
                 float height = rs.getFloat(8);
                 int target_day = rs.getInt(9);
