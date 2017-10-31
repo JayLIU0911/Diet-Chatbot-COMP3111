@@ -42,13 +42,13 @@ public class User {
     
     public User (ArrayList<String> list){
         
-        id = new String(list[0);
-        name=new String(list[1]);
-        status=new String(list[2]);
-        age=Integer.parseInt(list[3]);
-        height = Float.parseFloat(list[4]);
-        weight=Float.parseFloat(list[5]);
-        goal = new Goal(list[6],list[7]);
+        id = new String(list.get(0));
+        name=new String(list.get(1));
+        status=new String(list.get(2));
+        age=Integer.parseInt(list.get(3));
+        height = Float.parseFloat(list.(4));
+        weight=Float.parseFloat(list.get(5));
+        goal = new Goal(list.get(6),list.get(7));
     }
     
     
