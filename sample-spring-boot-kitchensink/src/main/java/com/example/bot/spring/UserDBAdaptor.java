@@ -29,7 +29,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         boolean result = false;
         int x = 0;
         
-        int uid = user.getUserId();
+        String uid = user.getUserId();
         String name = user.getUserName();
         String status = user.getUserStatus();
         int age = user.getUseAge();
@@ -43,7 +43,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         try {
             connection = this.getConnection();
             stmt = connection.prepareStatement("SELECT * FROM user_list WHERE uid=?");
-            stmt.setInt(1,uid);
+            stmt.setString(1,uid);
             rs = stmt.executeQuery();
             if(!rs.next()){
                 return false;
@@ -63,7 +63,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
             stmt = null;
             rs = null;
             stmt = connection.prepareStatement("INSERT INTO user_list VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            stmt.setInt(1,uid);
+            stmt.setString(1,uid);
             stmt.setString(2,name);
             stmt.setString(3,status);
             stmt.setInt(4,age);
@@ -102,7 +102,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         PreparedStatement stmt = null;
         ResultSet rs = null;
         boolean result = false;
-        int id = user.getUserId();
+        String id = user.getUserId();
         String tableName = "user_"+id;
         int x = 0;
         
@@ -117,7 +117,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
             rs = null;
             connection = this.getConnection();
             stmt = connection.prepareStatement("DELETE FROM user_list WHERE uid=?");
-            stmt.setInt(1,id);
+            stmt.setString(1,id);
             rs = stmt.executeQuery();
             if(rs.next())
                 x++;
@@ -142,7 +142,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
     }
     
     
-    public boolean updateRecord(int id, String text)
+    public boolean updateRecord(String id, String text)
     {
         String tableName = "user_" + id;
         Connection connection = null;
@@ -196,7 +196,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
     }
     
     
-    public boolean updateWeight(int id, float weight)
+    public boolean updateWeight(String id, float weight)
     {
         Connection connection = null;
         PreparedStatement stmt = null;
@@ -207,7 +207,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
             connection = this.getConnection();
             stmt = connection.prepareStatement("update user_list set weight=? where uid=?");
             stmt.setFloat(1,weight);
-            stmt.setInt(2,id);
+            stmt.setString(2,id);
             rs = stmt.executeQuery();
             if(rs.next()){
                 result = true;
@@ -231,7 +231,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
     }
     
     
-    public boolean updateGoal(int id, Goal goal)
+    public boolean updateGoal(String id, Goal goal)
     {
         Connection connection = null;
         PreparedStatement stmt = null;
@@ -243,7 +243,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         try{
             connection = this.getConnection();
             stmt = connection.prepareStatement("update user_list set target_weight=?,days_for_target=? where uid=?");
-            stmt.setInt(1,id);
+            stmt.setString(1,id);
             stmt.setFloat(2,weight);
             stmt.setFloat(3,day);
             rs = stmt.executeQuery();
@@ -268,7 +268,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
     }
     
     
-    public User searchUser(int id)
+    public User searchUser(String id)
     {
         Connection connection = null;
         PreparedStatement stmt = null;
@@ -282,7 +282,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         try{
             connection = this.getConnection();
             stmt = connection.prepareStatement("select * from user_list where uid=?");
-            stmt.setInt(1,id);
+            stmt.setString(1,id);
             rs = stmt.executeQuery();
             if(rs.next()){
                 //int id = rs.getInt(1);
@@ -327,7 +327,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
     }
     
     
-    public ArrayList<ArrayList<String>> searchRecord(int id)
+    public ArrayList<ArrayList<String>> searchRecord(String id)
     {
         Connection connection = null;
         PreparedStatement stmt = null;
@@ -404,7 +404,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
     }
     
     
-    public ArrayList<String> searchRecord2(int id, int date)
+    public ArrayList<String> searchRecord2(String id, int date)
     {
         Connection connection = null;
         PreparedStatement stmt = null;
