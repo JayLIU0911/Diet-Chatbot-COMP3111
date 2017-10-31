@@ -1,4 +1,4 @@
-package test;
+package com.example.bot.spring;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,8 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Slf4j
 public class UserDBAdaptor extends SQLDatabaseEngine{
 	
-	@Autowired
-	private SQLDatabaseEngine databaseEngine;
+//    @Autowired
+//    private SQLDatabaseEngine databaseEngine;
+    
     
 	public boolean insert(User user)
     {
@@ -28,7 +29,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         boolean result = false;
         int x = 0;
         
-        int uid = user.getUserId();
+        String uid = user.getUserId();
         String name = user.getUserName();
         String status = user.getUserStatus();
         int age = user.getUseAge();
@@ -40,9 +41,9 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         
         
         try {
-            connection = databaseEngine.getConnection();
-            stmt = connection.prepareStatement("SELECT * FROM user_list WHERE uid=?");
-            stmt.setInt(1,uid);
+            connection = this.getConnection();
+            stmt = connection.prepareStatement("SELECT * FROM user_list WHERE uid like '\%?\%'");
+            stmt.setString(1,uid);
             rs = stmt.executeQuery();
             if(!rs.next()){
                 return false;
@@ -62,7 +63,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
             stmt = null;
             rs = null;
             stmt = connection.prepareStatement("INSERT INTO user_list VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            stmt.setInt(1,uid);
+            stmt.setString(1,uid);
             stmt.setString(2,name);
             stmt.setString(3,status);
             stmt.setInt(4,age);
@@ -101,12 +102,12 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         PreparedStatement stmt = null;
         ResultSet rs = null;
         boolean result = false;
-        int id = user.getUserId();
+        String id = user.getUserId();
         String tableName = "user_"+id;
         int x = 0;
         
         try{
-            connection = databaseEngine.getConnection();
+            connection = this.getConnection();
             stmt = connection.prepareStatement("drop table ?");
             stmt.setString(1,tableName);
             rs = stmt.executeQuery();
@@ -114,9 +115,9 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
                 x++;
             stmt = null;
             rs = null;
-            connection = databaseEngine.getConnection();
-            stmt = connection.prepareStatement("DELETE FROM user_list WHERE uid=?");
-            stmt.setInt(1,id);
+            connection = this.getConnection();
+            stmt = connection.prepareStatement("DELETE FROM user_list WHERE uid like '\%?\%'");
+            stmt.setString(1,id);
             rs = stmt.executeQuery();
             if(rs.next())
                 x++;
@@ -141,30 +142,33 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
     }
     
     
-    public boolean updateRecord(int id, Food food)
+    public boolean updateRecord(String id, String text)
     {
         String tableName = "user_" + id;
         Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         boolean result = false;
+        
+        Food food = new Food(text);
+        
         //int date =
         //int time =
-        String intake = food.getUserName();
+        String intake = food.getName();
         //float weight = food.getWeight();
-        float energy = food.getEnergy();
-        float sodium = food.getSodium();
-        float fatty = food.getFatty();
+        float energy = food.getQuality()[0];
+        float sodium = food.getQuality()[1];
+        float fatty = food.getQuality()[2];
         
         User a = this.searchUser(id);
         float weight = a.getUserWeight();
         
         try{
-            connection = databaseEngine.getConnection();
+            connection = this.getConnection();
             stmt = connection.prepareStatement("INSERT INTO ? (date, time, food_intake, weight, energy, sodium, fatty_acids_total_saturated) VALUES(?,?,?,?,?,?,?)");
             stmt.setString(1,tableName);
-            stmt.setInt(2,date);
-            stmt.setInt(3,time);
+            //stmt.setInt(2,date);
+            //stmt.setInt(3,time);
             stmt.setString(4,intake);
             stmt.setFloat(5,weight);
             stmt.setFloat(6,energy);
@@ -192,7 +196,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
     }
     
     
-    public boolean updateWeight(int id, float weight)
+    public boolean updateWeight(String id, float weight)
     {
         Connection connection = null;
         PreparedStatement stmt = null;
@@ -200,10 +204,10 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         boolean result = false;
         
         try{
-            connection = databaseEngine.getConnection();
-            stmt = connection.prepareStatement("update user_list set weight=? where uid=?");
+            connection = this.getConnection();
+            stmt = connection.prepareStatement("update user_list set weight=? where uid like '\%?\%'");
             stmt.setFloat(1,weight);
-            stmt.setInt(2,id);
+            stmt.setString(2,id);
             rs = stmt.executeQuery();
             if(rs.next()){
                 result = true;
@@ -227,7 +231,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
     }
     
     
-    public boolean updateGoal(int id, Goal goal)
+    public boolean updateGoal(String id, Goal goal)
     {
         Connection connection = null;
         PreparedStatement stmt = null;
@@ -237,9 +241,9 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         float day = goal.getGoalDay();
         
         try{
-            connection = databaseEngine.getConnection();
+            connection = this.getConnection();
             stmt = connection.prepareStatement("update user_list set target_weight=?,days_for_target=? where uid=?");
-            stmt.setInt(1,id);
+            stmt.setString(1,id);
             stmt.setFloat(2,weight);
             stmt.setFloat(3,day);
             rs = stmt.executeQuery();
@@ -264,7 +268,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
     }
     
     
-    public User searchUser(int id)
+    public User searchUser(String id)
     {
         Connection connection = null;
         PreparedStatement stmt = null;
@@ -272,11 +276,13 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         
         User result = null;
         
+        ArrayList<String> x = new ArrayList<String>();
+        
         
         try{
-            connection = databaseEngine.getConnection();
-            stmt = connection.prepareStatement("select * from user_list where uid=?");
-            stmt.setInt(1,id);
+            connection = this.getConnection();
+            stmt = connection.prepareStatement("select * from user_list where uid like '\%?\%'");
+            stmt.setString(1,id);
             rs = stmt.executeQuery();
             if(rs.next()){
                 //int id = rs.getInt(1);
@@ -289,7 +295,17 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
                 float height = rs.getFloat(8);
                 int target_day = rs.getInt(9);
                 
-                result = new User(name,status,age,weight,height,target_day,target_weight,purpose);
+                x.add(name);
+                x.add(status);
+                x.add(Integer.toString(age));
+                x.add(Float.toString(weight));
+                x.add(Float.toString(height));
+                x.add(Integer.toString(target_day));
+                x.add(Float.toString(target_weight));
+                x.add(purpose);
+                
+                
+                result = new User(x);
             }
         } catch (Exception e){
             log.info("SQLException while searching user: {}", e.toString());
@@ -311,7 +327,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
     }
     
     
-    public ArrayList<ArrayList<String>> searchRecord(int id)
+    public ArrayList<ArrayList<String>> searchRecord(String id)
     {
         Connection connection = null;
         PreparedStatement stmt = null;
@@ -328,7 +344,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         String tableName = "user_" + id;
         
         try{
-            connection = databaseEngine.getConnection();
+            connection = this.getConnection();
             stmt = connection.prepareStatement("SELECT date, weight, energy, sodium, fatty_acids_total_saturated from ?");
             stmt.setString(1,tableName);
             rs = stmt.executeQuery();
@@ -388,7 +404,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
     }
     
     
-    public ArrayList<String> searchRecord2(int id, int date)
+    public ArrayList<String> searchRecord2(String id, int date)
     {
         Connection connection = null;
         PreparedStatement stmt = null;
@@ -405,7 +421,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         String tableName = "user_" + id;
         
         try{
-            connection = databaseEngine.getConnection();
+            connection = this.getConnection();
             stmt = connection.prepareStatement("SELECT date, weight, energy, sodium, fatty_acids_total_saturated from ? where date=?");
             stmt.setString(1,tableName);
             stmt.setInt(2,date);
@@ -454,5 +470,23 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         
         return result;
     }
+    
+    //@Override
+    public Connection getConnection() throws URISyntaxException, SQLException {
+        Connection connection;
+        URI dbUri = new URI(System.getenv("DATABASE_URL"));
+        
+        String username = dbUri.getUserInfo().split(":")[0];
+        String password = dbUri.getUserInfo().split(":")[1];
+        String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath() +  "?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory";
+        
+        log.info("Username: {} Password: {}", username, password);
+        log.info ("dbUrl: {}", dbUrl);
+        
+        connection = DriverManager.getConnection(dbUrl, username, password);
+        
+        return connection;
+    }
+    
     
 }

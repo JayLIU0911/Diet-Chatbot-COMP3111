@@ -84,6 +84,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
 
+import java.util.*;
+
 @Slf4j
 @LineMessageHandler
 public class KitchenSinkController {
@@ -98,6 +100,7 @@ public class KitchenSinkController {
 	private String state;
 	private ArrayList< String > userInit;
 	private ArrayList< User > userList = new ArrayList< User >();
+	private Menu menu;
 
 	public void promptUser(@NonNull String replyToken) {
 		String message = "1. Update weight\n"
@@ -134,18 +137,32 @@ public class KitchenSinkController {
 
 	@EventMapping
 	public void handleImageMessageEvent(MessageEvent<ImageMessageContent> event) throws IOException {
-		final MessageContentResponse response;
 		String replyToken = event.getReplyToken();
-		String messageId = event.getMessage().getId();
-		try {
-			response = lineMessagingClient.getMessageContent(messageId).get();
-		} catch (InterruptedException | ExecutionException e) {
-			reply(replyToken, new TextMessage("Cannot get image: " + e.getMessage()));
-			throw new RuntimeException(e);
-		}
-		DownloadedContent jpg = saveContent("jpg", response);
-		reply(((MessageEvent) event).getReplyToken(), new ImageMessage(jpg.getUri(), jpg.getUri()));
+		if (state.equals("Get recommendation from menu")) {
+			// boolean success = false;
+			// menu = new Menu(text);
+			// for (User u : userList) {
+			// 	if (u.getUserId() == id) {
+			// 		this.replyText(replyToken, menu.findOptimal().getName());
+			// 		success = true;
+			// 		break;
+			// 	}
+			// }
+			// if (!success)
+			// 	this.replyText(replyToken, "Get recommendation from text menu failed");
+		} else {
+			final MessageContentResponse response;
 
+			String messageId = event.getMessage().getId();
+			try {
+				response = lineMessagingClient.getMessageContent(messageId).get();
+			} catch (InterruptedException | ExecutionException e) {
+				reply(replyToken, new TextMessage("Cannot get image: " + e.getMessage()));
+				throw new RuntimeException(e);
+			}
+			DownloadedContent jpg = saveContent("jpg", response);
+			reply(((MessageEvent) event).getReplyToken(), new ImageMessage(jpg.getUri(), jpg.getUri()));
+		}
 	}
 
 	@EventMapping
@@ -177,7 +194,7 @@ public class KitchenSinkController {
 		String imageUrl = createUri("/static/buttons/1040.jpg");
 		CarouselTemplate carouselTemplate = new CarouselTemplate(
 						Arrays.asList(
-										new CarouselColumn(imageUrl, "Welcome! This is a helpful chatbot. We would like to collect your personal information", Arrays.asList(
+										new CarouselColumn(imageUrl, "Welcome! This is a helpful chatbot. We would like to collect your personal information", "", Arrays.asList(
 														new PostbackAction("name", "name"),
 														new PostbackAction("gender", "gender"),
 														new PostbackAction("age", "age"),
@@ -207,35 +224,89 @@ public class KitchenSinkController {
 	        case "name": {
 						state = "welcome";
 	        	this.replyText(replyToken, "What is your name?");
+	        	break;
 	        }
 	        case "gender": {
 	        	this.replyText(replyToken, "Please input your gender(male/female)");
+	        	break;
 	        }
 	        case "age": {
 	        	this.replyText(replyToken, "How old are you?");
+	        	break;
 	        }
 	        case "height": {
 	        	this.replyText(replyToken, "Please input your height(cm)");
+	        	break;
 	        }
 	        case "weight": {
 	        	this.replyText(replyToken, "Please input your weight(kg)");
+	        	break;
 	        }
 	        case "target weight": {
 	        	this.replyText(replyToken, "Can you tell me your target weight?(kg)");
+	        	break;
 	        }
 	        case "target time": {
 	        	this.replyText(replyToken, "How long do you want to achieve your goal?(day)");
 	        	state=null;
+	        	break;
 	        }
 
 					// state = Update daily record
 	        case "update weight": {
 						state = "Update daily record";
 	        	this.replyText(replyToken, "Please input your weight(kg)");
+	        	break;
 	        }
 	        case "update food": {
 						state = null;
 	        	this.replyText(replyToken, "what did you eat?");
+	        	break;
+	        }
+
+					// state = null
+	        case "weekly progress chart": {
+						String id = event.getSource().getUserId();
+						for (User u : userList) {
+							if (u.getUserId().equals(id)) {
+								String uri = u.generateWeeklySummary().toURI().toString();
+								reply(replyToken, new ImageMessage(uri, uri));
+								break;
+							}
+						}
+						break;
+	        }
+	        case "show Dieting Summary": {
+						String id = event.getSource().getUserId();
+						for (User u : userList) {
+							if (u.getUserId().equals(id)) {
+								this.replyText(replyToken, u.generateSummary());
+								break;
+							}
+						}
+						break;
+	        }
+
+					// state = Get recommendation from menu
+	        case "text menu": {
+						state = "Get recommendation from menu";
+	        	this.replyText(replyToken, "Please upload a menu in text");
+	        	break;
+	        }
+	        case "json menu": {
+						state = "Get recommendation from menu";
+	        	this.replyText(replyToken, "Please upload a menu in json");
+	        	break;
+	        }
+	        case "jpeg menu": {
+						state = "Get recommendation from menu";
+	        	this.replyText(replyToken, "Please upload a menu in jpeg");
+	        	break;
+	        }
+	        
+	        default:{
+	        	this.replyText(replyToken, "Got postback " + event.getPostbackContent().getData());
+	        	break;
 	        }
 		}
 	}
@@ -284,16 +355,17 @@ public class KitchenSinkController {
         String text = content.getText();
 
         log.info("Got text message from {}: {}", replyToken, text);
+				String id = event.getSource().getUserId();
 
         switch (state) {
         case "welcome": {
-        	user.add(text);
+        	userInit.add(text);
 
 					if (state.equals("welcome")) {
 						String imageUrl = createUri("/static/buttons/1040.jpg");
 						CarouselTemplate carouselTemplate = new CarouselTemplate(
 										Arrays.asList(
-														new CarouselColumn(imageUrl, "Welcome! This is a helpful chatbot. We would like to collect your personal information", Arrays.asList(
+														new CarouselColumn(imageUrl, "Welcome! This is a helpful chatbot. We would like to collect your personal information", "", Arrays.asList(
 																		new PostbackAction("name", "name"),
 																		new PostbackAction("gender", "gender"),
 																		new PostbackAction("age", "age"),
@@ -309,14 +381,14 @@ public class KitchenSinkController {
 						userList.add(new User(userInit));
 						userInit = null;
 					}
+					break;
         }
         case "Update daily record": {
 					boolean success = false;
-					int id = Integer.parseInt(event.getSource().getUserId());
 					try {
 		        Integer.parseInt(text);
 						for (User u : userList) {
-							if (u.getUserId() == id) {
+							if (u.getUserId().equals(id)) {
 								u.setWeight(text);
 								success = true;
 								break;
@@ -328,7 +400,7 @@ public class KitchenSinkController {
 							String imageUrl = createUri("/static/buttons/1040.jpg");
 							CarouselTemplate carouselTemplate = new CarouselTemplate(
 											Arrays.asList(
-															new CarouselColumn(imageUrl, "Update daily record", Arrays.asList(
+															new CarouselColumn(imageUrl, "Update daily record", "", Arrays.asList(
 																			new PostbackAction("weight", "update weight"),
 																			new PostbackAction("food", "update food")
 															))
@@ -337,17 +409,44 @@ public class KitchenSinkController {
 							this.reply(replyToken, templateMessage);
 						}
 			    } catch(NumberFormatException e) {
-			      this.replyText(replyToken, "Please input your weight");
+						if (User.userAdapter.updateRecord(id, text))
+			      	this.replyText(replyToken, "Update food record succeed");
+						else {
+							this.replyText(replyToken, "Update food record succeed");
+						}
 			    }
 					break;
         }
+				case "Get recommendation from menu": {
+					boolean success = false;
+					menu = new Menu(text);
+					for (User u : userList) {
+						if (u.getUserId().equals(id)) {
+							this.replyText(replyToken, menu.findOptimal(u).getName());
+							success = true;
+							break;
+						}
+					}
+					if (!success)
+						this.replyText(replyToken, "Get recommendation from text menu failed");
+					break;
+				}
 				default: {
 						String imageUrl = createUri("/static/buttons/1040.jpg");
 						CarouselTemplate carouselTemplate = new CarouselTemplate(
 										Arrays.asList(
-														new CarouselColumn(imageUrl, "Update daily record", Arrays.asList(
+														new CarouselColumn(imageUrl, "Update daily record", "", Arrays.asList(
 																		new PostbackAction("weight", "update weight"),
 																		new PostbackAction("food", "update food")
+														)),
+														new CarouselColumn(imageUrl, "Progress", "", Arrays.asList(
+																		new PostbackAction("generate weekly progress chart", "weekly progress chart"),
+																		new PostbackAction("show Dieting Summary", "show Dieting Summary")
+														)),
+														new CarouselColumn(imageUrl, "Get recommendation from menu", "", Arrays.asList(
+																		new PostbackAction("text menu", "text menu"),
+																		new PostbackAction("json menu", "json menu"),
+																		new PostbackAction("jpeg menu", "jpeg menu")
 														))
 										));
 						TemplateMessage templateMessage = new TemplateMessage("general", carouselTemplate);
@@ -480,11 +579,11 @@ public class KitchenSinkController {
 
 
 	public KitchenSinkController() {
-		database = new SQLDatabaseEngine();
+		database = new DatabaseEngine();
 		itscLOGIN = System.getenv("ITSC_LOGIN");
 	}
 
-	private SQLDatabaseEngine database;
+	private DatabaseEngine database;
 	private String itscLOGIN;
 
 
