@@ -45,7 +45,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
             stmt = connection.prepareStatement("SELECT * FROM user_list WHERE uid like concat '%'||?||'%'");
             stmt.setString(1,uid);
             rs = stmt.executeQuery();
-            if(!rs.next()){
+            if(rs.next()){
                 return false;
             }
             
@@ -56,9 +56,9 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
                 stmt.setString(1,tableName);
                 rs = stmt.executeQuery();
                 
-                if(rs.next())
-                    x++;
-                                             
+//                if(rs.next())
+//                    x++;
+            
             
             stmt = null;
             rs = null;
@@ -73,8 +73,8 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
             stmt.setFloat(7,height);
             stmt.setInt(8,target_day);
             rs = stmt.executeQuery();
-            if(rs.next()){
-                x++;}
+//            if(rs.next()){
+//                x++;}
         } catch (Exception e) {
             log.info("SQLExecption while inserting: {}", e.toString());
         } finally{
@@ -90,9 +90,9 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
                 log.info("SQLException while closing: {}", ex.toString());
             }
         }
-        if(x==2)
-            result = true;
-        return result;
+//        if(x==2)
+//            result = true;
+        return true;
     }
     
     
@@ -111,16 +111,17 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
             stmt = connection.prepareStatement("drop table ?");
             stmt.setString(1,tableName);
             rs = stmt.executeQuery();
-            if(rs.next())
-                x++;
+//            if(rs.next())
+//                x++;
             stmt = null;
             rs = null;
             connection = this.getConnection();
             stmt = connection.prepareStatement("DELETE FROM user_list WHERE uid like concat '%'||?||'%'");
             stmt.setString(1,id);
             rs = stmt.executeQuery();
-            if(rs.next())
-                x++;
+//            if(rs.next())
+//                x++;
+            result = true;
         } catch (Exception e) {
             log.info("SQLExecption while deleting: {}", e.toString());
         } finally{
@@ -136,8 +137,8 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
                 log.info("SQLException while closing: {}", ex.toString());
             }
         }
-        if(x==2)
-            result = true;
+//        if(x==2)
+//            result = true;
         return result;
     }
     
@@ -175,7 +176,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
             stmt.setFloat(7,sodium);
             stmt.setFloat(8,fatty);
             rs = stmt.executeQuery();
-            if(rs.next())
+            //if(rs.next())
                 result = true;
         } catch (Exception e){
             log.info("SQLException while updating: {}", e.toString());
@@ -209,9 +210,9 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
             stmt.setFloat(1,weight);
             stmt.setString(2,id);
             rs = stmt.executeQuery();
-            if(rs.next()){
+//            if(rs.next()){
                 result = true;
-            }
+            //}
         } catch (Exception e){
             log.info("SQLException while updating weight: {}", e.toString());
         } finally{
@@ -247,7 +248,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
             stmt.setFloat(2,weight);
             stmt.setFloat(3,day);
             rs = stmt.executeQuery();
-            if(rs.next())
+            //if(rs.next())
                 result = true;
         } catch (Exception e){
             log.info("SQLException while updating target: {}", e.toString());
@@ -291,9 +292,9 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
                 int age = rs.getInt(4);
                 float weight = rs.getFloat(5);
                 //String purpose = rs.getString(6);
-                float target_weight = rs.getFloat(7);
-                float height = rs.getFloat(8);
-                int target_day = rs.getInt(9);
+                float target_weight = rs.getFloat(6);
+                float height = rs.getFloat(7);
+                int target_day = rs.getInt(8);
                 
                 x.add(name);
                 x.add(status);
@@ -488,5 +489,75 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         return connection;
     }
     
+    
+    public String getState(User user){
+        Connection connection = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        String id = user.getUserId();
+        String result = null;
+        
+        try{
+            connection = this.getConnection();
+            stmt = connection.prepareStatement("select state from user_list where uid like concat '%'||?||'%'");
+            stmt.setString(1,id);
+            rs = stmt.executeQuery();
+            
+            if(rs.next())
+                result = rs.getString(1);
+        
+    } catch (Exception e){
+        log.info("SQLException while getting state: {}", e.toString());
+    } finally{
+        try{
+            if(rs.next())
+                rs.close();
+                if(stmt!=null)
+                    stmt.close();
+                    if(connection!=null)
+                        connection.close();
+                        }catch (Exception ex) {
+                            log.info("SQLException while closing: {}", ex.toString());
+                        }
+    }
+    
+    return result;
+}
+    
+    
+    public boolean setState(User user, String text){
+        Connection connection = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        boolean result = false;
+        String id = user.getUserId();
+        
+        try{
+            connection = this.getConnection();
+            stmt = connection.prepareStatement("update user_list set state=? where uid like concat '%'||?||'%'");
+            stmt.setString(1,text);
+            stmt.setString(2,id);
+            rs = stmt.executeQuery();
+            
+            result = true;
+            
+        } catch (Exception e){
+            log.info("SQLException while setting state: {}", e.toString());
+        } finally{
+            try{
+                if(rs.next())
+                    rs.close();
+                if(stmt!=null)
+                    stmt.close();
+                if(connection!=null)
+                    connection.close();
+            }catch (Exception ex) {
+                log.info("SQLException while closing: {}", ex.toString());
+            }
+        }
+        return result;
+    }
     
 }
