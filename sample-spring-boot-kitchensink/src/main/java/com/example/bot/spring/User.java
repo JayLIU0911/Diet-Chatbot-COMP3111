@@ -5,6 +5,7 @@
 package com.example.bot.spring;
 
 /*
+ f
 import javafx.application.Application;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.imageio.ImageIO;
