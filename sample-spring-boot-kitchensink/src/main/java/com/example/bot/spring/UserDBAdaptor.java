@@ -42,7 +42,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         
         try {
             connection = this.getConnection();
-            stmt = connection.prepareStatement("SELECT * FROM user_list WHERE uid=?");
+            stmt = connection.prepareStatement("SELECT * FROM user_list WHERE uid like '\%?\%'");
             stmt.setString(1,uid);
             rs = stmt.executeQuery();
             if(!rs.next()){
@@ -116,7 +116,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
             stmt = null;
             rs = null;
             connection = this.getConnection();
-            stmt = connection.prepareStatement("DELETE FROM user_list WHERE uid=?");
+            stmt = connection.prepareStatement("DELETE FROM user_list WHERE uid like '\%?\%'");
             stmt.setString(1,id);
             rs = stmt.executeQuery();
             if(rs.next())
@@ -205,7 +205,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         
         try{
             connection = this.getConnection();
-            stmt = connection.prepareStatement("update user_list set weight=? where uid=?");
+            stmt = connection.prepareStatement("update user_list set weight=? where uid like '\%?\%'");
             stmt.setFloat(1,weight);
             stmt.setString(2,id);
             rs = stmt.executeQuery();
@@ -281,7 +281,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         
         try{
             connection = this.getConnection();
-            stmt = connection.prepareStatement("select * from user_list where uid=?");
+            stmt = connection.prepareStatement("select * from user_list where uid like '\%?\%'");
             stmt.setString(1,id);
             rs = stmt.executeQuery();
             if(rs.next()){
