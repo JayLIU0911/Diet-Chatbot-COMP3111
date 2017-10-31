@@ -268,7 +268,7 @@ public class KitchenSinkController {
 	        case "weekly progress chart": {
 						String id = event.getSource().getUserId();
 						for (User u : userList) {
-							if (u.getUserId() == Integer.parseInt(id)) {
+							if (u.getUserId() == id) {
 								String uri = u.generateWeeklySummary().toURI().toString();
 								reply(replyToken, new ImageMessage(uri, uri));
 								break;
@@ -279,7 +279,7 @@ public class KitchenSinkController {
 	        case "show Dieting Summary": {
 						String id = event.getSource().getUserId();
 						for (User u : userList) {
-							if (u.getUserId() == Integer.parseInt(id)) {
+							if (u.getUserId() == id) {
 								this.replyText(replyToken, u.generateSummary());
 								break;
 							}
@@ -355,7 +355,7 @@ public class KitchenSinkController {
         String text = content.getText();
 
         log.info("Got text message from {}: {}", replyToken, text);
-				int id = Integer.parseInt(event.getSource().getUserId());
+				String id = event.getSource().getUserId();
 
         switch (state) {
         case "welcome": {
