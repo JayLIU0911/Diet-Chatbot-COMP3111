@@ -4,12 +4,19 @@
 
 package com.example.bot.spring;
 
+/*
+import javafx.application.Application;
+import javafx.embed.swing.SwingFXUtils;
+import javafx.imageio.ImageIO;
+import javafx.scene.Scene;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
+import javafx.stage.Stage;
 
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.ChartUtilities;
-import org.jfree.chart.ChartFactory;
-import org.jfree.data.general.DefaultPieDataset;
 import java.io.File;
+*/
 
 import java.util.Arrays;
 import java.util.Date;
@@ -25,7 +32,7 @@ public class User {
     static UserDBAdaptor userAdapter = new UserDBAdaptor();
     static FoodDBAdaptor foodAdapter = new FoodDBAdaptor();
     
-    private int id;
+    private String id;
     private String name;
     private String status;
     private int age;
@@ -35,7 +42,7 @@ public class User {
     
     public User (ArrayList<String> list){
         
-        id = Integer.parseInt(list[0]);
+        id = new String(list[0);
         name=new String(list[1]);
         status=new String(list[2]);
         age=Integer.parseInt(list[3]);
@@ -45,7 +52,7 @@ public class User {
     }
     
     
-    public int getUserId () { return id; }
+    public String getUserId () { return id; }
     public String getUserName (){ return name;}
     public String getUserStatus () { return status;}
     public int getUseAge () { return age; }
@@ -178,61 +185,69 @@ public class User {
         for (int i=0; i<7; i++){
             data[i] = pass7Record[i][0];
         }
+        File weeksummary = new File("Weekly.jpg");
+                             return weeksummary;
+    }
+    
+     
+        
     
     
+}
+/*
+class LineChartSample extends Application {
     
-            // Create a simple XY chart
-        XYSeries series_weight = new XYSeries("Weight");
-        XYSeries series_energy = new XYSeries("Energy");
-        XYSeries series_sodium = new XYSeries("Sodium");
-        XYSeries series_fattyacid = new XYSeries("Fatty Acid");
-         XYSeriesCollection dataset = new XYSeriesCollection();
-        for (int i=0; i<4; i++){
-            series_weight.add(date[i], pass7summary[i][0]);
+    @Override public void start(Stage stage) {
+                             Stage stage = new Stage;
+        stage.setTitle("Line Chart Sample");
+        final CategoryAxis xAxis = new CategoryAxis();
+        final NumberAxis yAxis = new NumberAxis();
+        xAxis.setLabel("Date");
+        final LineChart<String,Number> lineChart =
+        new LineChart<String,Number>(xAxis,yAxis);
+        
+        lineChart.setTitle("Weekly Summary");
+        
+        XYChart.Series series1 = new XYChart.Series();
+        series1.setName("Weight");
+        XYChart.Series series2 = new XYChart.Series();
+        series2.setName("Energy");
+        
+        for (int i=0; i<7; i++){
+            series1.getData().add(new XYChart.Data(Date[i], pass7Record[i][0]));
+            series1.getData().add(new XYChart.Data(Date[i], pass7Record[i][1]));
+
         }
-        for (int i=0; i<4; i++){
-            series_energy.add(date[i], pass7summary[i][0]);
-        }
-        for (int i=0; i<4; i++){
-            series_sodium.add(date[i], pass7summary[i][0]);
-        }
-        for (int i=0; i<4; i++){
-            series_fattyacid.add(date[i], pass7summary[i][0]);
-        }
-        dataset.addSeries(series_weight);
-        dataset.addSeries(series_energy);
-        dataset.addSeries(series_sodium);
-        dataset.addSeries(series_fattyacid );
-    
         
         
-            // Generate the graph
-            JFreeChart chart = ChartFactory.createXYLineChart(
-                                                              "Weekly Summary",
-                                                              "Date",
-                                                              "change",
-                                                              dataset,
-                                                              PlotOrientation.VERTICAL,  // Plot Orientation
-                                                              true,                      // Show Legend
-                                                              true,                      // Use tooltips
-                                                              false                      // Configure chart to generate URLs?
-                                                              );
-            try {
-                File weeksummary = new File("weekly.jpg");
-                ChartUtilities.saveChartAsJPEG(weeksummary, chart, 500, 300);
-                return weeksummary;
-            } catch (IOException e) {
-                System.err.println("Problem occurred creating chart.");
-            }
+
+        Scene scene  = new Scene(lineChart,800,600);
+        lineChart.getData().addAll(series1, series2);
+        
+        saveAsJpg(scene, "weeklySummary.jpg");
+        stage.setScene(scene);
+        //stage.show();
+        
+        WritableImage image = scene.snapshot(null);
+        File weeksummary = new File("Weekly.jpg");
+        try {
+            ImageIO.write(SwingFXUtils.fromFXImage(image, null), "jpg",
+                          weeksummary);
+            
+            
+            
+        } catch (Exception e) {
+            log.info("ImageWriteException while writing weeklysummary: {}", e.toString());
+        }
+    
     }
     
     
-        
-        
-        
     
-        
-        
+    public static void main(String[] args) {
+        launch(args);
+
+ }
+ 
 }
-
-
+*/
