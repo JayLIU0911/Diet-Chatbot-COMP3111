@@ -47,11 +47,29 @@ public class Menu{
     }
     public Food findMinEnergy(){
         int index = 0;
+        float minEnergy = this.food[0].getQuality()[0];
+        for(int i = 0; i < food.length; i++){
+            if(food[i].getQuality()[0]<minEnergy){
+                minEnergy = food[i].getQuality()[0];
+                index = i;
+            }
+        }
         return food[index];
-        
     }
+    
     public Food findOptimal(User user){
         int index = 0;
+        float intake = user.getIdealDailyIntake ();
+        intake = intake /3;
+        float diff = intake;
+        for (int i = 0l; i < food.length; i++){
+            float difff = food[i].getQuality()[0] - intake;
+            float abs = Math.abs(difff);
+            if (abs < diff){
+                diff = abs;
+                index = i;
+            }
+        }
         return food[index];
     }
 }
