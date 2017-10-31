@@ -34,7 +34,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         String status = user.getUserStatus();
         int age = user.getUseAge();
         float weight = user.getUserWeight();
-        String purpose = user.getUserGoal().getPurpose();
+        //String purpose = user.getUserGoal().getPurpose();
         float target_weight = user.getUserGoal().getGoalTarget();
         float height = user.getUserHeight();
         int target_day = user.getUserGoal().getGoalDay();
@@ -302,7 +302,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
                 x.add(Float.toString(height));
                 x.add(Integer.toString(target_day));
                 x.add(Float.toString(target_weight));
-                x.add(purpose);
+                //x.add(purpose);
                 
                 
                 result = new User(x);
