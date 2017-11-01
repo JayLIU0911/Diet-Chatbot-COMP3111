@@ -188,7 +188,7 @@ public class KitchenSinkController {
 	@EventMapping
 	public void handleFollowEvent(FollowEvent event) {
 		userInit = new ArrayList< String >();
-		userInit.add(event.getSource().getUserId());
+		userInit.add(event.getSource().getUserId());//add user id already
 		String replyToken = event.getReplyToken();
 		
 		state = "gender";
@@ -332,7 +332,7 @@ public class KitchenSinkController {
         switch (state) {
         case "gender": {
         	this.replyText(replyToken, "Please input your gender(male/female)");
-        	userInit.add(id);
+        	//userInit.add(id); reapted
         	userInit.add(text);
         	state = "age";
         	break;
@@ -370,6 +370,7 @@ public class KitchenSinkController {
         case "userInit": {
         	this.replyText(replyToken, "Great! Nice to meet you!");
         	userInit.add(text);
+        	userInit.add("this is state");
         	userList.add(new User(userInit));
 			userInit = null;
         	state = null;

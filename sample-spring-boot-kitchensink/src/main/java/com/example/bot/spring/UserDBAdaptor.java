@@ -17,68 +17,40 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Slf4j
 public class UserDBAdaptor extends SQLDatabaseEngine{
 	
-//    @Autowired
-//    private SQLDatabaseEngine databaseEngine;
+   @Autowired
+   private SQLDatabaseEngine databaseEngine;
     
-    
-	public boolean insert(User user)
-    {
-        Connection connection = null;
-        PreparedStatement stmt = null;
-        ResultSet rs= null;
-        boolean result = false;
-        int x = 0;
-        
-        String uid = user.getUserId();
-        String name = user.getUserName();
-        String status = user.getUserStatus();
-        int age = user.getUserAge();
-        float weight = user.getUserWeight();
-        //String purpose = user.getUserGoal().getPurpose();
-        float target_weight = user.getUserGoal().getGoalTarget();
-        float height = user.getUserHeight();
-        int target_day = user.getUserGoal().getGoalDay();
-        String state = user.getUserState();
-        
-        
-        try {
-            connection = this.getConnection();
-            stmt = connection.prepareStatement("SELECT * FROM user_list WHERE uid like concat '%'||?||'%'");
-            stmt.setString(1,uid);
+    public boolean insert(String id){
+    	Connection connection = null;
+    	PreparedStatement stmt = null;
+    	ResultSet rs = null;
+
+    	boolean result = false;
+
+    	try{
+    		connection = this.getConnection();
+    		stmt = connection.prepareStatement("SELECT * FROM user_list WHERE uid like '%'||?||'%'");
+            stmt.setString(1,id);
             rs = stmt.executeQuery();
-            if(rs.next()){
+            if(rs.next())
                 return false;
-            }
-            
-                stmt = null;
-                rs = null;
-                String tableName = "user_" + uid;
-                connection.prepareStatement("CREATE TABLE ? (date int, time int, food_intake varchar(200), weight float, energy float, sodium float, fatty_acids_total_saturated float, vegetable float, fruit float, grain float, meat float)");
-                stmt.setString(1,tableName);
-                rs = stmt.executeQuery();
-                
-//                if(rs.next())
-//                    x++;
-            
-            
+
             stmt = null;
             rs = null;
-            stmt = connection.prepareStatement("INSERT INTO user_list VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            stmt.setString(1,uid);
-            stmt.setString(2,name);
-            stmt.setString(3,status);
-            stmt.setInt(4,age);
-            stmt.setFloat(5,weight);
-            //stmt.setString(6,purpose);
-            stmt.setFloat(6,target_weight);
-            stmt.setFloat(7,height);
-            stmt.setInt(8,target_day);
-            stmt.setString(9,state);
+            String tableName = "user_" + id;
+            connection.prepareStatement("CREATE TABLE ? (date int, time int, food_intake varchar(200), weight float, energy float, sodium float, fatty_acids_total_saturated float, vegetable float, fruit float, grain float, meat float)");
+            stmt.setString(1,tableName);
             rs = stmt.executeQuery();
-//            if(rs.next()){
-//                x++;}
-        } catch (Exception e) {
-            log.info("SQLExecption while inserting: {}", e.toString());
+
+            stmt = null;
+            rs = null;
+            stmt = connection.prepareStatement("INSERT INTO user_list VALUES(?, ' ', ' ', 0, 0, 0, 0, 0, '0')");
+            stmt.setString(1,id);
+            rs = stmt.executeQuery();
+
+            result = true;
+    	} catch (Exception e) {
+            log.info("SQLExecption while inserting user: {}", e.toString());
         } finally{
             try{
                 if(rs.next())
@@ -89,22 +61,97 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
                     connection.close();
                 
             } catch (Exception ex) {
-                log.info("SQLException while closing: {}", ex.toString());
+                log.info("SQLException while closing1: {}", ex.toString());
             }
         }
-//        if(x==2)
-//            result = true;
-        return true;
+        return result;
     }
+
+
+// 	public boolean insert(ArrayList<String> user)
+//     {
+//         Connection connection = null;
+//         PreparedStatement stmt = null;
+//         ResultSet rs= null;
+//         boolean result = false;
+//         int x = 0;
+        
+//         String uid = user.get(0);
+//         String name = user.get(1);
+//         String status = user.get(2);
+//         int age = Integer.parseInt(user.get(3));
+//         float weight = Float.parseFloat(user.get(4));
+//         //String purpose = user.getUserGoal().getPurpose();
+//         float target_weight = Float.parseFloat(user.get(5));
+//         float height = Float.parseFloat(user.get(6));
+//         int target_day = Integer.parseInt(user.get(7));
+//         String state = "0";
+        
+        
+//         try {
+//             connection = this.getConnection();
+//             stmt = connection.prepareStatement("SELECT * FROM user_list WHERE uid like '%'||?||'%'");
+//             stmt.setString(1,uid);
+//             rs = stmt.executeQuery();
+//             if(rs.next()){
+//                 return false;
+//             }
+            
+//                 stmt = null;
+//                 rs = null;
+//                 String tableName = "user_" + uid;
+//                 connection.prepareStatement("CREATE TABLE ? (date int, time int, food_intake varchar(200), weight float, energy float, sodium float, fatty_acids_total_saturated float, vegetable float, fruit float, grain float, meat float)");
+//                 stmt.setString(1,tableName);
+//                 rs = stmt.executeQuery();
+                
+// //                if(rs.next())
+// //                    x++;
+            
+            
+//             stmt = null;
+//             rs = null;
+//             stmt = connection.prepareStatement("INSERT INTO user_list VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+//             stmt.setString(1,uid);
+//             stmt.setString(2,name);
+//             stmt.setString(3,status);
+//             stmt.setInt(4,age);
+//             stmt.setFloat(5,weight);
+//             //stmt.setString(6,purpose);
+//             stmt.setFloat(6,target_weight);
+//             stmt.setFloat(7,height);
+//             stmt.setInt(8,target_day);
+//             stmt.setString(9,state);
+//             rs = stmt.executeQuery();
+// //            if(rs.next()){
+// //                x++;}
+//         } catch (Exception e) {
+//             log.info("SQLExecption while inserting: {}", e.toString());
+//         } finally{
+//             try{
+//                 if(rs.next())
+//                     rs.close();
+//                 if(stmt!=null)
+//                     stmt.close();
+//                 if(connection!=null)
+//                     connection.close();
+                
+//             } catch (Exception ex) {
+//                 log.info("SQLException while closing1: {}", ex.toString());
+//             }
+//         }
+// //        if(x==2)
+// //            result = true;
+//         return true;
+//     }
     
     
-    public boolean delete(User user)
+    public boolean delete(String id)
     {
         Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         boolean result = false;
-        String id = user.getUserId();
+        //String id = user.getUserId();
         String tableName = "user_"+id;
         int x = 0;
         
@@ -118,7 +165,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
             stmt = null;
             rs = null;
             connection = this.getConnection();
-            stmt = connection.prepareStatement("DELETE FROM user_list WHERE uid like concat '%'||?||'%'");
+            stmt = connection.prepareStatement("DELETE FROM user_list WHERE uid like '%'||?||'%'");
             stmt.setString(1,id);
             rs = stmt.executeQuery();
 //            if(rs.next())
@@ -136,7 +183,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
                     connection.close();
                 
             } catch (Exception ex) {
-                log.info("SQLException while closing: {}", ex.toString());
+                log.info("SQLException while closing2: {}", ex.toString());
             }
         }
 //        if(x==2)
@@ -163,8 +210,8 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         float sodium = food.getQuality()[1];
         float fatty = food.getQuality()[2];
         
-        User a = this.searchUser(id);
-        float weight = a.getUserWeight();
+        float weight = this.searchUserWeight(id);
+        //float weight = a.getUserWeight();
         
         try{
             connection = this.getConnection();
@@ -191,7 +238,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
                 if(connection!=null)
                     connection.close();
             }catch (Exception ex) {
-                log.info("SQLException while closing: {}", ex.toString());
+                log.info("SQLException while closing3: {}", ex.toString());
             }
         }
         
@@ -208,7 +255,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         
         try{
             connection = this.getConnection();
-            stmt = connection.prepareStatement("update user_list set weight=? where uid like concat '%'||?||'%'");
+            stmt = connection.prepareStatement("update user_list set weight=? where uid like '%'||?||'%'");
             stmt.setFloat(1,weight);
             stmt.setString(2,id);
             rs = stmt.executeQuery();
@@ -226,7 +273,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
                 if(connection!=null)
                     connection.close();
             }catch (Exception ex) {
-                log.info("SQLException while closing: {}", ex.toString());
+                log.info("SQLException while closing4: {}", ex.toString());
             }
         }
         
@@ -245,7 +292,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         
         try{
             connection = this.getConnection();
-            stmt = connection.prepareStatement("update user_list set target_weight=?,days_for_target=? where uid like concat '%'||?||'%'");
+            stmt = connection.prepareStatement("update user_list set target_weight=?,days_for_target=? where uid like '%'||?||'%'");
             stmt.setString(1,id);
             stmt.setFloat(2,weight);
             stmt.setFloat(3,day);
@@ -263,7 +310,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
                 if(connection!=null)
                     connection.close();
             }catch (Exception ex) {
-                log.info("SQLException while closing: {}", ex.toString());
+                log.info("SQLException while closing5: {}", ex.toString());
             }
         }
         
@@ -271,46 +318,46 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
     }
     
     
-    public User searchUser(String id)
+    public float searchUserWeight(String id)
     {
         Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         
-        User result = null;
+        float result = 0;
         
         ArrayList<String> x = new ArrayList<String>();
         
         
         try{
             connection = this.getConnection();
-            stmt = connection.prepareStatement("select * from user_list where uid like concat '%'||?||'%'");
+            stmt = connection.prepareStatement("select weight from user_list where uid like '%'||?||'%'");
             stmt.setString(1,id);
             rs = stmt.executeQuery();
             if(rs.next()){
                 //int id = rs.getInt(1);
-                String name = rs.getString(2);
-                String status = rs.getString(3);
-                int age = rs.getInt(4);
-                float weight = rs.getFloat(5);
+                //String name = rs.getString(2);
+                //String status = rs.getString(3);
+                //int age = rs.getInt(4);
+                //float weight = rs.getFloat(5);
                 //String purpose = rs.getString(6);
-                float target_weight = rs.getFloat(6);
-                float height = rs.getFloat(7);
-                int target_day = rs.getInt(8);
-                String state = rs.getString(9);
+                //float target_weight = rs.getFloat(6);
+                //float height = rs.getFloat(7);
+                //int target_day = rs.getInt(8);
+                //String state = rs.getString(9);
                 
-                x.add(name);
-                x.add(status);
-                x.add(Integer.toString(age));
-                x.add(Float.toString(weight));
-                x.add(Float.toString(height));
-                x.add(Integer.toString(target_day));
-                x.add(Float.toString(target_weight));
+                // x.add(name);
+                // x.add(status);
+                // x.add(Integer.toString(age));
+                // x.add(Float.toString(weight));
+                // x.add(Float.toString(height));
+                // x.add(Integer.toString(target_day));
+                // x.add(Float.toString(target_weight));
                 //x.add(purpose);
-                x.add(state);
+                //x.add(state);
                 
                 
-                result = new User(x);
+                result = rs.getFloat(1);
             }
         } catch (Exception e){
             log.info("SQLException while searching user: {}", e.toString());
@@ -323,7 +370,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
                 if(connection!=null)
                     connection.close();
             }catch (Exception ex) {
-                log.info("SQLException while closing: {}", ex.toString());
+                log.info("SQLException while closing6: {}", ex.toString());
             }
         }
         
@@ -400,7 +447,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
                 if(connection!=null)
                     connection.close();
             }catch (Exception ex) {
-                log.info("SQLException while closing: {}", ex.toString());
+                log.info("SQLException while closing7: {}", ex.toString());
             }
         }
         
@@ -469,7 +516,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
                 if(connection!=null)
                     connection.close();
             }catch (Exception ex) {
-                log.info("SQLException while closing: {}", ex.toString());
+                log.info("SQLException while closing8: {}", ex.toString());
             }
         }
         
@@ -494,17 +541,17 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
     }
     
     
-    public String getState(User user){
+    public String getState(String id){
         Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         
-        String id = user.getUserId();
+        //String id = user.getUserId();
         String result = null;
         
         try{
             connection = this.getConnection();
-            stmt = connection.prepareStatement("select state from user_list where uid like concat '%'||?||'%'");
+            stmt = connection.prepareStatement("select state from user_list where uid like '%'||?||'%'");
             stmt.setString(1,id);
             rs = stmt.executeQuery();
             
@@ -522,7 +569,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
                     if(connection!=null)
                         connection.close();
                         }catch (Exception ex) {
-                            log.info("SQLException while closing: {}", ex.toString());
+                            log.info("SQLException while closing9: {}", ex.toString());
                         }
     }
     
@@ -530,17 +577,17 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
 }
     
     
-    public boolean setState(User user, String text){
+    public boolean setState(String id, String text){
         Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         
         boolean result = false;
-        String id = user.getUserId();
+        //String id = user.getUserId();
         
         try{
             connection = this.getConnection();
-            stmt = connection.prepareStatement("update user_list set state=? where uid like concat '%'||?||'%'");
+            stmt = connection.prepareStatement("update user_list set state=? where uid like '%'||?||'%'");
             stmt.setString(1,text);
             stmt.setString(2,id);
             rs = stmt.executeQuery();
@@ -558,10 +605,512 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
                 if(connection!=null)
                     connection.close();
             }catch (Exception ex) {
-                log.info("SQLException while closing: {}", ex.toString());
+                log.info("SQLException while closing10: {}", ex.toString());
             }
         }
         return result;
     }
+
+
+    public boolean setName(String id, String text){
+    	Connection connection = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        boolean result = false;
+        //String id = user.getUserId();
+        
+        try{
+            connection = this.getConnection();
+            stmt = connection.prepareStatement("update user_list set name=? where uid like '%'||?||'%'");
+            stmt.setString(1,text);
+            stmt.setString(2,id);
+            rs = stmt.executeQuery();
+            
+            result = true;
+            
+        } catch (Exception e){
+            log.info("SQLException while setting name: {}", e.toString());
+        } finally{
+            try{
+                if(rs.next())
+                    rs.close();
+                if(stmt!=null)
+                    stmt.close();
+                if(connection!=null)
+                    connection.close();
+            }catch (Exception ex) {
+                log.info("SQLException while closing11: {}", ex.toString());
+            }
+        }
+        return result;
+    }
+
+
+    public boolean setStatus(String id, String text){
+    	Connection connection = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        boolean result = false;
+        //String id = user.getUserId();
+        
+        try{
+            connection = this.getConnection();
+            stmt = connection.prepareStatement("update user_list set status=? where uid like '%'||?||'%'");
+            stmt.setString(1,text);
+            stmt.setString(2,id);
+            rs = stmt.executeQuery();
+            
+            result = true;
+            
+        } catch (Exception e){
+            log.info("SQLException while setting status: {}", e.toString());
+        } finally{
+            try{
+                if(rs.next())
+                    rs.close();
+                if(stmt!=null)
+                    stmt.close();
+                if(connection!=null)
+                    connection.close();
+            }catch (Exception ex) {
+                log.info("SQLException while closing12: {}", ex.toString());
+            }
+        }
+        return result;
+    }
+
+
+    public boolean setAge(String id, int age){
+    	Connection connection = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        boolean result = false;
+        //String id = user.getUserId();
+        
+        try{
+            connection = this.getConnection();
+            stmt = connection.prepareStatement("update user_list set age=? where uid like '%'||?||'%'");
+            stmt.setInt(1,age);
+            stmt.setString(2,id);
+            rs = stmt.executeQuery();
+            
+            result = true;
+            
+        } catch (Exception e){
+            log.info("SQLException while setting age: {}", e.toString());
+        } finally{
+            try{
+                if(rs.next())
+                    rs.close();
+                if(stmt!=null)
+                    stmt.close();
+                if(connection!=null)
+                    connection.close();
+            }catch (Exception ex) {
+                log.info("SQLException while closing13: {}", ex.toString());
+            }
+        }
+        return result;
+    }
+
+
+    public boolean setWeight(String id, float weight){
+    	Connection connection = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        boolean result = false;
+        //String id = user.getUserId();
+        
+        try{
+            connection = this.getConnection();
+            stmt = connection.prepareStatement("update user_list set weight=? where uid like '%'||?||'%'");
+            stmt.setFloat(1,weight);
+            stmt.setString(2,id);
+            rs = stmt.executeQuery();
+            
+            result = true;
+            
+        } catch (Exception e){
+            log.info("SQLException while setting weight: {}", e.toString());
+        } finally{
+            try{
+                if(rs.next())
+                    rs.close();
+                if(stmt!=null)
+                    stmt.close();
+                if(connection!=null)
+                    connection.close();
+            }catch (Exception ex) {
+                log.info("SQLException while closing14: {}", ex.toString());
+            }
+        }
+        return result;
+    }
+
+
+    public boolean setTargetWeight(String id, float target){
+    	Connection connection = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        boolean result = false;
+        //String id = user.getUserId();
+        
+        try{
+            connection = this.getConnection();
+            stmt = connection.prepareStatement("update user_list set target_weight=? where uid like '%'||?||'%'");
+            stmt.setFloat(1,target);
+            stmt.setString(2,id);
+            rs = stmt.executeQuery();
+            
+            result = true;
+            
+        } catch (Exception e){
+            log.info("SQLException while setting target weight: {}", e.toString());
+        } finally{
+            try{
+                if(rs.next())
+                    rs.close();
+                if(stmt!=null)
+                    stmt.close();
+                if(connection!=null)
+                    connection.close();
+            }catch (Exception ex) {
+                log.info("SQLException while closing15: {}", ex.toString());
+            }
+        }
+        return result;
+    }
+
+
+    public boolean setHeight(String id, float height){
+    	Connection connection = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        boolean result = false;
+        //String id = user.getUserId();
+        
+        try{
+            connection = this.getConnection();
+            stmt = connection.prepareStatement("update user_list set height=? where uid like '%'||?||'%'");
+            stmt.setFloat(1,height);
+            stmt.setString(2,id);
+            rs = stmt.executeQuery();
+            
+            result = true;
+            
+        } catch (Exception e){
+            log.info("SQLException while setting height: {}", e.toString());
+        } finally{
+            try{
+                if(rs.next())
+                    rs.close();
+                if(stmt!=null)
+                    stmt.close();
+                if(connection!=null)
+                    connection.close();
+            }catch (Exception ex) {
+                log.info("SQLException while closing16: {}", ex.toString());
+            }
+        }
+        return result;
+    }
+
+
+    public boolean setTargetDay(String id, int day){
+    	Connection connection = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        boolean result = false;
+        //String id = user.getUserId();
+        
+        try{
+            connection = this.getConnection();
+            stmt = connection.prepareStatement("update user_list set days_for_target=? where uid like '%'||?||'%'");
+            stmt.setInt(1,day);
+            stmt.setString(2,id);
+            rs = stmt.executeQuery();
+            
+            result = true;
+            
+        } catch (Exception e){
+            log.info("SQLException while setting target day: {}", e.toString());
+        } finally{
+            try{
+                if(rs.next())
+                    rs.close();
+                if(stmt!=null)
+                    stmt.close();
+                if(connection!=null)
+                    connection.close();
+            }catch (Exception ex) {
+                log.info("SQLException while closing17: {}", ex.toString());
+            }
+        }
+        return result;
+    }
+
+
+    public float getWeight(String id){
+        Connection connection = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        //String id = user.getUserId();
+        float result = 0;
+        
+        try{
+            connection = this.getConnection();
+            stmt = connection.prepareStatement("select weight from user_list where uid like '%'||?||'%'");
+            stmt.setString(1,id);
+            rs = stmt.executeQuery();
+            
+            if(rs.next())
+                result = rs.getFloat(1);
+        
+    } catch (Exception e){
+        log.info("SQLException while getting weight: {}", e.toString());
+    } finally{
+        try{
+            if(rs.next())
+                rs.close();
+            if(stmt!=null)
+                stmt.close();
+            if(connection!=null)
+                connection.close();
+            }catch (Exception ex) {
+                log.info("SQLException while closing18: {}", ex.toString());
+            }
+    }
+    
+    	return result;
+	}
+
+
+	public String getStatus(String id){
+        Connection connection = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        //String id = user.getUserId();
+        String result = null;
+        
+        try{
+            connection = this.getConnection();
+            stmt = connection.prepareStatement("select status from user_list where uid like '%'||?||'%'");
+            stmt.setString(1,id);
+            rs = stmt.executeQuery();
+            
+            if(rs.next())
+                result = rs.getString(1);
+        
+    } catch (Exception e){
+        log.info("SQLException while getting status: {}", e.toString());
+    } finally{
+        try{
+            if(rs.next())
+                rs.close();
+            if(stmt!=null)
+                stmt.close();
+            if(connection!=null)
+                connection.close();
+            }catch (Exception ex) {
+                log.info("SQLException while closing19: {}", ex.toString());
+            }
+    }
+    
+    	return result;
+	}
+
+
+	public int getAge(String id){
+        Connection connection = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        //String id = user.getUserId();
+        int result = 0;
+        
+        try{
+            connection = this.getConnection();
+            stmt = connection.prepareStatement("select age from user_list where uid like '%'||?||'%'");
+            stmt.setString(1,id);
+            rs = stmt.executeQuery();
+            
+            if(rs.next())
+                result = rs.getInt(1);
+        
+    } catch (Exception e){
+        log.info("SQLException while getting age: {}", e.toString());
+    } finally{
+        try{
+            if(rs.next())
+                rs.close();
+            if(stmt!=null)
+                stmt.close();
+            if(connection!=null)
+                connection.close();
+            }catch (Exception ex) {
+                log.info("SQLException while closing20: {}", ex.toString());
+            }
+    }
+    
+    	return result;
+	}
+
+
+	public float getTargetWeight(String id){
+        Connection connection = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        //String id = user.getUserId();
+        float result = 0;
+        
+        try{
+            connection = this.getConnection();
+            stmt = connection.prepareStatement("select target_weight from user_list where uid like '%'||?||'%'");
+            stmt.setString(1,id);
+            rs = stmt.executeQuery();
+            
+            if(rs.next())
+                result = rs.getFloat(1);
+        
+    } catch (Exception e){
+        log.info("SQLException while getting target weight: {}", e.toString());
+    } finally{
+        try{
+            if(rs.next())
+                rs.close();
+            if(stmt!=null)
+                stmt.close();
+            if(connection!=null)
+                connection.close();
+            }catch (Exception ex) {
+                log.info("SQLException while closing22: {}", ex.toString());
+            }
+    }
+    
+    	return result;
+	}
+
+
+	public float getHeight(String id){
+        Connection connection = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        //String id = user.getUserId();
+        float result = 0;
+        
+        try{
+            connection = this.getConnection();
+            stmt = connection.prepareStatement("select height from user_list where uid like '%'||?||'%'");
+            stmt.setString(1,id);
+            rs = stmt.executeQuery();
+            
+            if(rs.next())
+                result = rs.getFloat(1);
+        
+    } catch (Exception e){
+        log.info("SQLException while getting height: {}", e.toString());
+    } finally{
+        try{
+            if(rs.next())
+                rs.close();
+            if(stmt!=null)
+                stmt.close();
+            if(connection!=null)
+                connection.close();
+            }catch (Exception ex) {
+                log.info("SQLException while closing23: {}", ex.toString());
+            }
+    }
+    
+    	return result;
+	}
+
+
+	public int getTargetDay(String id){
+        Connection connection = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        //String id = user.getUserId();
+        int result = null;
+        
+        try{
+            connection = this.getConnection();
+            stmt = connection.prepareStatement("select days_for_target from user_list where uid like '%'||?||'%'");
+            stmt.setString(1,id);
+            rs = stmt.executeQuery();
+            
+            if(rs.next())
+                result = rs.getInt(1);
+        
+    } catch (Exception e){
+        log.info("SQLException while getting target day: {}", e.toString());
+    } finally{
+        try{
+            if(rs.next())
+                rs.close();
+            if(stmt!=null)
+                stmt.close();
+            if(connection!=null)
+                connection.close();
+            }catch (Exception ex) {
+                log.info("SQLException while closing24: {}", ex.toString());
+            }
+    }
+    
+    	return result;
+	}
+
+
+    public float getDailyIntake(String id, int date){
+    	ArrayList<String> x = this.searchRecord2(id,date);
+    	float result = Float.parseFloat(x.get(2));
+    	return result;
+    }
+
+
+    public float getIdealDailyIntake (String id){
+    	float weight = this.getWeight(id);
+        float lose_weight = weight * 30;
+        float maintain = weight*40;
+        float gain_weight = weight*50;
+        float daily_loss = 3500*3/7;
+        float change_per_day = (this.getTargetWeight(id) - weight)/this.getTargetDay(id);
+        float intake_calories = change_per_day*daily_loss;
+        float BMR=0;
+
+        String status = this.getStatus(id);
+        float height = this.getHeight(id);
+        int age = this.getAge(id);
+        
+        if (status.equalsIgnoreCase("male")){
+        	BMR = (float)88.362 + ( (float)13.397*weight) + ((float)4.799*height) - ((float)5.677*age);
+    
+            
+        }
+        else if (status.equalsIgnoreCase("female")){
+        	BMR = (float)447.593 + ( (float)9.247*weight) + ( (float)3.098*height) - ((float)4.33*age);
+        }
+        
+        
+        if (this.getTargetWeight(id)==0){
+            return BMR;
+        }
+        else
+            return BMR + intake_calories;
+    }
+
+
     
 }
