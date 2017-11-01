@@ -52,6 +52,7 @@ public class User {
         height = Float.parseFloat(list.get(4));
         weight=Float.parseFloat(list.get(5));
         goal = new Goal(list.get(6),list.get(7));
+        state = new String(list.get(8));
         
         try {
             
@@ -72,10 +73,11 @@ public class User {
     public String getUserStatus () { return status;}
     public String getState() { return state;}
     public void setState(String State){ state = State; }
-    public int getUseAge () { return age; }
+    public int getUserAge () { return age; }
     public float getUserWeight (){ return weight;}
     public float getUserHeight () { return height;}
     public Goal getUserGoal () { return goal;}
+    public String getUserState() {return state;}
     public void setWeight (String newWeight){
         
         try {

@@ -32,12 +32,13 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         String uid = user.getUserId();
         String name = user.getUserName();
         String status = user.getUserStatus();
-        int age = user.getUseAge();
+        int age = user.getUserAge();
         float weight = user.getUserWeight();
         //String purpose = user.getUserGoal().getPurpose();
         float target_weight = user.getUserGoal().getGoalTarget();
         float height = user.getUserHeight();
         int target_day = user.getUserGoal().getGoalDay();
+        String state = user.getUserState();
         
         
         try {
@@ -62,7 +63,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
             
             stmt = null;
             rs = null;
-            stmt = connection.prepareStatement("INSERT INTO user_list VALUES(?, ?, ?, ?, ?, ?, ?, ?)");
+            stmt = connection.prepareStatement("INSERT INTO user_list VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
             stmt.setString(1,uid);
             stmt.setString(2,name);
             stmt.setString(3,status);
@@ -72,6 +73,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
             stmt.setFloat(6,target_weight);
             stmt.setFloat(7,height);
             stmt.setInt(8,target_day);
+            stmt.setString(9,state);
             rs = stmt.executeQuery();
 //            if(rs.next()){
 //                x++;}
@@ -295,6 +297,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
                 float target_weight = rs.getFloat(6);
                 float height = rs.getFloat(7);
                 int target_day = rs.getInt(8);
+                String state = rs.getString(9);
                 
                 x.add(name);
                 x.add(status);
@@ -304,6 +307,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
                 x.add(Integer.toString(target_day));
                 x.add(Float.toString(target_weight));
                 //x.add(purpose);
+                x.add(state);
                 
                 
                 result = new User(x);
