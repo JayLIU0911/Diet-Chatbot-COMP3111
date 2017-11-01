@@ -60,10 +60,10 @@ public class Food{
         
         this.quality = dummy;
     }
-//    public Food(String name, float price){
-//        String[] x = null;
-//        this(name,price,x);
-//    }
+    public Food(String name, float price){
+        String[] x = null;
+        this(name,price,x);
+    }
     
     	public Food(String text) {
     		Food x = new Food(text,0,null);
