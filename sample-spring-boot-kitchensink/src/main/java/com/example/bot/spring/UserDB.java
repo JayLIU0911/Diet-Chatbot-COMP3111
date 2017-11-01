@@ -20,7 +20,7 @@ public class UserDB extends SQLDatabaseEngine{
    @Autowired
    private SQLDatabaseEngine databaseEngine;
 
-   private FoodDBAdapter foodAdapter = new FoodDBAdapter();
+   private FoodDB foodAdapter = new FoodDB();
     
     public boolean insert(String id){
     	Connection connection = null;
@@ -40,7 +40,7 @@ public class UserDB extends SQLDatabaseEngine{
             stmt = null;
             rs = null;
             String tableName = "user_" + id;
-            connection.prepareStatement("CREATE TABLE ? (date int, time int, food_intake varchar(200), weight float, energy float, sodium float, fatty_acids_total_saturated float, vegetable float, fruit float, grain float, meat float)");
+            connection.prepareStatement("CREATE TABLE ? (date int, time int, food_intake varchar(200), price float, weight float, energy float, sodium float, fatty_acids_total_saturated float)");
             stmt.setString(1,tableName);
             rs = stmt.executeQuery();
 
@@ -214,19 +214,21 @@ public class UserDB extends SQLDatabaseEngine{
         float fatty = foodAdapter.getQuality(text)[2];
         
         float weight = this.getWeight(id);
+        float price = foodAdapter.getPrice(text);
         //float weight = a.getUserWeight();
         
         try{
             connection = this.getConnection();
-            stmt = connection.prepareStatement("INSERT INTO ? (date, time, food_intake, weight, energy, sodium, fatty_acids_total_saturated) VALUES(?,?,?,?,?,?,?)");
+            stmt = connection.prepareStatement("INSERT INTO ? (date, time, food_intake, price, weight, energy, sodium, fatty_acids_total_saturated) VALUES(?,?,?,?,?,?,?,?)");
             stmt.setString(1,tableName);
             //stmt.setInt(2,date);
             //stmt.setInt(3,time);
             stmt.setString(4,intake);
-            stmt.setFloat(5,weight);
-            stmt.setFloat(6,energy);
-            stmt.setFloat(7,sodium);
-            stmt.setFloat(8,fatty);
+            stmt.setFloat(5,price);)
+            stmt.setFloat(6,weight);
+            stmt.setFloat(7,energy);
+            stmt.setFloat(8,sodium);
+            stmt.setFloat(9,fatty);
             rs = stmt.executeQuery();
             //if(rs.next())
                 result = true;
