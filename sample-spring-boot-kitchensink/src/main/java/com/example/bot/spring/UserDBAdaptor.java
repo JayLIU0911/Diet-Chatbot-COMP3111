@@ -19,6 +19,8 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
 	
    @Autowired
    private SQLDatabaseEngine databaseEngine;
+
+   private FoodDBAdapter foodAdapter = new FoodDBAdapter();
     
     public boolean insert(String id){
     	Connection connection = null;
@@ -191,8 +193,9 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         return result;
     }
     
-    
-    public boolean updateRecord(String id, String text)
+
+
+   public boolean updateRecord(String id, String text)
     {
         String tableName = "user_" + id;
         Connection connection = null;
@@ -200,17 +203,17 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         ResultSet rs = null;
         boolean result = false;
         
-        Food food = new Food(text);
+        //foodAdapter = new Food(text);
         
         //int date =
         //int time =
-        String intake = food.getName();
+        String intake = foodAdapter.getName(text);
         //float weight = food.getWeight();
-        float energy = food.getQuality()[0];
-        float sodium = food.getQuality()[1];
-        float fatty = food.getQuality()[2];
+        float energy = foodAdapter.getQuality(text)[0];
+        float sodium = foodAdapter.getQuality(text)[1];
+        float fatty = foodAdapter.getQuality(text)[2];
         
-        float weight = this.searchUserWeight(id);
+        float weight = this.getWeight(id);
         //float weight = a.getUserWeight();
         
         try{
@@ -244,7 +247,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         
         return result;
     }
-    
+
     
     public boolean updateWeight(String id, float weight)
     {
@@ -318,65 +321,65 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
     }
     
     
-    public float searchUserWeight(String id)
-    {
-        Connection connection = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
+    // public float searchUserWeight(String id)
+    // {
+    //     Connection connection = null;
+    //     PreparedStatement stmt = null;
+    //     ResultSet rs = null;
         
-        float result = 0;
+    //     float result = 0;
         
-        ArrayList<String> x = new ArrayList<String>();
+    //     ArrayList<String> x = new ArrayList<String>();
         
         
-        try{
-            connection = this.getConnection();
-            stmt = connection.prepareStatement("select weight from user_list where uid like '%'||?||'%'");
-            stmt.setString(1,id);
-            rs = stmt.executeQuery();
-            if(rs.next()){
-                //int id = rs.getInt(1);
-                //String name = rs.getString(2);
-                //String status = rs.getString(3);
-                //int age = rs.getInt(4);
-                //float weight = rs.getFloat(5);
-                //String purpose = rs.getString(6);
-                //float target_weight = rs.getFloat(6);
-                //float height = rs.getFloat(7);
-                //int target_day = rs.getInt(8);
-                //String state = rs.getString(9);
+    //     try{
+    //         connection = this.getConnection();
+    //         stmt = connection.prepareStatement("select weight from user_list where uid like '%'||?||'%'");
+    //         stmt.setString(1,id);
+    //         rs = stmt.executeQuery();
+    //         if(rs.next()){
+    //             //int id = rs.getInt(1);
+    //             //String name = rs.getString(2);
+    //             //String status = rs.getString(3);
+    //             //int age = rs.getInt(4);
+    //             //float weight = rs.getFloat(5);
+    //             //String purpose = rs.getString(6);
+    //             //float target_weight = rs.getFloat(6);
+    //             //float height = rs.getFloat(7);
+    //             //int target_day = rs.getInt(8);
+    //             //String state = rs.getString(9);
                 
-                // x.add(name);
-                // x.add(status);
-                // x.add(Integer.toString(age));
-                // x.add(Float.toString(weight));
-                // x.add(Float.toString(height));
-                // x.add(Integer.toString(target_day));
-                // x.add(Float.toString(target_weight));
-                //x.add(purpose);
-                //x.add(state);
+    //             // x.add(name);
+    //             // x.add(status);
+    //             // x.add(Integer.toString(age));
+    //             // x.add(Float.toString(weight));
+    //             // x.add(Float.toString(height));
+    //             // x.add(Integer.toString(target_day));
+    //             // x.add(Float.toString(target_weight));
+    //             //x.add(purpose);
+    //             //x.add(state);
                 
                 
-                result = rs.getFloat(1);
-            }
-        } catch (Exception e){
-            log.info("SQLException while searching user: {}", e.toString());
-        } finally{
-            try{
-                if(rs.next())
-                    rs.close();
-                if(stmt!=null)
-                    stmt.close();
-                if(connection!=null)
-                    connection.close();
-            }catch (Exception ex) {
-                log.info("SQLException while closing6: {}", ex.toString());
-            }
-        }
+    //             result = rs.getFloat(1);
+    //         }
+    //     } catch (Exception e){
+    //         log.info("SQLException while searching user: {}", e.toString());
+    //     } finally{
+    //         try{
+    //             if(rs.next())
+    //                 rs.close();
+    //             if(stmt!=null)
+    //                 stmt.close();
+    //             if(connection!=null)
+    //                 connection.close();
+    //         }catch (Exception ex) {
+    //             log.info("SQLException while closing6: {}", ex.toString());
+    //         }
+    //     }
         
-        return result;
+    //     return result;
         
-    }
+    // }
     
     
     public ArrayList<ArrayList<String>> searchRecord(String id)
@@ -1111,6 +1114,54 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
             return BMR + intake_calories;
     }
 
+
+	public String generateSummary(String id) {
+        
+        ArrayList<ArrayList<String>> Record = new ArrayList<ArrayList<String>>();
+        
+        int number_of_date = this.searchRecord(id).size();
+        
+        // for (int i = 0; i < number_of_date; i++){
+        //     ArrayList<String> Line = new ArrayList<String>();
+            
+        //     //for (String obj: this.searchRecord(id).get(i)){
+        //         Line.add(this.searchRecord(id).get(i));
+        //     //}
+        //     Record.add(Line);
+        // }
+
+        Record = this.searchRecord(id);
+        
+        
+        float[][] float_Record = new float[number_of_date][3];  // calories, sodium, fat
+        
+        for (int i=0;i<number_of_date;i++){
+            for(int j=1; j<3; j++){
+                float_Record[i][j] = Float.parseFloat(Record.get(i).get(j+2));
+            }
+        }
+        
+        float[] overall = {0,0,0} ; // total calories, sodium, fat
+        for (int i=0; i<number_of_date; i++){
+            for (int j=0; j<3; j++){
+                overall[j] += float_Record[i][j];
+            }
+        }
+        
+        String output = "So far, you have consumed " + overall[0] + " calories, " + overall[1] + " sodium and " + overall[2] + "fatty acid. ";
+        
+        return output;
+        
+    }
+
+
+    public File generateWeeklySummary (String id) {
+        ArrayList<ArrayList<String>> Record = new ArrayList<ArrayList<String>>();
+        Record = this.searchRecord(id);
+
+        String[][] result = New String[7][3];
+
+    }
 
     
 }
