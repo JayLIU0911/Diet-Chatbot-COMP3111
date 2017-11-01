@@ -6,6 +6,36 @@ public class Menu{
     private Food[] food;
     
     public Menu(String txt){
+        /*
+         BufferedReader reader = null;
+         try {
+         URL url = new URL(urlString);
+         reader = new BufferedReader(new InputStreamReader(url.openStream()));
+         StringBuffer buffer = new StringBuffer();
+         int read;
+         char[] chars = new char[1024];
+         while ((read = reader.read(chars)) != -1)
+         buffer.append(chars, 0, read);
+         
+         } finally {
+         if (reader != null)
+         reader.close();
+         }
+         
+         JSONObject obj = new JSONObject(buffer.toString());
+         
+         String name = obj.getString("name");
+         
+         int price = obj.getInt("price");
+         
+         JSONArray arr = obj.getJSONArray("ingredients");
+         
+         String[] ingredients = new String[arr.length()];
+         
+         for (int i = 0; i < arr.length(); i++)
+         ingredients[i]=arr[i];
+         
+         */
         int items = 0;
         List<String> menu = new ArrayList<>();
         try (Scanner scanner = new Scanner(txt)){
