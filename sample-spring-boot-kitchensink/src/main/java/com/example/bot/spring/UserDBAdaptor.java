@@ -20,7 +20,7 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
    @Autowired
    private SQLDatabaseEngine databaseEngine;
 
-   private FoodDBAdapter foodAdapter = new FoodDBAdapter();
+   private FoodDBAdaptor foodAdapter = new FoodDBAdaptor();
     
     public boolean insert(String id){
     	Connection connection = null;
@@ -1152,15 +1152,6 @@ public class UserDBAdaptor extends SQLDatabaseEngine{
         
         return output;
         
-    }
-
-
-    public File generateWeeklySummary (String id) {
-        ArrayList<ArrayList<String>> Record = new ArrayList<ArrayList<String>>();
-        Record = this.searchRecord(id);
-
-        String[][] result = New String[7][3];
-
     }
 
     
