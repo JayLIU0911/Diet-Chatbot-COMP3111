@@ -59,10 +59,11 @@ public class Menu{
     
     public Food findOptimal(User user){
         int index = 0;
+     
         float intake = user.getIdealDailyIntake ();
         intake = intake /3;
         float diff = intake;
-        for (int i = 0l; i < food.length; i++){
+        for (int i = 0; i < food.length; i++){
             float difff = food[i].getQuality()[0] - intake;
             float abs = Math.abs(difff);
             if (abs < diff){
@@ -70,6 +71,7 @@ public class Menu{
                 index = i;
             }
         }
+        
         return food[index];
     }
 }

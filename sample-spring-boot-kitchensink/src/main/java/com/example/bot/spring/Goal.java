@@ -13,10 +13,10 @@ public class Goal {
     //private String purpose;
     private float target;
     
-    public Goal (int Day, float Target){
-        day = Day;
-        target = Target;
-        //purpose = new String(Purpose);
+    public Goal (String Day, String Target){
+        day = Integer.parseInt(Day);
+        target = Float.parseFloat(Target);
+        //purpose =loat new String(Purpose);
     }
     
     public int getGoalDay () {

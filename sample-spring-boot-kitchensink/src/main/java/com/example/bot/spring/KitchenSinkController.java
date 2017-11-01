@@ -97,7 +97,7 @@ public class KitchenSinkController {
 
 	// modification starts
 	private Queue< String > contextQ;
-	private String state;
+	private String state = "";
 	private ArrayList< String > userInit;
 	private ArrayList< User > userList = new ArrayList< User >();
 	private Menu menu;
@@ -190,22 +190,26 @@ public class KitchenSinkController {
 		userInit = new ArrayList< String >();
 		userInit.add(event.getSource().getUserId());
 		String replyToken = event.getReplyToken();
+		
+		state = "gender";
+		String message = new String("Welcome! This is a helpful chatbot. We would like to collect your personal information. May I know your name?");
+		this.replyText(replyToken, message);
 
-		String imageUrl = createUri("/static/buttons/1040.jpg");
-		CarouselTemplate carouselTemplate = new CarouselTemplate(
-						Arrays.asList(
-										new CarouselColumn(imageUrl, "Welcome! This is a helpful chatbot. We would like to collect your personal information", "", Arrays.asList(
-														new PostbackAction("name", "name"),
-														new PostbackAction("gender", "gender"),
-														new PostbackAction("age", "age"),
-														new PostbackAction("height", "height"),
-														new PostbackAction("weight", "weight"),
-														new PostbackAction("target weight", "target weight"),
-														new PostbackAction("target time", "target time")
-										))
-						));
-		TemplateMessage templateMessage = new TemplateMessage("welcome", carouselTemplate);
-		this.reply(replyToken, templateMessage);
+//		String imageUrl = createUri("/static/buttons/1040.jpg");
+//		CarouselTemplate carouselTemplate = new CarouselTemplate(
+//						Arrays.asList(
+//										new CarouselColumn(imageUrl, "Welcome! This is a helpful chatbot. We would like to collect your personal information", "", Arrays.asList(
+//														new PostbackAction("name", "name"),
+//														new PostbackAction("gender", "gender"),
+//														new PostbackAction("age", "age"),
+//														new PostbackAction("height", "height"),
+//														new PostbackAction("weight", "weight"),
+//														new PostbackAction("target weight", "target weight"),
+//														new PostbackAction("target time", "target time")
+//										))
+//						));
+//		TemplateMessage templateMessage = new TemplateMessage("welcome", carouselTemplate);
+//		this.reply(replyToken, templateMessage);
 	}
 
 	@EventMapping
@@ -220,38 +224,6 @@ public class KitchenSinkController {
 			//this.replyText(replyToken, "Got postback " + event.getPostbackContent().getData());
 			String postback = event.getPostbackContent().getData();
 	    switch (postback) {
-					// state = welcome
-	        case "name": {
-						state = "welcome";
-	        	this.replyText(replyToken, "What is your name?");
-	        	break;
-	        }
-	        case "gender": {
-	        	this.replyText(replyToken, "Please input your gender(male/female)");
-	        	break;
-	        }
-	        case "age": {
-	        	this.replyText(replyToken, "How old are you?");
-	        	break;
-	        }
-	        case "height": {
-	        	this.replyText(replyToken, "Please input your height(cm)");
-	        	break;
-	        }
-	        case "weight": {
-	        	this.replyText(replyToken, "Please input your weight(kg)");
-	        	break;
-	        }
-	        case "target weight": {
-	        	this.replyText(replyToken, "Can you tell me your target weight?(kg)");
-	        	break;
-	        }
-	        case "target time": {
-	        	this.replyText(replyToken, "How long do you want to achieve your goal?(day)");
-	        	state=null;
-	        	break;
-	        }
-
 					// state = Update daily record
 	        case "update weight": {
 						state = "Update daily record";
@@ -265,7 +237,7 @@ public class KitchenSinkController {
 	        }
 
 					// state = null
-	        case "weekly progress chart": {
+	        case "weekly progress": {
 						String id = event.getSource().getUserId();
 						for (User u : userList) {
 							if (u.getUserId().equals(id)) {
@@ -276,7 +248,7 @@ public class KitchenSinkController {
 						}
 						break;
 	        }
-	        case "show Dieting Summary": {
+	        case "Dieting Summary": {
 						String id = event.getSource().getUserId();
 						for (User u : userList) {
 							if (u.getUserId().equals(id)) {
@@ -355,34 +327,55 @@ public class KitchenSinkController {
         String text = content.getText();
 
         log.info("Got text message from {}: {}", replyToken, text);
-				String id = event.getSource().getUserId();
+		String id = event.getSource().getUserId();
 
         switch (state) {
-        case "welcome": {
+        case "gender": {
+        	this.replyText(replyToken, "Please input your gender(male/female)");
+        	userInit.add(id);
         	userInit.add(text);
-
-					if (state.equals("welcome")) {
-						String imageUrl = createUri("/static/buttons/1040.jpg");
-						CarouselTemplate carouselTemplate = new CarouselTemplate(
-										Arrays.asList(
-														new CarouselColumn(imageUrl, "Welcome! This is a helpful chatbot. We would like to collect your personal information", "", Arrays.asList(
-																		new PostbackAction("name", "name"),
-																		new PostbackAction("gender", "gender"),
-																		new PostbackAction("age", "age"),
-																		new PostbackAction("height", "height"),
-																		new PostbackAction("weight", "weight"),
-																		new PostbackAction("target weight", "target weight"),
-																		new PostbackAction("target time", "target time")
-														))
-										));
-						TemplateMessage templateMessage = new TemplateMessage("welcome", carouselTemplate);
-						this.reply(replyToken, templateMessage);
-					} else {
-						userList.add(new User(userInit));
-						userInit = null;
-					}
-					break;
+        	state = "age";
+        	break;
         }
+        case "age": {
+        	this.replyText(replyToken, "How old are you?");
+        	userInit.add(text);
+        	state = "height";
+        	break;
+        }
+        case "height": {
+        	this.replyText(replyToken, "Please input your height(cm)");
+        	userInit.add(text);
+        	state = "weight";
+        	break;
+        }
+        case "weight": {
+        	this.replyText(replyToken, "Please input your weight(kg)");
+        	userInit.add(text);
+        	state = "target weight";
+        	break;
+        }
+        case "target weight": {
+        	this.replyText(replyToken, "Can you tell me your target weight?(kg)");
+        	userInit.add(text);
+        	state = "target time";
+        	break;
+        }
+        case "target time": {
+        	this.replyText(replyToken, "How long do you want to achieve your goal?(day)");
+        	userInit.add(text);
+        	state = "userInit";
+        	break;
+        }
+        case "userInit": {
+        	this.replyText(replyToken, "Great! Nice to meet you!");
+        	userInit.add(text);
+        	userList.add(new User(userInit));
+			userInit = null;
+        	state = null;
+        	break;
+        }
+        
         case "Update daily record": {
 					boolean success = false;
 					try {
@@ -419,7 +412,9 @@ public class KitchenSinkController {
         }
 				case "Get recommendation from menu": {
 					boolean success = false;
+//					this.replyText(replyToken, "Get recommendation from text menu failed1");
 					menu = new Menu(text);
+					this.replyText(replyToken, "Get recommendation from text menu failed2");
 					for (User u : userList) {
 						if (u.getUserId().equals(id)) {
 							this.replyText(replyToken, menu.findOptimal(u).getName());
@@ -435,15 +430,17 @@ public class KitchenSinkController {
 						String imageUrl = createUri("/static/buttons/1040.jpg");
 						CarouselTemplate carouselTemplate = new CarouselTemplate(
 										Arrays.asList(
-														new CarouselColumn(imageUrl, "Update daily record", "", Arrays.asList(
+														new CarouselColumn(imageUrl, "Update daily record", "Update daily record", Arrays.asList(
 																		new PostbackAction("weight", "update weight"),
+																		new PostbackAction("food", "update food"),
 																		new PostbackAction("food", "update food")
 														)),
-														new CarouselColumn(imageUrl, "Progress", "", Arrays.asList(
-																		new PostbackAction("generate weekly progress chart", "weekly progress chart"),
-																		new PostbackAction("show Dieting Summary", "show Dieting Summary")
+														new CarouselColumn(imageUrl, "Progress", "Progress", Arrays.asList(
+																		new PostbackAction("weekly progress", "weekly progress"),
+																		new PostbackAction("dieting summary", "dieting summary"),
+																		new PostbackAction("dieting summary", "dieting summary")
 														)),
-														new CarouselColumn(imageUrl, "Get recommendation from menu", "", Arrays.asList(
+														new CarouselColumn(imageUrl, "Get recommendation from menu", "Get recommendation from menu", Arrays.asList(
 																		new PostbackAction("text menu", "text menu"),
 																		new PostbackAction("json menu", "json menu"),
 																		new PostbackAction("jpeg menu", "jpeg menu")
