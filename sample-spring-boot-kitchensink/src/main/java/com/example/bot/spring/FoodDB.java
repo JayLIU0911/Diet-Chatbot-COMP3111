@@ -404,7 +404,7 @@ public class FoodDB extends SQLDatabaseEngine{
             String pre = "SELECT tips FROM tips WHERE id = '"+ n +"'";
             stmt = connection.prepareStatement(pre);
             rs = stmt.executeQuery();
-            if(rs!=null){
+            if(!rs.next()){
             	result += rs.getString(1);
             }
         }catch(Exception e){
