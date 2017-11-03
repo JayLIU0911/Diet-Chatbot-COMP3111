@@ -9,6 +9,8 @@ import java.sql.*;
 import java.net.URISyntaxException;
 import java.net.URI;
 import java.util.*;
+import java.util.Date;
+import java.text.*;
 
 //executeUpdate  rs=   ?   create a string stmt.exe(string )  
 
@@ -332,7 +334,7 @@ public class FoodDB extends SQLDatabaseEngine{
     	float[] qua = getQuality(name);
     	result+= "energy: "+ qua[0] + "\n";
     	result+= "sodium: "+ qua[1] + "\n";
-    	result+= "fatty acid: "+ qua[2] + "\n\n";
+    	result+= "fatty acid: "+ qua[2];
     	return result;
     }
 
@@ -367,6 +369,7 @@ public class FoodDB extends SQLDatabaseEngine{
 			Iterator<String> itr = foods.iterator();
 			while (itr.hasNext()) {
 				result += checkNutrition(itr.next());
+				result += "\n";
 				log.info("iterator : {}", result);
 			}
 
@@ -402,10 +405,13 @@ public class FoodDB extends SQLDatabaseEngine{
 		try{
             connection = this.getConnection();
             String pre = "SELECT tips FROM tips WHERE id = '"+ n +"'";
+            //log.info("23333333: {}",stmt.toString());
             stmt = connection.prepareStatement(pre);
+            log.info("23333333: {}",stmt.toString());
             rs = stmt.executeQuery();
-            if(rs!=null){
+            if(rs.next()){
             	result += rs.getString(1);
+            	log.info("result= {}",result);
             }
         }catch(Exception e){
             	log.info("SQL Exception in tips {}",e.toString());
@@ -421,21 +427,28 @@ public class FoodDB extends SQLDatabaseEngine{
 		return result; 	
     }
 
-
-    String checkAppropriate(String id, String name){
+    public String checkAppropriate(String id, String name){
     	UserDB user = new UserDB();
     	int ideal = user.getIdealDailyIntake(id);
-    	int energy = (int)getQuality(name)[0];
+    	float energy = getQuality(name)[0];
     	Date time = new Date();
     	SimpleDateFormat dateformat = new SimpleDateFormat("dd/MM/yyyy");
     	String search_date = dateformat.format(time);
+
+    	log.info("in appro: {}",search_date);
+    	
     	ArrayList<String> x = user.searchRecord2(id,search_date);
+    	if(x==null)
+    		return "This food is appropriate for you to have today, since it is not excceed the range of ideal intake.";
+
     	float y = Float.parseFloat(x.get(2));
 
+    	log.info("in appro2: {}",y);
+
     	if((y+energy)>=ideal)
-    		return "This food is not appropriate for you to have today, since it is out of range of your today's ideal intake."
+    		return "This food is not appropriate for you to have today, since it is out of range of your today's ideal intake.";
     	else
-    		return "This food is appropriate for you to have today, since it is not excceed the range of ideal intake."
+    		return "This food is appropriate for you to have today, since it is not excceed the range of ideal intake.";
 
     }
     
