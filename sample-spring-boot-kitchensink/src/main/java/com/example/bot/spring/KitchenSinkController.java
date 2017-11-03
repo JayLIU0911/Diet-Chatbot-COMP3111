@@ -198,7 +198,12 @@ public class KitchenSinkController {
 			String[] postbackArr = postback.split(" ");
 	    switch (postbackArr[0]) {
 					case "update": {
-						this.replyText(replyToken, "Please input your " + postbackArr[1]);
+						switch (postbackArr[1]) {
+							case "food": { this.replyText(replyToken, "What did you eat?"); break; }
+							case "weight": { this.replyText(replyToken, "What is your current weight(kg)? (Please input a number)"); break; }
+							case "target_weight": { this.replyText(replyToken, "What is your new target weight(kg)? (Please input a number)"); break; }
+							default: { this.replyText(replyToken, "Wrong postback: " + postback); userDB.setUser(userID, "state", "0"); break; }
+						}
 						userDB.setUser(userID, "state", postback);
 						break;
 					}
@@ -231,33 +236,48 @@ public class KitchenSinkController {
 								this.replyText(replyToken, userDB.generateSummary(userID));
 								break;
 							}
+							default: {
+								this.replyText(replyToken, "Wrong postback: " + postback);
+								userDB.setUser(userID, "state", "0");
+			        	break;
+							}
 						}
 						break;
 					}
 					case "check": {
 						switch (postbackArr[1]) {
-							case "nutrition": {
+							case "nutrition":
+							case "appropriate": {
 								userDB.setUser(userID, "state", postback);
-								this.replyText(replyToken, "Please input food name");
+								this.replyText(replyToken, "Please input a food name");
 								break;
 							}
-							case "dailyProgress": {
-								float calories = userDB.getDailyIntake(userID, new Date());
-								float idealCalories = userDB.getIdealDailyIntake(userID);
-								if (calories < idealCalories)
-									this.replyText(replyToken, "According to your personal information and your long-term goal. We suggest you to consume " + idealCalories + " cal today. You have already consumed " + calories
-										+ " calories and you can consume " + (idealCalories - calories) + " more cal.");
-								else
-									this.replyText(replyToken, "According to your personal information and your long-term goal. We suggest you to consume " + idealCalories + " cal today. You have already consumed " + calories
-										+ " calories and you can't consume anymore.");
+							// case "dailyProgress": {
+							// 	float calories = userDB.getDailyIntake(userID, new Date());
+							// 	float idealCalories = userDB.getIdealDailyIntake(userID);
+							// 	if (calories < idealCalories)
+							// 		this.replyText(replyToken, "According to your personal information and your long-term goal. We suggest you to consume " + idealCalories + " cal today. You have already consumed " + calories
+							// 			+ " calories and you can consume " + (idealCalories - calories) + " more cal.");
+							// 	else
+							// 		this.replyText(replyToken, "According to your personal information and your long-term goal. We suggest you to consume " + idealCalories + " cal today. You have already consumed " + calories
+							// 			+ " calories and you can't consume anymore.");
+							// 	break;
+							// }
+							case "tips": {
+								this.replyText(replyToken, foodDB.getTip());
 								break;
+							}
+							default: {
+								this.replyText(replyToken, "Wrong postback: " + postback);
+								userDB.setUser(userID, "state", "0");
+			        	break;
 							}
 						}
-
 						break;
 					}
 	        default:{
 	        	this.replyText(replyToken, "Wrong postback: " + postback);
+						userDB.setUser(userID, "state", "0");
 	        	break;
 	        }
 		}
@@ -312,14 +332,22 @@ public class KitchenSinkController {
 				}
 			}
 			if (i == setOrder.length - 1) {
-				this.replyText(replyToken, "Great! Nice to meet you!");
+				this.replyText(replyToken, "Great! Nice to meet you! You can input anything at any time to wake me up :D");
 				userDB.setUser(userID, "state", "0");
 			}	else {
-				this.replyText(replyToken, "Please input your " + stateArr[1]);
+				switch (stateArr[1]) { // {"name", "status", "age", "weight", "target_weight", "height", "days_for_target"}
+					case "status": { this.replyText(replyToken, "What is your gender(male/female)?"); break; }
+					case "age": { this.replyText(replyToken, "How old are you? (Please input a number)"); break; }
+					case "weight": { this.replyText(replyToken, "What is your weight(kg)? (Please input a number)"); break; }
+					case "target_weight": { this.replyText(replyToken, "What is your target weight(kg)? (Please input a number)"); break; }
+					case "height": { this.replyText(replyToken, "What is your height(cm)? (Please input a number)"); break; }
+					case "days_for_target": { this.replyText(replyToken, "How long do you plan to achieve your goal? (Please input a day number)"); break; }
+					default: { this.replyText(replyToken, "Wrong state in handleSetState(): " + String.join(" ", stateArr)); userDB.setUser(userID, "state", "0"); break; }
+				}
 				userDB.setUser(userID, "state", String.join(" ", stateArr));
 			}
 		} else
-			this.replyText(replyToken, "Set " + stateArr[1] + " failed");
+			this.replyText(replyToken, "Set " + stateArr[1] + " failed. Please try to input again :(");
 	}
 
 	private void handleUpdateState(String replyToken, String userID, String[] stateArr, String input) throws Exception {
@@ -327,10 +355,10 @@ public class KitchenSinkController {
 			case "weight": {
 				if (userDB.setUser(userID, stateArr[1], input)) {
 					this.replyText(replyToken, "Update " + stateArr[1] + " succeeded");
-					userDB.setUser(userID, "state", "0");
 				} else {
 					this.replyText(replyToken, "Update " + stateArr[1] + " failed");
 				}
+				userDB.setUser(userID, "state", "0");
 				break;
 			}
 			case "food": {
@@ -339,16 +367,32 @@ public class KitchenSinkController {
 					userDB.setUser(userID, "state", "0");
 				} else {
 					this.replyText(replyToken, "Update " + stateArr[1] + " failed");
+					userDB.setUser(userID, "state", "0");
 				}
 				break;
 			}
-			case "goal(target_weight,days_for_target)": {
-				if (userDB.setUser(userID, "target_weight", input.split(",")[0]) && userDB.setUser(userID, "days_for_target", input.split(",")[1])) {
-					this.replyText(replyToken, "Update " + stateArr[1] + " succeeded");
+			case "target_weight": {
+				if (userDB.setUser(userID, "target_weight", input)) {
+					this.replyText(replyToken, "How long do you plan to achieve your new goal? (Please input a day number)");
+					userDB.setUser(userID, "state", "update days_for_target");
+				} else {
 					userDB.setUser(userID, "state", "0");
+					this.replyText(replyToken, "Update " + stateArr[1] + " failed");
+				}
+				break;
+			}
+			case "days_for_target": {
+				if (userDB.setUser(userID, "days_for_target", input)) {
+					this.replyText(replyToken, "Update goal succeeded");
 				} else {
 					this.replyText(replyToken, "Update " + stateArr[1] + " failed");
 				}
+				userDB.setUser(userID, "state", "0");
+				break;
+			}
+			default: {
+				this.replyText(replyToken, "Wrong state in handleUpdateState(): " + String.join(" ", stateArr));
+				userDB.setUser(userID, "state", "0");
 				break;
 			}
 		}
@@ -391,21 +435,26 @@ public class KitchenSinkController {
 						break;
 					}
 					case "check": {
-						this.replyText(replyToken, foodDB.checkNutrition(text));
+						switch (stateArr[1]) {
+							case "nutrition": { this.replyText(replyToken, foodDB.checkNutrition(text)); break; }
+							case "appropriate": { this.replyText(replyToken, foodDB.checkAppropriate(userID, text)); break; }
+							default: { this.replyText(replyToken, "Wrong state in handleTextContent(): " + state); break; }
+						}
 						userDB.setUser(userID, "state", "0");
 						break;
 					}
 					case "0": {
-						String updateImage = createUri("/image/update.jpg");
-						String recommendationImage = createUri("/image/recommendation.jpg");
-						String summaryImage = createUri("/image/summary.jpg");
-						String checkImage = createUri("/image/check.jpg");
+						String updateImage = createUri("/static/buttons/update.jpg");
+						String recommendationImage = createUri("/static/buttons/recommend.jpg");
+						String summaryImage = createUri("/static/buttons/summary.jpg");
+						String checkImage = createUri("/static/buttons/check.jpg");
+						String imageUrl = createUri("/static/buttons/1040.jpg");
 						CarouselTemplate carouselTemplate = new CarouselTemplate(
 										Arrays.asList(
 														new CarouselColumn(updateImage, "Update", "update", Arrays.asList(
 																		new PostbackAction("weight", "update weight"),
 																		new PostbackAction("food", "update food"),
-																		new PostbackAction("goal", "update goal(target_weight,days_for_target)")
+																		new PostbackAction("goal", "update target_weight")
 														)),
 														new CarouselColumn(recommendationImage, "Get recommendation from menu", "get recommendation from menu", Arrays.asList(
 																		new PostbackAction("text menu", "menu text"),
@@ -419,8 +468,8 @@ public class KitchenSinkController {
 														)),
 														new CarouselColumn(checkImage, "Check", "check", Arrays.asList(
 																		new PostbackAction("check nutrition", "check nutrition"),
-																		new PostbackAction("check daily progress", "check dailyProgress"),
-																		new PostbackAction("check nutrition", "check nutrition")
+																		new PostbackAction("should I eat this?", "check appropriate"),
+																		new PostbackAction("healthy tips", "check tips")
 														))
 										));
 						TemplateMessage templateMessage = new TemplateMessage("general options", carouselTemplate);
@@ -428,7 +477,9 @@ public class KitchenSinkController {
 						break;
 				}
 				default: {
-					this.replyText(replyToken, "Wrong state: " + String.join(" ", stateArr));
+					this.replyText(replyToken, "Wrong state in handleTextContent(): " + state);
+					userDB.setUser(userID, "state", "0");
+					break;
 				}
 			}
 
