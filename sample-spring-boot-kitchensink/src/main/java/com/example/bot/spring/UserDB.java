@@ -567,7 +567,7 @@ public class UserDB extends SQLDatabaseEngine{
 
 
         String targetWeightString = new String(this.getUser(id,"target_weight"));
-        if (targetWeightString.equalsIgnoreCase("no")) return (int)BMR;
+        if (targetWeightString.equalsIgnoreCase("no")) return (int)(BMR*(float)1.375);
 
             else{
 
@@ -579,7 +579,7 @@ public class UserDB extends SQLDatabaseEngine{
         float daily_loss = 3500*3/7;
         float change_per_day = ( targetWeight - weight)/ dayForTarget;
         float intake_calories = change_per_day*daily_loss;
-        return (int)(BMR + intake_calories);
+        return (int)(BMR*(float)1.375 + intake_calories);
     }
 
 
@@ -662,15 +662,11 @@ public class UserDB extends SQLDatabaseEngine{
                 sum[j] += Float.parseFloat(Record.get(number_of_date-i-1).get(j+1));
             }
         }
-        String comparison;
-        if (sum[0]/date_for_summary > getIdealDailyIntake(id) ){
-            comparison = "larger than the standard daily calorie consumption, "+ getIdealDailyIntake(id) + "\n";
-        }
-        else {
-            comparison = "smaller than the standard daily calorie consumption, "+ getIdealDailyIntake(id) + "\n";
-        }
+       
+        
+        
         String output = "In the past " + date_for_summary + " days, your daily energy intake and average weight are: \n" + "Energy: " +(int)(sum[0]/date_for_summary) +
-        "kcal/day,\n"+ comparison + "Average Weight: " + (int)(sum[1]/date_for_summary) + "kg. \n" + "The detailed daily record of weight and energy intake: \n";
+        "kcal/day,\n"+ "the standard daily calorie consumption: "+ getIdealDailyIntake(id) + "kcal/day\n" + "Average Weight: " + (int)(sum[1]/date_for_summary) + "kg. \n\n" + "The detailed daily record of weight and energy intake: \n";
         
         
         
@@ -678,7 +674,7 @@ public class UserDB extends SQLDatabaseEngine{
         
         
         for ( int i=0; i<date_for_summary; i++){
-            output =output + Integer.parseInt(Record.get(number_of_date-i-1).get(0))+": \n"+"Energy: "+Integer.parseInt(Record.get(number_of_date-i-1).get(2))+"kcal \n"+"Weight: "+Integer.parseInt(Record.get(number_of_date-i-1).get(1))+"kg\n";
+            output =output + Record.get(number_of_date-i-1).get(0) +": \n"+"Energy: "+Record.get(number_of_date-i-1).get(2)+"kcal \n"+"Weight: "+Record.get(number_of_date-i-1).get(1)+"kg\n";
         }
         
         if (date_for_summary == 0) output = "You have not input any data yet!";

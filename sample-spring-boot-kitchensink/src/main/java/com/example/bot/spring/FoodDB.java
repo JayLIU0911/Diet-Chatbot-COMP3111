@@ -332,9 +332,13 @@ public class FoodDB extends SQLDatabaseEngine{
     public String checkNutrition(String name){
     	String result = "The nutrition for " + name + " is \n";
     	float[] qua = getQuality(name);
-    	result+= "energy: "+ qua[0] + "\n";
-    	result+= "sodium: "+ qua[1] + "\n";
-    	result+= "fatty acid: "+ qua[2];
+    	String[] quas = new String(3);
+    	for (int i = 0; i < qua.length; ++i) {
+    		quas[i] = String.format("%.1f", qua[i]);
+    	}
+    	result+= "energy: "+ quas[0] + "Kcal\n";
+    	result+= "sodium: "+ quas[1] + "mg\n";
+    	result+= "fatty acid: "+ quas[2] +"g";
     	return result;
     }
 
@@ -439,16 +443,16 @@ public class FoodDB extends SQLDatabaseEngine{
     	
     	ArrayList<String> x = user.searchRecord2(id,search_date);
     	if(x==null)
-    		return "This food is appropriate for you to have today, since it is not excceed the range of ideal intake.";
+    		return "It is totally fine that you have this today.";
 
     	float y = Float.parseFloat(x.get(2));
 
     	log.info("in appro2: {}",y);
 
     	if((y+energy)>=ideal)
-    		return "This food is not appropriate for you to have today, since it is out of range of your today's ideal intake.";
+    		return "This food is not appropriate for you to have today, since it will exceed your ideal intake.";
     	else
-    		return "This food is appropriate for you to have today, since it is not excceed the range of ideal intake.";
+    		return "It is totally fine that you have this today.";
 
     }
     
