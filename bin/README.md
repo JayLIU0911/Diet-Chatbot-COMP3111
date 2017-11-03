@@ -1,122 +1,34 @@
-# Lab 6: Refactoring
+# 2017F COMP3111/3111H Software Engineering Project github 
 
-The aim of this lab is to get some hands-on experience with refactoring.
+This is actually part of the course website of Hong Kong University of Science and Technology (HKUST) software enginnering course. The ultimate goal for this cohort students is to develop a chatbot (chatting robot) running on the instance messager LINE. 
 
-Refactoring is the process of changing the internal structure of our code to
-make it more comprehensible without changing its external behavior. We do this
-because we're not the sole consumers of the code we write: we owe it to our
-colleagues (our teammates in this case) and our future selves to make our code
-easy to change and understand!
 
-## A simple transcript printing program
+## What is this?
 
-For this lab, we're going to be dealing with a simple transcript printing
-program. The Java file containing all the classes can be found
-[here](RefactoringLab.java). It should run using your standard fare Java IDEs
-or if you compile and run the file.
+This is a repository forked from https://github.com/line/line-bot-sdk-java. You should use this as a starting point to complete your lab.
 
-The `generateTranscriptForWidth` is responsible for printing transcripts that
-look like this:
+# Offline Tutorials
 
-```
-                    John Chan
-                     21039408
-                      2017F
+You need to have some backgrounds on Java/Database/git in order to complete the labs. Unfortunately it is unaffortable to cover them in the lecture or at the lab. Some [offline tutorials](./docs/tutorial/) are available for bridging the gap.
 
-COMP3111 Software Engineering 4.00 4
-COMP3311 Database Management Systems 3.30 3
 
-Semester GPA: 3.70
-```
+# Labs Schedule
 
-Then again, we might have specific column limits for our printing, so we can
-specify these in our program as well. For example, assuming a column limit 20:
+| Lab | Week | Topic | Status |
+|-----|------|-------|------|
+|     | 1  | No lab at week 1 |  |
+| 1   | 2  | [Chatbot Deployment](./lab1.md) |  Released |
+| 2   | 3    | [Chatbot with static file Database](./lab2.md)       |  Released |
+| 3   | 4    | [Chatbot with SQL Database](./lab3.md)|  Released |
+|     | 5    | No lab at week 5 | |
+| 4   | 6    | [UML](./lab_UML.pdf) | [Solution](./uml_lab_sample_answer.pdf) |
+|     | 7    | No lab at week 7 | |
+| 5   | 8    | [Design Pattern](./lab6/lab_design_pattern.pdf) |
+| 6   | 9    | [Refactoring](./refactoring-lab/README.md) |
 
-```
-     John Chan
-      21039408
-       2017F
 
-COMP3111
-    Software Engineering
-    4.00 4
-COMP3311
-    Database Management Systems
-    3.30 3
+# How does the Lab works
 
-Semester GPA: 3.70
-```
+2 points are allocated for each lab. You attendance at lab worth one point and completing the lab worth another point. All labs are full house and it is unlikely you can change your lab section. Please seek approval from the instructor if you need to swap your lab. You may complete the lab work at home and come to the lab for demo. 
 
-Notice that the lines now "wrap" because the class names don't fit on a single
-line with their codes.
 
-Of course, before we print the transcripts, we might want to perform a
-"dry run" to figure out how large our transcript will turn out. To enable this,
-we also implement a `transcriptHeightForWidth` method that determines the
-number of lines for a transcript.
-
-## Your task
-
-We're going to try poke and prod at the transcript program, see where the
-design falters, and make **incremental** changes to make the program better.
-Some patterns can be found at
-Martin Fowler's [excellent refactoring page](https://refactoring.com/catalog/),
-but I would suggest first trying to identify *why* the code isn't so good and
-suggesting simple ways to fix these problems. For example, pulling out
-literals as member variables or blocks of code as methods can be excellent
-ways to improve your code.
-
-### Task 1: Use dashes ("-") instead of spaces (" ") to center-align the header
-
-```
------John Chan------
-------21039408------
--------2017F--------
-
-COMP3111
-    Software Engineering
-    4.00 4
-COMP3311
-    Database Management Systems
-    3.30 3
-
-Semester GPA: 3.70
-```
-
-*   Was anything lacking in the code? Did you find yourself repeating
-yourself? Was the code easy to maintain? (These problems are often
-referred to as "code smells").
-*   Propose and implement a fix to the problem. Why is it better?
-
-### Task 2: Use 2 spaces for indentations, instead of 4.
-
-```
------John Chan------
-------21039408------
--------2017F--------
-
-COMP3111
-  Software Engineering
-  4.00 4
-COMP3311
-  Database Management Systems
-  3.30 3
-
-Semester GPA: 3.70
-```
-
-*   Did you remember to also update the `transcriptHeightForWidth` method?
-*   What code smells did you encounter here?
-*   Propose and implement a fix to the problem. Why is it better?
-
-### Task 3: Consolidate the `transcriptHeightForWidth` and `generateTranscriptforWidth` methods
-
-As one might expect, the `transcriptHeightForWidth` and
-`generateTranscriptForWidth` classes are structurally similar - after all,
-they're describing the same transcript structure.
-
-*   Propose and implement some changes that consolidate or improve code
-reuse between the two methods. What are some advantages and
-disadvantages to your approach?
-*   Bonus: are there any design patterns that *make sense* with respect to
-consolidating these two methods?

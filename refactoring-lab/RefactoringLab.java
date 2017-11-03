@@ -79,23 +79,35 @@ class Transcript {
         // By finding the remaining half of the spaces, we center align the text.
         int spacesBeforeName = (width - studentName.length()) / 2;
         for (int i = 0; i < spacesBeforeName; ++i) {
-            transcriptBuilder.append(" ");
+            transcriptBuilder.append("-");
         }
         transcriptBuilder.append(studentName);
+        for (int i = 0; i < spacesBeforeName; ++i) {
+            transcriptBuilder.append("-");
+        }
         transcriptBuilder.append("\n");
 
         int spacesBeforeId = (width - studentId.length()) / 2;
         for (int i = 0; i < spacesBeforeId; ++i) {
-            transcriptBuilder.append(" ");
+            transcriptBuilder.append("-");
         }
         transcriptBuilder.append(studentId);
+        int spaceAfterID = (width-studentId.length()-spacesBeforeId);
+        for (int i = 0; i < spaceAfterID; ++i) {
+            transcriptBuilder.append("-");
+        }
+       
         transcriptBuilder.append("\n");
 
         int spacesBeforeSemester = (width - semesterName.length()) / 2;
         for (int i = 0; i < spacesBeforeSemester; ++i) {
-            transcriptBuilder.append(" ");
+            transcriptBuilder.append("-");
         }
         transcriptBuilder.append(semesterName);
+        int spacesAfterSemester = (width - semesterName.length()-spacesBeforeSemester);
+        for (int i = 0; i < spacesAfterSemester; ++i) {
+            transcriptBuilder.append("-");
+        }
         transcriptBuilder.append("\n");
 
         // Newline between header and transcript body.
