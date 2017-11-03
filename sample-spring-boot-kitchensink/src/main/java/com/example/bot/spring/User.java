@@ -97,29 +97,29 @@ public class User {
     }
     
     public float getIdealDailyIntake (){
-        float lose_weight = weight * 30;
-        float maintain = weight*40;
-        float gain_weight = weight*50;
-        float daily_loss = 3500*3/7;
+        //float lose_weight = weight * 30;
+       // float maintain = weight*40;
+       // float gain_weight = weight*50;
+        float daily_loss = 3500*3/7; // in kg
         float change_per_day = (goal.getGoalTarget() - weight)/goal.getGoalDay();
         float intake_calories = change_per_day*daily_loss;
         float BMR=0;
         
         if (status.equalsIgnoreCase("male")){
-        	BMR = (float)88.362 + ( (float)13.397*weight) + ((float)4.799*height) - ((float)5.677*age);
+        	BMR = ((float)88.362 + ( (float)13.397*weight) + ((float)4.799*height) - ((float)5.677*age))*1.375; // Assuming light excercise everyday
     
             
         }
         else if (status.equalsIgnoreCase("female")){
-        	BMR = (float)447.593 + ( (float)9.247*weight) + ( (float)3.098*height) - ((float)4.33*age);
+        	BMR = ((float)447.593 + ( (float)9.247*weight) + ( (float)3.098*height) - ((float)4.33*age))*1.375; // Assuming light excercise everyday
         }
         
         
         if (goal.getGoalTarget()==0){
-            return BMR;
+            return BMR; // maintain weight
         }
         else
-            return BMR + intake_calories;
+            return BMR + intake_calories; // lose weight or gain weight
     }
     
     
