@@ -110,32 +110,20 @@ public class KitchenSinkController {
      *
      *
      */
-	static private User user = new User();
-    
-    /**
-     *
-     *
-     */
-	static private Food food = new Food();
+	private String[] setOrder = {"name", "status", "age", "weight", "target_weight", "height", "days_for_target"};
 
     /**
      *
      *
      */
-	static private String[] setOrder = {"name", "status", "age", "weight", "target_weight", "height", "days_for_target"};
+	private Calendar calendar = new GregorianCalendar(2017,10,11);
+
 
     /**
      *
      *
      */
-	Calendar calendar = new GregorianCalendar(2017,10,11);
-    
-
-    /**
-     *
-     *
-     */
-	Date coupon_date =  calendar.getTime();
+	private Date coupon_date =  calendar.getTime();
 
 
     /**
@@ -170,7 +158,7 @@ public class KitchenSinkController {
 		reply(event.getReplyToken(), new LocationMessage(locationMessage.getTitle(), locationMessage.getAddress(),
 				locationMessage.getLatitude(), locationMessage.getLongitude()));
 	}
-    
+
     /**
      * This method is used to handle image message event from the user by replying the same image back to user.
      * @param event This is the corresponding image event object
@@ -192,23 +180,23 @@ public class KitchenSinkController {
 		DownloadedContent jpg = saveContent("jpg", response);
 		// reply(((MessageEvent) event).getReplyToken(), new ImageMessage(jpg.getUri(), jpg.getUri()));
 
-		String state = user.getUser(userID, "state");
+		String state = User.getUser(userID, "state");
 		if (state == null) {
 			this.replyText(replyToken, "Get user state failed: " + userID);
 		}	else if (state.equals("menu jpeg")) {
 			try {
-				if (!food.createMenuImage(userID, new URI(jpg.getUri()))) {
+				if (!Food.createMenuImage(userID, new URI(jpg.getUri()))) {
 					this.replyText(replyToken, "createMenuImage() failed with userID: " + userID + " and menu URI: " + jpg.getUri());
-					user.setUser(userID, "state", "0");
+					User.setUser(userID, "state", "0");
 					return;
 				}
 			} catch (URISyntaxException e) {
 				this.replyText(replyToken, "URISyntaxException in createMenuImage(): " + e.getMessage());
-				user.setUser(userID, "state", "0");
+				User.setUser(userID, "state", "0");
 				return;
 			}
 
-			String recommendation = food.getMenuInfo(userID);
+			String recommendation = Food.getMenuInfo(userID);
 			if (recommendation != null)
 				this.replyText(replyToken, recommendation + "\nWhat do you want to choose?");
 			else
@@ -217,7 +205,7 @@ public class KitchenSinkController {
 			this.replyText(replyToken, "Wrong state in handleImageMessageEvent(): " + state);
 		}
 
-		user.setUser(userID, "state", "0");
+		User.setUser(userID, "state", "0");
 	}
 
     /**
@@ -249,7 +237,7 @@ public class KitchenSinkController {
 		log.info("unfollowed this bot: {}", event);
 
 		String userID = event.getSource().getUserId();
-		if (user.delete(userID))
+		if (User.delete(userID))
 			log.info("Delete user succeeded: " + userID);
 		else
 			log.info("Delete user failed: " + userID);
@@ -265,13 +253,13 @@ public class KitchenSinkController {
 		String userID = event.getSource().getUserId();
 		String replyToken = event.getReplyToken();
 
-		if (!user.insert(userID,coupon_date)) {
+		if (!User.insert(userID,coupon_date)) {
 			this.replyText(replyToken, "Insert user failed: " + userID);
 			return;
 		}
 
 		String state = new String("set name");
-		if (!user.setUser(userID, "state", state)) {
+		if (!User.setUser(userID, "state", state)) {
 			this.replyText(replyToken, "Set state failed: " + state);
 			return;
 		}
@@ -308,14 +296,14 @@ public class KitchenSinkController {
 							case "food": { this.replyText(replyToken, "What did you eat?"); break; }
 							case "weight": { this.replyText(replyToken, "What is your current weight(kg)? (Please input a number)"); break; }
 							case "target_weight": { this.replyText(replyToken, "What is your new target weight(kg)? (Please input a number)"); break; }
-							default: { this.replyText(replyToken, "Wrong postback: " + postback); user.setUser(userID, "state", "0"); break; }
+							default: { this.replyText(replyToken, "Wrong postback: " + postback); User.setUser(userID, "state", "0"); break; }
 						}
-						user.setUser(userID, "state", postback);
+						User.setUser(userID, "state", postback);
 						break;
 					}
 					case "menu": {
 						this.replyText(replyToken, "Please input your " + postbackArr[1] + " menu");
-						user.setUser(userID, "state", postback);
+						User.setUser(userID, "state", postback);
 						break;
 					}
 					case "summary": {
@@ -324,9 +312,9 @@ public class KitchenSinkController {
                                 Date current_time = new Date();
                                 SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
                                 String date = dateFormat.format(current_time);
-                                float calories = user.getDailyIntake(userID, date);
+                                float calories = User.getDailyIntake(userID, date);
 
-								float idealCalories = user.getIdealDailyIntake(userID);
+								float idealCalories = User.getIdealDailyIntake(userID);
 								if (calories == idealCalories)
 									this.replyText(replyToken, "Today you consumed " + calories + " kcal. Based on your personal information, we recommand you to consume " + idealCalories + " kcal per day. "
 										+ "Good Job! Continue on your current consumption plan.");
@@ -339,16 +327,16 @@ public class KitchenSinkController {
 								break;
 							}
 							case "weekly": {
-								this.replyText(replyToken, user.generateWeeklySummary(userID));
+								this.replyText(replyToken, User.generateWeeklySummary(userID));
 								break;
 							}
 							case "overall": {
-								this.replyText(replyToken, user.generateSummary(userID));
+								this.replyText(replyToken, User.generateSummary(userID));
 								break;
 							}
 							default: {
 								this.replyText(replyToken, "Wrong postback: " + postback);
-								user.setUser(userID, "state", "0");
+								User.setUser(userID, "state", "0");
 			        	break;
 							}
 						}
@@ -358,13 +346,13 @@ public class KitchenSinkController {
 						switch (postbackArr[1]) {
 							case "nutrition":
 							case "appropriate": {
-								user.setUser(userID, "state", postback);
+								User.setUser(userID, "state", postback);
 								this.replyText(replyToken, "Please input a food name");
 								break;
 							}
 							// case "dailyProgress": {
-							// 	float calories = user.getDailyIntake(userID, new Date());
-							// 	float idealCalories = user.getIdealDailyIntake(userID);
+							// 	float calories = User.getDailyIntake(userID, new Date());
+							// 	float idealCalories = User.getIdealDailyIntake(userID);
 							// 	if (calories < idealCalories)
 							// 		this.replyText(replyToken, "According to your personal information and your long-term goal. We suggest you to consume " + idealCalories + " cal today. You have already consumed " + calories
 							// 			+ " calories and you can consume " + (idealCalories - calories) + " more cal.");
@@ -374,12 +362,12 @@ public class KitchenSinkController {
 							// 	break;
 							// }
 							case "tips": {
-								this.replyText(replyToken, food.getTip());
+								this.replyText(replyToken, Food.getTip());
 								break;
 							}
 							default: {
 								this.replyText(replyToken, "Wrong postback: " + postback);
-								user.setUser(userID, "state", "0");
+								User.setUser(userID, "state", "0");
 			        	break;
 							}
 						}
@@ -387,7 +375,7 @@ public class KitchenSinkController {
 					}
 	        default:{
 	        	this.replyText(replyToken, "Wrong postback: " + postback);
-						user.setUser(userID, "state", "0");
+						User.setUser(userID, "state", "0");
 	        	break;
 	        }
 		}
@@ -402,7 +390,7 @@ public class KitchenSinkController {
 		String replyToken = event.getReplyToken();
 		this.replyText(replyToken, "Got beacon message " + event.getBeacon().getHwid());
 	}
-    
+
     /**
      * This method is used to handle other events not metioned in the class from user by sending a text message
      * @param event this is the corresponding event object
@@ -412,20 +400,21 @@ public class KitchenSinkController {
 		log.info("Received message(Ignored): {}", event);
 	}
 
-    
-    
+
+
 
     /**
-     *
-     *
+     * This method is used to handle other events not metioned in the class from user by sending a text message
+     * @param event this is the corresponding event object
      */
 	private void reply(@NonNull String replyToken, @NonNull Message message) {
 		reply(replyToken, Collections.singletonList(message));
 	}
 
     /**
-     *
-     *
+     * This method is used to reply message according to replyToken
+     * @param replyToken This is the replyToken for the message
+     * @param message This is the message to be replied
      */
 	private void reply(@NonNull String replyToken, @NonNull List<Message> messages) {
 		try {
@@ -437,9 +426,12 @@ public class KitchenSinkController {
 	}
 
     /**
-     *
-     *
+     * This method is used to simplify text reply function
+     * @param replyToken This is the replyToken for the message
+     * @param message This is the message to be replied
+     * @throws IllegalArgumentException If replyToken is empty
      */
+
 	private void replyText(@NonNull String replyToken, @NonNull String message) {
 		if (replyToken.isEmpty()) {
 			throw new IllegalArgumentException("replyToken must not be empty");
@@ -460,7 +452,7 @@ public class KitchenSinkController {
 	}
 
     /**
-     * This method is to handle in valid input from users for age , weight, target weight, 
+     * This method is to handle in valid input from users for age , weight, target weight,
      * height, days for target and gender
      * @param state This is the corresponding state of user for the input
      * @param input This is the input from the user
@@ -496,7 +488,7 @@ public class KitchenSinkController {
 			return;
 		}
 
-		if (user.setUser(userID, stateArr[1], input)) {
+		if (User.setUser(userID, stateArr[1], input)) {
 			int i = 0;
 			for (; i < setOrder.length - 1; ++i) {
 				if (stateArr[1].equals(setOrder[i])) {
@@ -506,7 +498,7 @@ public class KitchenSinkController {
 			}
 			if (i == setOrder.length - 1) {
 				this.replyText(replyToken, "Great! Nice to meet you! You can input anything at any time to wake me up ✧⁺⸜(●˙▾˙●)⸝⁺✧");
-				user.setUser(userID, "state", "0");
+				User.setUser(userID, "state", "0");
 
                 Timer T1 = new Timer(userID);
                 T1.start();
@@ -519,9 +511,9 @@ public class KitchenSinkController {
 					case "target_weight": { this.replyText(replyToken, "What is your target weight(kg)? (Please input a number)"); break; }
 					case "height": { this.replyText(replyToken, "What is your height(cm)? (Please input a number)"); break; }
 					case "days_for_target": { this.replyText(replyToken, "How long do you plan to achieve your goal? (Please input a day number)"); break; }
-					default: { this.replyText(replyToken, "Wrong state in handleSetState(): " + String.join(" ", stateArr)); user.setUser(userID, "state", "0"); break; }
+					default: { this.replyText(replyToken, "Wrong state in handleSetState(): " + String.join(" ", stateArr)); User.setUser(userID, "state", "0"); break; }
 				}
-				user.setUser(userID, "state", String.join(" ", stateArr));
+				User.setUser(userID, "state", String.join(" ", stateArr));
 			}
 		} else
 			this.replyText(replyToken, "Set " + stateArr[1] + " failed. Please try to input again :(");
@@ -539,46 +531,46 @@ public class KitchenSinkController {
 
 		switch (stateArr[1]) {
 			case "weight": {
-				if (user.setUser(userID, stateArr[1], input)) {
+				if (User.setUser(userID, stateArr[1], input)) {
 					this.replyText(replyToken, "Update " + stateArr[1] + " succeeded");
 				} else {
 					this.replyText(replyToken, "Update " + stateArr[1] + " failed");
 				}
-				user.setUser(userID, "state", "0");
+				User.setUser(userID, "state", "0");
 				break;
 			}
 			case "food": {
-				if (user.updateRecord(userID, input)) {
+				if (User.updateRecord(userID, input)) {
 					this.replyText(replyToken, "Update " + stateArr[1] + " succeeded");
-					user.setUser(userID, "state", "0");
+					User.setUser(userID, "state", "0");
 				} else {
 					this.replyText(replyToken, "Update " + stateArr[1] + " failed");
-					user.setUser(userID, "state", "0");
+					User.setUser(userID, "state", "0");
 				}
 				break;
 			}
 			case "target_weight": {
-				if (user.setUser(userID, "target_weight", input)) {
+				if (User.setUser(userID, "target_weight", input)) {
 					this.replyText(replyToken, "How long do you plan to achieve your new goal? (Please input a day number)");
-					user.setUser(userID, "state", "update days_for_target");
+					User.setUser(userID, "state", "update days_for_target");
 				} else {
-					user.setUser(userID, "state", "0");
+					User.setUser(userID, "state", "0");
 					this.replyText(replyToken, "Update " + stateArr[1] + " failed");
 				}
 				break;
 			}
 			case "days_for_target": {
-				if (user.setUser(userID, "days_for_target", input)) {
+				if (User.setUser(userID, "days_for_target", input)) {
 					this.replyText(replyToken, "Update goal succeeded");
 				} else {
 					this.replyText(replyToken, "Update " + stateArr[1] + " failed");
 				}
-				user.setUser(userID, "state", "0");
+				User.setUser(userID, "state", "0");
 				break;
 			}
 			default: {
 				this.replyText(replyToken, "Wrong state in handleUpdateState(): " + String.join(" ", stateArr));
-				user.setUser(userID, "state", "0");
+				User.setUser(userID, "state", "0");
 				break;
 			}
 		}
@@ -592,7 +584,7 @@ public class KitchenSinkController {
             throws Exception {
         String text = content.getText();
 				String userID = event.getSource().getUserId();
-				String state = user.getUser(userID, "state");
+				String state = User.getUser(userID, "state");
 				if (state == null) {
 					this.replyText(replyToken, "Get user state failed: " + userID);
 					return;
@@ -644,49 +636,49 @@ public class KitchenSinkController {
 					case "menu": {
 						switch (stateArr[1]) {
 							case "text": {
-								if (!food.createMenuText(userID, text))
+								if (!Food.createMenuText(userID, text))
 									this.replyText(replyToken, "createMenuText() failed with userID: " + userID + " and menu: " + text);
 								break;
 							}
 							case "json": {
-								if (!food.createMenuJson(userID, text))
+								if (!Food.createMenuJson(userID, text))
 									this.replyText(replyToken, "createMenuJson() failed with userID: " + userID + " and menu: " + text);
 								break;
 							}
 							default: {
 								this.replyText(replyToken, "Wrong state in handleTextContent(): " + state);
-								user.setUser(userID, "state", "0");
+								User.setUser(userID, "state", "0");
 								break;
 							}
 						}
-						String recommendation = food.getMenuInfo(userID);
+						String recommendation = Food.getMenuInfo(userID);
 						if (recommendation != null)
 							this.replyText(replyToken, recommendation + "\nWhat do you want to choose?");
 						else
 							this.replyText(replyToken, "getMenuInfo() failed with userID: " + userID);
 
-						user.setUser(userID, "state", "warning");
+						User.setUser(userID, "state", "warning");
 						break;
 					}
 					case "warning": {
 						String response = new String();
-						if(!food.FoodinMenu(userID, text)){
+						if(!Food.FoodinMenu(userID, text)){
 							response += "Your selection is not in the menu you've provided. However we still make the following recommendation based on your food selection. \n";
 						}
 
-						response += food.WarningforFoodSelection(userID, text) + " If you are going to select this food we suggest you to eat " + food.foodPortion(userID, text) + " of the food.";
+						response += Food.WarningforFoodSelection(userID, text) + " If you are going to select this food we suggest you to eat " + Food.foodPortion(userID, text) + " of the food.";
 						this.replyText(replyToken, response);
 
-						user.setUser(userID, "state", "0");
+						User.setUser(userID, "state", "0");
 						break;
 					}
 					case "check": {
 						switch (stateArr[1]) {
-							case "nutrition": { this.replyText(replyToken, food.checkNutrition(text)); break; }
-							case "appropriate": { this.replyText(replyToken, food.checkAppropriate(userID, text)); break; }
+							case "nutrition": { this.replyText(replyToken, Food.checkNutrition(text)); break; }
+							case "appropriate": { this.replyText(replyToken, Food.checkAppropriate(userID, text)); break; }
 							default: { this.replyText(replyToken, "Wrong state in handleTextContent(): " + state); break; }
 						}
-						user.setUser(userID, "state", "0");
+						User.setUser(userID, "state", "0");
 						break;
 					}
 					case "0": {
@@ -724,12 +716,12 @@ public class KitchenSinkController {
 				}
 				default: {
 					this.replyText(replyToken, "Wrong state in handleTextContent(): " + state);
-					user.setUser(userID, "state", "0");
+					User.setUser(userID, "state", "0");
 					break;
 				}
 			}
     }
-    
+
     /**
      * This method create URL string for the object on the corresponding path
      * @param path This the path for the object needed to create URL
@@ -790,14 +782,24 @@ public class KitchenSinkController {
 
 
 
-	//The annontation @Value is from the package lombok.Value
-	//Basically what it does is to generate constructor and getter for the class below
-	//See https://projectlombok.org/features/Value
-	@Value
-	public static class DownloadedContent {
-		Path path;
-		String uri;
-	}
+    /**
+     * This class is to generate constructor and getter for the class below
+     * @see https://projectlombok.org/features/Value
+     */
+    @Value //The annontation @Value is from the package lombok.Value
+    public static class DownloadedContent {
+        
+        /**
+         * path of the downloaded content
+         */
+        Path path;
+        
+        /**
+         * URI of the downloaded content
+         */
+        String uri;
+    }
+
 
 
     /**
@@ -828,7 +830,7 @@ public class KitchenSinkController {
         	);
     	}
     }
-    
+
     /**
      * This medthod simplifys the input of function "push"
      * @param userID This is the userID of the receiver of pushed message
@@ -837,7 +839,7 @@ public class KitchenSinkController {
     private void push(@NonNull String userID, @NonNull Message message) {
         push(userID, Collections.singletonList(message));
     }
-    
+
     /**
      * This method is used to push message to user
      * @param userID This is the user ID for the receiver of pushed message
@@ -851,25 +853,25 @@ public class KitchenSinkController {
             throw new RuntimeException(e);
         }
     }
-    
-    
+
+
     /**
      * The Timer class works as a remainder with two functions:
      * 1. remaind user to update intaked food at specific time (hk time 9am, 2pm and 8pm)
      * 2. remaind user to update their goal if they have achieved it or the goal fails to achieve with target days
      */
     private class Timer implements Runnable {
-        
+
         /**
          * A new thread for immplementation of Timer class
          */
         private Thread t;
-        
+
         /**
          * user ID of the receiver for pushing remainder mesasge
          */
         private String userID;
-        
+
         /**
          * constructor for Timer class
          * @param userID This is the string input assigned to the data member userID
@@ -877,8 +879,8 @@ public class KitchenSinkController {
         Timer(String userID) {
             this.userID=userID;
         }
-        
-        
+
+
         /**
          * This method implements the functions of timer class. By checking the current time continuously,
          * this function able to send update food remainder to user at hk time 9am, 2pm and 8pm. Also, this method
@@ -891,7 +893,7 @@ public class KitchenSinkController {
                 SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
                 String current_time_string = timeFormat.format(current);
                 String current_date_string = dateFormat.format(current);
-                
+
                 if (current_time_string.equals("01:00:00") || current_time_string.equals("06:00:00") || current_time_string.equals("12:00:00")){
                     push(userID, new TextMessage("Please update food of your meal"));
                     try {
@@ -899,10 +901,10 @@ public class KitchenSinkController {
                     } catch (Exception e) {
                         log.info("thread fail");
                     }
-                    
+
                 }
-                
-                switch(user.check_goal(userID)){
+
+                switch(User.check_goal(userID)){
                     case 1:
                     case 2:
                         push(userID, new TextMessage("You have successfully reached your target weight! \n Please update your next goal"));
@@ -911,11 +913,11 @@ public class KitchenSinkController {
                         push(userID, new TextMessage("I'm sorry to inform you fail to reach your target weight within your planned period. \n Please update your next goal"));
                         break;
                     default: break;
-                        
+
                 }
             }
         }
-        
+
         /**
          * This method created a new thread for the Timer class,
          * and assigned "Timer" to be the thread's name
