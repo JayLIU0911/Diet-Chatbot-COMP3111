@@ -16,66 +16,35 @@ import java.net.URI;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+/**
+ * A class use to connect to the psql database
+ * @author Liu Shuyue
+ * @since 2017-11-18
+ */
 @Slf4j
-public class UserDB extends SQLDatabaseEngine{
+public class UserDB{
 
-   @Autowired
-   private SQLDatabaseEngine databaseEngine;
-
-   private FoodDB foodAdapter = new FoodDB();
-
-    public boolean insert(String id){
+	/**
+	 * This function is going to check the database whether a user id is in the user list
+	 * @param id Input a user id in order to check it in the database
+	 * @return result return a boolean, if the user exist, return false, else, true
+	 */
+    public boolean check_userlist(String id){
         Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-
-        boolean result = false;
-
         try{
-            connection = this.getConnection();
-            stmt = connection.prepareStatement("SELECT * FROM user_list WHERE uid = ?");
-            stmt.setString(1,id);
-            rs = stmt.executeQuery();
-            if(rs.next()){
-                if(connection!=null)
-                    connection.close();
-                return false;
-            }
-
-            stmt = null;
-            rs = null;
-            String tableName = "user_" + id;
-            stmt = connection.prepareStatement("CREATE TABLE " + id + " (date varchar(50), time varchar(50), food_intake varchar(200), price varchar(50), weight varchar(50), energy varchar(50), sodium varchar(50), fatty_acids_total_saturated varchar(50))");
-            // stmt.setString(1,tableName);
-                        log.info("create table stmt: {}", stmt.toString());
-            stmt.executeUpdate();
-
-                        log.info("create table stmt succeed: {}", stmt.toString());
-            stmt = null;
-            rs = null;
-                        String sql = "INSERT INTO user_list VALUES('" + id + "', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '0')";
-                        log.info("insert table stmt: {}", sql);
-                        // sql = "INSERT INTO user_list VALUES(" + id + ", ' ', ' ', ' ', ' ', ' ', ' ', ' ', '0')";
-                        // log.info("insert table stmt0: {}", sql);
-
-            stmt = connection.prepareStatement(sql);
-            // stmt.setString(1,id);
-
-                        // log.info("insert table stmt1: {}", stmt.toString());
-
-                                                // stmt = connection.prepareStatement("INSERT INTO user_list VALUES(?, ' ', ' ', ' ', ' ', ' ', ' ', ' ', '0')");
-                                    // stmt.setString(1,id);
-                                                // log.info("insert table stmt2: {}", stmt.toString());
-                        stmt.executeUpdate();
-
-            result = true;
+        connection = this.getConnection();
+        stmt = connection.prepareStatement("SELECT * FROM user_list WHERE uid = ?");
+        stmt.setString(1,id);
+        rs = stmt.executeQuery();
+        if(rs.next())
+        		return false;
         } catch (Exception e) {
             log.info("SQLExecption while inserting user: {}", e.toString());
         } finally{
             try{
-                if(connection!=null)
-                    connection.close();
-                //rs.close();
+                connection.close();
                 if(stmt!=null)
                     stmt.close();
 
@@ -84,46 +53,26 @@ public class UserDB extends SQLDatabaseEngine{
             }
         }
         
-        return result;
+        return true;
     }
 
-
-    public boolean delete(String id)
-    {
+    /**
+     * This function is going the create a new user table with the name of user id
+     * @param id Input user id to be the name of the table
+     */
+    public void create_usertable(String id){
         Connection connection = null;
         PreparedStatement stmt = null;
-        ResultSet rs = null;
-        boolean result = false;
-        //String id = user.getUserId();
-        //String tableName = "user_"+id;
-        int x = 0;
-
         try{
-            connection = this.getConnection();
-            String sql = "drop table " + id;
-            stmt = connection.prepareStatement(sql);
-            //stmt.setString(1,tableName);
-            stmt.executeUpdate();
-//            if(rs.next())
-//                x++;
-            connection.close();
-            stmt = null;
-            rs = null;
-            connection = this.getConnection();
-            stmt = connection.prepareStatement("DELETE FROM user_list WHERE uid = ?");
-            stmt.setString(1,id);
-            stmt.executeUpdate();
-//            if(rs.next())
-//                x++;
-            result = true;
+        connection = this.getConnection();
+        String sql = "CREATE TABLE " + id + " (date varchar(50), time varchar(50), food_intake varchar(200), price varchar(50), weight varchar(50), energy varchar(50), sodium varchar(50), fatty_acids_total_saturated varchar(50))";
+        stmt = connection.prepareStatement(sql);
+        stmt.executeUpdate();
         } catch (Exception e) {
-            log.info("SQLExecption while deleting: {}", e.toString());
+            log.info("SQLExecption while inserting user2: {}", e.toString());
         } finally{
             try{
-                if(connection!=null)
-                    connection.close();
-                // if(rs.next())
-                //     rs.close();
+                connection.close();
                 if(stmt!=null)
                     stmt.close();
 
@@ -131,160 +80,228 @@ public class UserDB extends SQLDatabaseEngine{
                 log.info("SQLException while closing2: {}", ex.toString());
             }
         }
-//        if(x==2)
-//            result = true;
         
-        return result;
     }
 
-
-
-   public boolean updateRecord(String id, String text)
-    {
-        //String tableName = "user_" + id;
+    /**
+     * This function is going to insert a new row in the user list table with the user id
+     * The new row is initiated with the user id and haven't get coupon
+     * @param id Input the user id to create a new row
+     */
+    public void insert_user(String id){
         Connection connection = null;
         PreparedStatement stmt = null;
-        ResultSet rs = null;
-        boolean result = false;
-
-        //foodAdapter = new Food(text);
-        Date current_time = new Date();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-        SimpleDateFormat timeFormat = new SimpleDateFormat("hh/mm/ss");
-
-        String date = dateFormat.format(current_time);
-        String time = timeFormat.format(current_time);
-
-
-        //String intake = foodAdapter.getName(text);
-        //float weight = food.getWeight();
-        String energy = Float.toString(foodAdapter.getQuality(text)[0]);
-        String sodium = Float.toString(foodAdapter.getQuality(text)[1]);
-        String fatty = Float.toString(foodAdapter.getQuality(text)[2]);
-
-        String weight = getUser(id,"weight");
-        //String price = Float.toString(foodAdapter.getPrice(text));
-        //float weight = a.getUserWeight();
-
         try{
-            connection = this.getConnection();
-            String sql = "insert into " + id + " (date, time, food_intake, price, weight, energy, sodium, fatty_acids_total_saturated) values('" + date +"','"+time+"','"+text+"','0','"+weight+"','"+energy+"','"+sodium+"','"+fatty+"')";
-            //stmt = connection.prepareStatement("INSERT INTO ? (date, time, food_intake, price, weight, energy, sodium, fatty_acids_total_saturated) VALUES(?,?,?,?,?,?,?,?)");
-            // stmt.setString(1,tableName);
-            // stmt.setString(2,date);
-            // stmt.setString(3,time);
-            // stmt.setString(4,text);
-            // stmt.setString(5,"0");
-            // stmt.setString(6,weight);
-            // stmt.setString(7,energy);
-            // stmt.setString(8,sodium);
-            // stmt.setString(9,fatty);
-            stmt = connection.prepareStatement(sql);
-            stmt.executeUpdate();
-            //if(rs.next())
-                result = true;
-        } catch (Exception e){
-            log.info("SQLException while updating: {}", e.toString());
+        connection = this.getConnection();
+        String sql = "INSERT INTO user_list VALUES('" + id + "', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '0', ' ', 'yes')";
+        stmt = connection.prepareStatement(sql);
+        stmt.executeUpdate();
+        } catch (Exception e) {
+            log.info("SQLExecption while inserting user3: {}", e.toString());
         } finally{
             try{
-                if(connection!=null)
-                    connection.close();
-                // if(rs.next())
-                //     rs.close();
+                connection.close();
                 if(stmt!=null)
                     stmt.close();
-                
-            }catch (Exception ex) {
+
+            } catch (Exception ex) {
                 log.info("SQLException while closing3: {}", ex.toString());
             }
         }
         
+    }
+
+    /**
+     * This function is going to drop a user table with the user id
+     * @param id Input the user id to find the corresponding user table
+     * @return result Return true if the table found and drop successfully, else return false
+     */
+    public boolean drop_table(String id) {
+        Connection connection = null;
+        PreparedStatement stmt = null;
+        boolean result = false;
+        try{
+        connection = this.getConnection();
+        String sql = "drop table " + id;
+        stmt = connection.prepareStatement(sql);
+        stmt.executeUpdate();
+        result = true;
+        } catch (Exception e) {
+            log.info("SQLExecption while deleting1: {}", e.toString());
+        } finally{
+            try{
+                connection.close();
+                if(stmt!=null)
+                    stmt.close();
+
+            } catch (Exception ex) {
+                log.info("SQLException while closing4: {}", ex.toString());
+            }
+        }
         return result;
     }
 
-
-    public boolean updateGoal(String id, Goal goal)
-    {
+    /**
+     * This function is going to delete the user's row from the user list table
+     * First to check whether the user's row exist
+     * And then delete the corresponding user row
+     * @param id Input the user id to check whether the row exist and delete the row
+     * @return result Return a boolean. If the user id not exist, return false, else if the user id exist and deleted successfully, return true
+     */
+    public boolean delete_user(String id) {
         Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         boolean result = false;
-        String weight = Float.toString(goal.getGoalTarget());
-        String day = Float.toString(goal.getGoalDay());
-
         try{
-            connection = this.getConnection();
-            String sql = "update user_list set target_weight='" + weight + "',days_for_target='" + day + "' where uid = '" + id +"'"; 
-            stmt = connection.prepareStatement(sql);
-            //stmt = connection.prepareStatement("update user_list set target_weight=?,days_for_target=? where uid=?");
-            //stmt.setString(1,id);
-            stmt.setString(1,weight);
-            stmt.setString(2,day);
-            stmt.setString(3,id);
-            stmt.executeUpdate();
-            //if(rs.next())
-                result = true;
-        } catch (Exception e){
-            log.info("SQLException while updating target: {}", e.toString());
+        connection = this.getConnection();
+        stmt = connection.prepareStatement("select FROM user_list WHERE uid = ?");
+        stmt.setString(1,id);
+        rs = stmt.executeQuery();
+        if(rs.next()){
+        stmt = connection.prepareStatement("DELETE FROM user_list WHERE uid = ?");
+        stmt.setString(1,id);
+        stmt.executeUpdate();
+        result = true;}
+        else
+        	result = false;
+        } catch (Exception e) {
+            log.info("SQLExecption while deleting2: {}", e.toString());
+            result = false;
         } finally{
             try{
-                if(connection!=null)
-                    connection.close();
-                // if(rs.next())
-                //     rs.close();
+                connection.close();
                 if(stmt!=null)
                     stmt.close();
-                
-            }catch (Exception ex) {
+                rs.close();
+
+            } catch (Exception ex) {
                 log.info("SQLException while closing5: {}", ex.toString());
             }
         }
+        return result;
         
+    }
+
+    /**
+     * This function is going to insert the record into the user table with food name, user's weight, food's qualities
+     * First we will get the current time
+     * And we will call food.class to the corresponding nutrition depending on the food name
+     * Finally we use all these information to insert a new row in the user table
+     * @param id Input the user id to get corresponding user's weight and select the user table
+     * @param text Input the food name to get information about the food
+     * @param weight Input the user's weight at the time to insert into the table
+     * @return Return a boolean. If all these things done successfully(can find the user table and get the information about the food), it will return true. Else, return false
+     */
+    public boolean insert_record(String id, String text, String weight){
+        Connection connection = null;
+        PreparedStatement stmt = null;
+        Food foodAdapter = new Food();
+        Date current_time = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        SimpleDateFormat timeFormat = new SimpleDateFormat("hh/mm/ss");
+
+        boolean result = false;
+
+        String date = dateFormat.format(current_time);
+        String time = timeFormat.format(current_time);
+
+        String energy = Float.toString(foodAdapter.getQuality(text)[0]);
+        String sodium = Float.toString(foodAdapter.getQuality(text)[1]);
+        String fatty = Float.toString(foodAdapter.getQuality(text)[2]);
+
+        try{
+        connection = this.getConnection();
+        String sql = "insert into " + id + " (date, time, food_intake, price, weight, energy, sodium, fatty_acids_total_saturated) values('" + date +"','"+time+"','"+text+"','0','"+weight+"','"+energy+"','"+sodium+"','"+fatty+"')";
+        stmt = connection.prepareStatement(sql);
+        stmt.executeUpdate();
+        result = true;
+        } catch (Exception e) {
+            log.info("SQLExecption while update record: {}", e.toString());
+        } finally{
+            try{
+                connection.close();
+                if(stmt!=null)
+                    stmt.close();
+
+            } catch (Exception ex) {
+                log.info("SQLException while closing6: {}", ex.toString());
+            }
+        }
         return result;
     }
 
+    /**
+     * This function is just created for the test case in order to delete the corresponding record we insert through the test case
+     * It is not used in the controller
+     * @param id Input the user id to find the user table
+     * @param text Input the food name to find the corresponding rows in the user table
+     * @return result Return a boolean value if all the things done successfully
+     */
+    public boolean deleteRecord(String id, String text){
+    	Connection connection = null;
+        PreparedStatement stmt = null;
+        boolean result = false;
+        try{
+        connection = this.getConnection();
+        String sql = "delete from "+id+" where food_intake='"+text+"'";
+        stmt = connection.prepareStatement(sql);
+        stmt.executeUpdate();
+        result = true;
+    	} catch (Exception e) {
+            log.info("SQLExecption while delete record: {}", e.toString());
+        } finally{
+            try{
+                connection.close();
+                if(stmt!=null)
+                    stmt.close();
 
-    public ArrayList<ArrayList<String>> searchRecord(String id)
-    {
+            } catch (Exception ex) {
+                log.info("SQLException while closing11: {}", ex.toString());
+            }
+        }
+        return result;
+
+    }
+
+    /**
+     * This function is going to search the whole user table
+     * It will search the table depending on the date and add the information on the same date together
+     * It will return the data in a 2D arraylist with one date added together
+     * @param id Input the user id to find the user table
+     * @return result Return a 2D arraylist(String) with one date of a row and there are five columns(date,weight,energy,sodium,fatty)
+     */
+    public ArrayList<ArrayList<String>> DBsearch_record(String id){
         Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        ArrayList<ArrayList<String>> result = new ArrayList<>();
-        ArrayList<String> a = new ArrayList<String>();
-
-
+        
+        ArrayList<ArrayList<String>> result = new ArrayList<ArrayList<String>>();
+        //ArrayList<String> a = new ArrayList<String>(5);
+        
         float x = 0;
         float y = 0;
         float z = 0;
         String weight = "0";
+        String date2 = "0";
+        String date = "0";
+        String energy = "0";
+        String sodium = "0";
+        String fatty = "0";
+        String weight2 = "0";
 
-        //String tableName = "user_" + id;
+        int i = 0;
 
         try{
             connection = this.getConnection();
-            String sql = "SELECT date, weight, energy, sodium, fatty_acids_total_saturated from " + id;
-            //stmt = connection.prepareStatement("SELECT date, weight, energy, sodium, fatty_acids_total_saturated from ?");
-            //stmt.setString(1,tableName);
-            stmt = connection.prepareStatement(sql);
-            rs = stmt.executeQuery();
-            //log.info("")
-
-
-
-            String date2 = "0";
-            String date = null;
-            String energy = null;
-            String sodium = null;
-            String fatty = null;
-            //int i = -1;
+        	String sql = "SELECT date, weight, energy, sodium, fatty_acids_total_saturated from " + id;
+        	stmt = connection.prepareStatement(sql);
+        	rs = stmt.executeQuery();
 
             while(rs.next())
             {
                 date = rs.getString(1);
-                log.info("in 280, {}",date);
-                //date2 = date;
                 energy = rs.getString(3);
-                log.info("in 280, {}",energy);
                 sodium = rs.getString(4);
                 fatty = rs.getString(5);
                 weight = rs.getString(2);
@@ -294,19 +311,26 @@ public class UserDB extends SQLDatabaseEngine{
                     y = Float.parseFloat(sodium);
                     z = Float.parseFloat(fatty);
                     date2 = date;
-                    log.info("12345");
+                    weight2 = weight;
+                    log.info("12345-6, {}", x);
+                    log.info("12345-6, {}", y);
+                    log.info("12345-6, {}", z);
                 }
 
                 else if(!date.equals(date2))
                 {
-                    //i++;
 
-                    a.clear();
-                    a.add(date);
-                    a.add(weight);
+                    ArrayList<String> a = new ArrayList<String>(5);
+        
+                    a.add(date2);
+                    a.add(weight2);
                     a.add(Float.toString(x));
                     a.add(Float.toString(y));
                     a.add(Float.toString(z));
+
+                    log.info("12345-5, {}", x);
+                    log.info("12345-5, {}", y);
+                    log.info("12345-5, {}", z);
 
                     result.add(a);
 
@@ -314,80 +338,73 @@ public class UserDB extends SQLDatabaseEngine{
                     y = Float.parseFloat(sodium);
                     z = Float.parseFloat(fatty);
 
-
                     date2 = date;
-                    log.info("123456");
+                    weight2 = weight;
+                    i = i + 1;
+                    log.info("123456-2");
                 }
                 else{
                     x = x + Float.parseFloat(energy);
                     y = y + Float.parseFloat(sodium);
                     z = z + Float.parseFloat(fatty);
-                    log.info("123457");
+                    log.info("12345-7, {}", x);
+                    log.info("12345-7, {}", y);
+                    log.info("12345-7, {}", z);
+                    weight2 = weight;
                 }
             }
+            if(!date2.equals("0")){
+            ArrayList<String> b = new ArrayList<String>(5);
+           
+            b.add(date);
+            b.add(weight);
+            b.add(Float.toString(x));
+            b.add(Float.toString(y));
+            b.add(Float.toString(z));
+            result.add(b);}
 
-            a.clear();
-            a.add(date);
-            a.add(weight);
-            a.add(Float.toString(x));
-            a.add(Float.toString(y));
-            a.add(Float.toString(z));
-            result.add(a);
-
-        } catch (Exception e){
-            log.info("SQLException while computing record: {}", e.toString());
+        }catch(Exception e){
+            log.info("In searchRecord,{}",e.toString());
         } finally{
-            try{
-                if(connection!=null)
-                    connection.close();
-                if(rs.next())
-                    rs.close();
+        	try{
+                connection.close();
                 if(stmt!=null)
                     stmt.close();
-                
-            }catch (Exception ex) {
+                rs.close();
+
+            } catch (Exception ex) {
                 log.info("SQLException while closing7: {}", ex.toString());
             }
         }
         
         return result;
-
     }
 
-
-    public ArrayList<String> searchRecord2(String id, String date)
-    {
+    /**
+     * This function is going the search the data in the user table on a exact given date
+     * It will return the data on the given day
+     * @param id Input the user id to find the user table
+     * @param date Input the date you want to check in the user table
+     * @return result Return an Arraylist which include the information on the given date by five values -- date, weight, energy, sodium, and fatty
+     */
+    public ArrayList<String> DBsearch_day(String id, String date){
         Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-
         ArrayList<String> result = new ArrayList<String>();
-        //String[] result = null;
-        //int i = 1;
+
         float x = 0;
         float y = 0;
         float z = 0;
-        //float weight = 0;
-
-        String tableName = "user_" + id;
-
+        String weight=null;
         try{
-            connection = this.getConnection();
-            String sql = "SELECT date, weight, energy, sodium, fatty_acids_total_saturated from " + id + " where date = '" + date +"'";
-            //stmt = connection.prepareStatement("SELECT date, weight, energy, sodium, fatty_acids_total_saturated from ? where date=?");
-            //stmt.setString(1,tableName);
-            //stmt.setString(2,date);
+        connection = this.getConnection();
+        String sql = "SELECT date, weight, energy, sodium, fatty_acids_total_saturated from " + id + " where date = '" + date +"'";
+        stmt = connection.prepareStatement(sql);
+        rs = stmt.executeQuery();
+        
 
-            stmt = connection.prepareStatement(sql);
-            rs = stmt.executeQuery();
-
-            log.info("search daily data success in database: {}", stmt.toString());
-
-            result.add(date);
-
-            String weight=null;
-
-            while(rs.next())
+        while(rs.next())
             {
                 String date2 = rs.getString(1);
                 weight = rs.getString(2);
@@ -406,34 +423,99 @@ public class UserDB extends SQLDatabaseEngine{
                     break;
             }
 
+            result.add(date);
             result.add(weight);
             result.add(Float.toString(x));
             result.add(Float.toString(y));
             result.add(Float.toString(z));
-            if ( x==0 && y==0 && z==0){
-                result = null;
-            }
 
-        } catch (Exception e){
-            log.info("SQLException while computing record: {}", e.toString());
+        } catch (Exception e) {
+            log.info("SQLExecption while search record2: {}", e.toString());
         } finally{
             try{
-                if(connection!=null)
-                    connection.close();
-                if(rs.next())
-                    rs.close();
+                connection.close();
+                if(stmt!=null)
+                    stmt.close();
+                rs.close();
+
+            } catch (Exception ex) {
+                log.info("SQLException while closing8: {}", ex.toString());
+            }
+        }
+        return result;
+    }
+
+    /**
+     * This function the going to get the data on a given column and a given row in the user list table
+     * @param id Input the user id to find the corresponding row in the user list
+     * @param column Input the column name to find the column
+     * @return result Return a String which is the data found in the given row and column
+     */
+    public String select_userlist(String id, String column){
+        Connection connection = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        String result = null;
+        try{
+            connection = this.getConnection();
+            String sql = "select " + column + " from user_list where uid = '" + id + "'";
+            stmt = connection.prepareStatement(sql);
+            rs = stmt.executeQuery();
+            if(rs.next())
+            	result = rs.getString(1);
+        } catch (Exception e){
+        log.info("SQLException while get user: {}", e.toString());
+    } finally{
+        try{
+            connection.close();
+            if(stmt!=null)
+                stmt.close();
+            rs.close();         
+            }catch (Exception ex) {
+                log.info("SQLException while closing9: {}", ex.toString());
+            }
+    }
+    return result;
+    }
+
+    /**
+     * This function is going to update the information in the user list table
+     * It will update the data in the given row and given column
+     * @param id Input the user id to find the corresponding row in the user list
+     * @param column Input the column name to find the column
+     * @param text Input the text you want to update at the given row and column in the user list
+     * @return result Return a boolean value to tell whether update succeeds
+     */
+    public boolean update_userlist(String id, String column, String text){
+        Connection connection = null;
+        PreparedStatement stmt = null;
+        boolean result = false;
+
+        try{
+            connection = this.getConnection();
+            String sql = "update user_list set " + column + "='" + text + "' where uid = '" + id + "'";
+            stmt = connection.prepareStatement(sql);
+            stmt.executeUpdate();
+            result = true;
+        } catch (Exception e){
+            log.info("SQLException while setting state: {}", e.toString());
+        } finally{
+            try{
+                connection.close();
                 if(stmt!=null)
                     stmt.close();
                 
             }catch (Exception ex) {
-                log.info("SQLException while closing8: {}", ex.toString());
+                log.info("SQLException while closing10: {}", ex.toString());
             }
         }
-        
         return result;
     }
 
-    //@Override
+    /**
+     * This function is going to connect the data base in heroku
+     * @return connection Return the connection
+     */
     public Connection getConnection() throws URISyntaxException, SQLException {
         Connection connection;
         URI dbUri = new URI(System.getenv("DATABASE_URL"));
@@ -448,241 +530,6 @@ public class UserDB extends SQLDatabaseEngine{
         connection = DriverManager.getConnection(dbUrl, username, password);
 
         return connection;
-    }
-
-
-    public String getUser(String id, String column){
-        Connection connection = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-
-        //String id = user.getUserId();
-        String result = null;
-
-        try{
-            connection = this.getConnection();
-            String sql = "select " + column + " from user_list where uid = '" + id + "'";
-            //stmt = connection.prepareStatement("select ? from user_list where uid="+ id);
-            //stmt.setString(1,column);
-            //stmt.setString(2,id);
-            stmt = connection.prepareStatement(sql);
-            rs = stmt.executeQuery();
-
-            if(rs.next())
-                result = rs.getString(1);
-
-    } catch (Exception e){
-        log.info("SQLException while getting state: {}", e.toString());
-    } finally{
-        try{
-            connection.close();
-            if(rs.next())
-                rs.close();
-            if(stmt!=null)
-                stmt.close();
-            //if(connection!=null)
-            
-            }catch (Exception ex) {
-                log.info("SQLException while closing9: {}", ex.toString());
-            }
-    }
-    
-    return result;
-}
-
-
-    public boolean setUser(String id, String column, String text){
-        Connection connection = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-
-        boolean result = false;
-        //String id = user.getUserId();
-
-        try{
-            connection = this.getConnection();
-            String sql = "update user_list set " + column + "='" + text + "' where uid = '" + id + "'";
-            stmt = connection.prepareStatement(sql);
-            //stmt = connection.prepareStatement("update user_list set ?=? where uid="+id);
-            //stmt.setString(1,column);
-            //stmt.setString(2,text);
-            //stmt.setString(3,id);
-            stmt.executeUpdate();
-
-            result = true;
-
-        } catch (Exception e){
-            log.info("SQLException while setting state: {}", e.toString());
-        } finally{
-            try{
-                connection.close();
-                // if(rs.next())
-                //     rs.close();
-                if(stmt!=null)
-                    stmt.close();
-                //if(connection!=null)
-                
-            }catch (Exception ex) {
-                log.info("SQLException while closing10: {}", ex.toString());
-            }
-        }
-        
-        return result;
-    }
-
-
-    public float getDailyIntake(String id, Date date){
-        SimpleDateFormat dateformat = new SimpleDateFormat("dd/MM/yyyy");
-        //Date current_time = new Date();
-        //String date = dateFormat.format(current_time);
-        String search_date = dateformat.format(date);
-        log.info("date success: {}",date.toString());
-        ArrayList<String> x = this.searchRecord2(id,search_date);
-        log.info("search daily success: {}");
-
-        if (x == null) return 0;
-
-        float result = Float.parseFloat(x.get(2));
-        log.info("the result of daily summary is : {}");
-        return result;
-    }
-
-
-    public int getIdealDailyIntake (String id){
-
-
-
-        float weight = Float.parseFloat(this.getUser(id,"weight"));
-        String status = new String(this.getUser(id,"status"));
-        float height = Float.parseFloat(this.getUser(id,"height"));
-        int age = Integer.parseInt(this.getUser(id,"age"));
-
-        float BMR=0;
-        if (status.equalsIgnoreCase("male")){
-            BMR = (float)88.362 + ( (float)13.397*weight) + ((float)4.799*height) - ((float)5.677*age);
-        }
-        else if (status.equalsIgnoreCase("female")){
-            BMR = (float)447.593 + ( (float)9.247*weight) + ( (float)3.098*height) - ((float)4.33*age);
-        }
-
-
-        String targetWeightString = new String(this.getUser(id,"target_weight"));
-        if (targetWeightString.equalsIgnoreCase("no")) return (int)(BMR*(float)1.375);
-
-            else{
-
-        float dayForTarget = Float.parseFloat(this.getUser(id,"days_for_target"));
-        float targetWeight = Float.parseFloat(targetWeightString);
-        float lose_weight = weight * 30;
-        float maintain = weight*40;
-        float gain_weight = weight*50;
-        float daily_loss = 3500*3/7;
-        float change_per_day = ( targetWeight - weight)/ dayForTarget;
-        float intake_calories = change_per_day*daily_loss;
-        return (int)(BMR*(float)1.375 + intake_calories);
-    }
-
-
-
-
-
-
-
-
-    }
-
-
-    public String generateSummary(String id) {
-
-        ArrayList<ArrayList<String>> Record = new ArrayList<ArrayList<String>>();
-
-        Record = this.searchRecord(id);
-        log.info("2333331");
-        int number_of_date = Record.size();
-
-        // for (int i = 0; i < number_of_date; i++){
-        //     ArrayList<String> Line = new ArrayList<String>();
-
-        //     //for (String obj: this.searchRecord(id).get(i)){
-        //         Line.add(this.searchRecord(id).get(i));
-        //     //}
-        //     Record.add(Line);
-        // }
-
-        
-
-
-        float[][] float_Record = new float[number_of_date][3];  // calories, sodium, fat
-
-        for (int i=0;i<number_of_date;i++){
-            for(int j=0; j<3; j++){
-                float_Record[i][j] = Float.parseFloat(Record.get(i).get(j+2));
-                log.info("232,{}", j);
-            }
-        }
-
-        float[] overall = {0,0,0} ; // total calories, sodium, fat
-        for (int i=0; i<number_of_date; i++){
-            for (int j=0; j<3; j++){
-                overall[j] += float_Record[i][j];
-            }
-        }
-
-        String first_day = Record.get(0).get(0);
-        String output = "Starting from " + first_day + " , you have totally consumed: \n"+"Energy: "+ (int)overall[0]+"kcal, \n" + "Sodium: "+(int)overall[1]+"mg, \n"+"Saturated Fatty Acids: "+(int)overall[2]+"g.";
-        
-        if (number_of_date == 0) output = "You have not input any data yet!";
-
-        return output;
-
-    }
-
-
-    public String generateWeeklySummary (String id) {
-        ArrayList<ArrayList<String>> Record = new ArrayList<ArrayList<String>>(this.searchRecord(id));
-        log.info("54321");
-        //Record = this.searchRecord(id);
-        int number_of_date = Record.size();
-        log.info("65432");
-        int date_for_summary = number_of_date;
-        // in case there are less than 7 days' reord
-
-        if (date_for_summary>7){
-            date_for_summary=7;
-        }
-
-        
-
-
-        float[] sum= {0,0,0,0}; // calories, sodium, fat
-
-        for (int i=0;i<date_for_summary;i++){
-
-            for (int j=0; j<4; j++){
-                sum[j] += Float.parseFloat(Record.get(number_of_date-i-1).get(j+1));
-            }
-        }
-       
-        
-        
-        String output = "In the past " + date_for_summary + " days, your daily energy intake and average weight are: \n" + "Energy: " +(int)(sum[1]/date_for_summary) +
-        "kcal/day,\n"+ "the standard daily calorie consumption: "+ getIdealDailyIntake(id) + "kcal/day\n" + "Average Weight: " + (int)(sum[0]/date_for_summary) + "kg. \n\n" + "The detailed daily record of weight and energy intake: \n";
-        
-        
-        
-        
-        
-        
-        for ( int i=0; i<date_for_summary; i++){
-            output =output + Record.get(number_of_date-i-1).get(0) +": \n"+"Energy: "+Record.get(number_of_date-i-1).get(2)+"kcal \n"+"Weight: "+Record.get(number_of_date-i-1).get(1)+"kg\n";
-        }
-        
-        if (date_for_summary == 0) output = "You have not input any data yet!";
-        
-        return output;
-
-
-
     }
 
 
