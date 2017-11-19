@@ -31,13 +31,13 @@ public class CouponDB{
      * @param code The coupon code
      * @return result Return a boolean value to tell wether the insert is succeed
      */
-	public boolean insert_code(String id, String code){
+	public static boolean insert_code(String id, String code){
 		Connection connection = null;
         PreparedStatement stmt = null;
         boolean result = false;
 
         try{
-        	connection = this.getConnection();
+        	connection = getConnection();
         	String sql = "insert into coupon values('" + id + "', '" + code + "')";
         	stmt = connection.prepareStatement(sql);
         	stmt.executeUpdate();
@@ -47,7 +47,7 @@ public class CouponDB{
         } finally{
             try{
                 connection.close();
-                if(stmt!=null)
+                
                     stmt.close();
             } catch (Exception ex) {
                 log.info("SQLException while closing2-1: {}", ex.toString());
@@ -63,14 +63,14 @@ public class CouponDB{
      * @param code The coupon code to check in the coupon table
      * @return id The user id found in the coupon table corresponding to the coupon code
      */
-	public String check_code(String code){
+	public static String check_code(String code){
 		Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         String result = null;
 
         try{
-        	connection = this.getConnection();
+        	connection = getConnection();
         	String sql = "select * from coupon where code='" + code + "'";
         	stmt = connection.prepareStatement(sql);
         	rs = stmt.executeQuery();
@@ -81,7 +81,7 @@ public class CouponDB{
         } finally{
             try{
                 connection.close();
-                if(stmt!=null)
+                
                     stmt.close();
                 rs.close();
             } catch (Exception ex) {
@@ -97,7 +97,7 @@ public class CouponDB{
      * @param id the user id to search the row in the user list table
      * @return result A boolean value, if succeed, return true, else return false
      */
-	public boolean check_available(String id){
+	public static boolean check_available(String id){
 		Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -106,7 +106,7 @@ public class CouponDB{
         String coupon = null;
 
         try{
-        	connection = this.getConnection();
+        	connection = getConnection();
         	String sql = "select follow,coupon from user_list where uid = '"+id+"'";
         	stmt = connection.prepareStatement(sql);
         	rs = stmt.executeQuery();
@@ -119,7 +119,7 @@ public class CouponDB{
         } finally{
             try{
                 connection.close();
-                if(stmt!=null)
+                
                     stmt.close();
                 rs.close();
             } catch (Exception ex) {
@@ -138,14 +138,14 @@ public class CouponDB{
      * @param code The coupon code in oder to search the row in the coupon table
      * @return result A boolean value to tell whether the delete is completed or not
      */
-    public boolean delete_code(String code){
+    public static boolean delete_code(String code){
         Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         boolean result = false;
 
         try{
-            connection = this.getConnection();
+            connection = getConnection();
             String sql = "select from coupon where code = '"+code+"'";
             stmt = connection.prepareStatement(sql);
             rs = stmt.executeQuery();
@@ -159,7 +159,7 @@ public class CouponDB{
         } finally{
             try{
                 connection.close();
-                if(stmt!=null)
+                
                     stmt.close();
                 rs.close();
             } catch (Exception ex) {
@@ -175,14 +175,14 @@ public class CouponDB{
      * @param id The user id in order to search in the coupon table
      * @return result A boolean value whether the delete is completed or not
      */
-    public boolean delete_id(String id){
+    public static boolean delete_id(String id){
         Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         boolean result = false;
 
         try{
-            connection = this.getConnection();
+            connection = getConnection();
             String sql = "select from coupon where id = '"+id+"'";
             stmt = connection.prepareStatement(sql);
             rs = stmt.executeQuery();
@@ -198,7 +198,7 @@ public class CouponDB{
         } finally{
             try{
                 connection.close();
-                if(stmt!=null)
+                
                     stmt.close();
                 rs.close();
             } catch (Exception ex) {
@@ -211,7 +211,7 @@ public class CouponDB{
     /**
      * This function is going to get connection to the psql in heroku
      */
-	public Connection getConnection() throws URISyntaxException, SQLException {
+	private static Connection getConnection() throws URISyntaxException, SQLException {
         Connection connection;
         URI dbUri = new URI(System.getenv("DATABASE_URL"));
 
