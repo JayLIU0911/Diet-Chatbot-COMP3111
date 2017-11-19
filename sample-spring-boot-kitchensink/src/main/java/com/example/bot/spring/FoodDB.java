@@ -12,13 +12,22 @@ import java.util.*;
 import java.util.Date;
 import java.text.*;
 
-//executeUpdate  rs=   ?   create a string stmt.exe(string )
 
+/**
+ * This class is going to connect the psql datebase menu and nutrition
+ * @author Gao Huaxuan
+ * @since 2017-11-18
+ */
 @Slf4j
-//@Autowired
 public class FoodDB{
 
-	public ArrayList<String> DBSearchIngredient(String ingredient){
+	/**
+	 * This function is going to search a ingredient of the food in the database
+	 * It search for the given food name and get the average of all those data found
+	 * @param ingredient An ingredient in a food in order to search the corresponding food in the database
+	 * @return An arraylist with all the information(average) of that food
+	 */
+	public static ArrayList<String> DBSearchIngredient(String ingredient){
 		Connection connection=null;
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
@@ -35,14 +44,12 @@ public class FoodDB{
 		String weight = null;
 		int i = 1;
 		try{
-			connection=this.getConnection();
-			//String pre = "SELECT ndb_no, description, measure, weight, energy_per_measure, sodium_na_per_measure, fatty_acid_total_saturated_per_measure FROM nutrition1 where description like concat('%', ?, '%')";
+			connection=getConnection();
 			stmt = connection.prepareStatement("SELECT ndb_no, description, measure, weight, energy_per_measure, sodium_na_per_measure, fatty_acids_total_saturated_per_measure FROM nutrition1 where description like '%'||?||'%'");
 
-			stmt.setString(1,ingredient); //the input
-			//log.info("SQLException while searching ingredient: {}", stmt.toString());
+			stmt.setString(1,ingredient); 
+
 			rs = stmt.executeQuery();
-			//log.info("SQLException while searching ingredient: {}", rs.toString());
 
 			while(rs.next()){
 				no = rs.getString(1);
@@ -52,8 +59,7 @@ public class FoodDB{
 				energy = rs.getString(5);
 				sodium = rs.getString(6);
 				fatty = rs.getString(7);
-				if(!energy.equals("--"))
-					x = x + Float.parseFloat(energy);
+				x = x + Float.parseFloat(energy);
 				if(!sodium.equals("--"))
 					y = y + Float.parseFloat(sodium);
 				if(!fatty.equals("--"))
@@ -78,10 +84,8 @@ public class FoodDB{
 		}finally{
 			try{
 				connection.close();
-				if(rs.next())
-					rs.close();
-				if(stmt!=null)
-					stmt.close();
+				rs.close();
+				stmt.close();
 			}catch (Exception ex) {
 				log.info("SQLException while closing: {}", ex.toString());
 			}
@@ -89,7 +93,43 @@ public class FoodDB{
 		return null;
 	}
 
-	public Connection getConnection() throws URISyntaxException, SQLException {
+	/**
+	 * This function is going to check whether a food name can be found in the database
+	 * @param name The food name to search in the database
+	 * @return result Return a boolean value to tell whether the food is exist in the database. If exist, return true, else false
+	 */
+	public static boolean DBexist(String name){
+		Connection connection=null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		boolean result = false;
+		try{
+            connection = getConnection();
+            String pre = "SELECT FROM nutrition1 WHERE description like '%'||?||'%'";
+            stmt.setString(1,name);
+            stmt = connection.prepareStatement(pre);
+            rs = stmt.executeQuery();
+            log.info("in create menu text delete 1 {}");
+            if(rs!=null&&rs.next())
+            	result = true;
+        }catch(Exception e){
+            	log.info("in DBexist() deleting rows {}",e.toString());
+        }finally{
+			try{
+				connection.close();
+				rs.close();
+				stmt.close();
+			}catch (Exception ex) {
+				log.info("SQLException while closing: {}", ex.toString());
+			}
+		}
+        return result;
+	}
+
+	/**
+	 * This function is going to connect the psql in heroku
+	 */
+	private static Connection getConnection() throws URISyntaxException, SQLException {
 		Connection connection;
 		URI dbUri = new URI(System.getenv("DATABASE_URL"));
 
@@ -105,41 +145,50 @@ public class FoodDB{
 		return connection;
 	}
 
-	public void DBdeleteMenu(String id){
+	/**
+	 * This function is going to delete all the rows in menu table of the given user id
+	 * @param id The user id to search and delete in the menu table
+	 * @return result Return a boolean value whether the rows exist and been deleted from the menu table. If all these done, return true. Else, false.
+	 */
+	public static boolean DBdeleteMenu(String id){
 		Connection connection=null;
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
-		//flag = false;
+		boolean result = false;
 		try{
-            connection = this.getConnection();
+            connection = getConnection();
             String pre = "SELECT * FROM menu WHERE userid = '"+ id +"'";
             stmt = connection.prepareStatement(pre);
             rs = stmt.executeQuery();
             log.info("in create menu text delete 1 {}");
-            if(rs==null){
-            	return;
-            }
-            if(rs.next()){
+            if(rs!=null&&rs.next()){
             	pre = "DELETE FROM menu WHERE userid = '"+ id +"'";
             	stmt = connection.prepareStatement(pre);
             	stmt.executeUpdate();
                 rs.close();
                 stmt.close();
                 log.info("in create menu text delete2");
-                //flag = true;
+                result = true;
             }
         }catch(Exception e){
             	log.info("in create menu text deleting rows {}",e.toString());
         }
-        //return flag;
+        return result;
 	}
 
-	public boolean DBInsertMenu(String id, String name, String p){
+	/**
+	 * This function is going to insert a row into the menu table with the user id and the food name and price
+	 * @param id The user id which will be inserted in the menu table
+	 * @param name The food name which will be inserted in the menu table
+	 * @param p The food price which will be inserted in the menu table
+	 * @return result Return a boolean value to check whether the task is completed
+	 */
+	public static boolean DBInsertMenu(String id, String name, String p){
 		Connection connection=null;
 		PreparedStatement stmt = null;
 		boolean result = false;
 		try{
-				connection = this.getConnection();
+				connection = getConnection();
 				String pre = "INSERT INTO menu VALUES('" +id+ "','" + name+"','" + p+"')";
     			stmt = connection.prepareStatement(pre);
     			log.info("nowin create Menu prepare stmt: {}", stmt.toString());
@@ -160,13 +209,20 @@ public class FoodDB{
 		return result;
     }
 
-    public ArrayList<String> DBgetMenu(ArrayList<String> foods, String id){
+    /**
+     * This function is going to search in the menu table
+     * And get a arraylist with food name
+     * @param foods An arraylist with food name inside
+     * @param id The user id to search in the menu table
+     * @return foods An arraylist added some food name selected from the database
+     */
+    public static ArrayList<String> DBgetMenu(ArrayList<String> foods, String id){
     	Connection connection=null;
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 
 		try{
-			connection=this.getConnection();
+			connection=getConnection();
 			String pre = "SELECT foodname FROM menu where userid = '" + id+"'";
     	   	stmt = connection.prepareStatement(pre);
     	   	log.info("in getMenu info : {}", stmt.toString());
@@ -193,14 +249,18 @@ public class FoodDB{
 	}
 
 
-
-    public String DBgetTip(int n){
+	/**
+	 * This function is going to get tips from database
+	 * @param n An index number in order to find the corresponding tips in the tips table
+	 * @return tips Return a String(tips)
+	 */
+    public static String DBgetTip(int n){
     	Connection connection=null;
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		
 		try{
-            connection = this.getConnection();
+            connection = getConnection();
             String pre = "SELECT tips FROM tips WHERE id = '"+ n +"'";
             //log.info("23333333: {}",stmt.toString());
             stmt = connection.prepareStatement(pre);
@@ -226,118 +286,3 @@ public class FoodDB{
 
 }
 
-	// int fre=rs.getInt(2);
-	// fre++;
-	// stmt = connection.prepareStatement("UPDATE resH SET frequency = ? WHERE response = ?");
-	// stmt.setInt(1,fre);
-	// stmt.setString(2, result);
-	// stmt.executeUpdate();
-	//result +=  "The weight of "+descrip+" is "+weight+"and the measure is "+measure;
-	//@Override
-
-
-// ArrayList<Component> components = new ArrayList<Component>();
-//         float[] dummy = new float[3];
-//         if (ingres == null){
-//             if(this.foodDB.searchFood(name) == null){
-//                 this.quality = dummy;
-//             }
-//             else{
-//                 components = this.foodDB.searchFood(n);
-
-//                 Iterator<Component> itr = components.iterator();
-//                 while (itr.hasNext()) {
-//                 	 	float[] x = itr.next().getNutritionPerServing();
-//                 	 	for(int j= 0;j<x.length; j++){
-//                             dummy[j]=dummy[j]+x[j];
-//                      }
-//                 }
-//             }
-//         }
-
-//         else{
-
-//             for(int i =0; i < ingres.length;i++){
-//                 if (this.foodDB.searchFood(ingres[i])== null){
-//                     continue;
-//                 }
-//                 else{
-//                     try {
-//                     		float[] c = this.foodDB.searchIngredient(ingres[i]).getNutritionPerServing();
-//                          for(int j=0; j< c.length;j++){
-//                         	 	dummy[j] = dummy[j] + c[j];
-//                          }
-//                     }catch(Exception e) {
-//                     		//System.out.println("searchIngredient");
-//                     }
-//                 }
-//             }
-//         }
-
-//         this.quality = dummy;
-//     }
-
-// for(int i=0;i<words.length;i++)
-		// {
-		// 	try{
-		// 		Component a = searchIngredient(words[i]);
-		// 		if(a!=null)
-		// 		{
-		// 			if(i==0){
-		// 				temp[0]=words[0];
-		// 			}
-		// 			else{
-		// 				temp[i]=temp[i-1]+" "+words[i];
-		// 				if(i==words.length-1){
-
-		// 						Component b = searchIngredient(temp[i]);
-		// 						result.add(b);
-
-		// 				}
-		// 			}
-		// 		}
-		// 		else{
-		// 			if(i==0||temp[i-1]==null){
-		// 				continue;
-		// 			}
-
-		// 			Component b = searchIngredient(temp[i-1]);
-		// 			result.add(b);
-
-		// 		}
-		// 	}
-		// 	catch(Exception e)catch (Exception ex) {
-		// 		log.info("SQLException while searching food: {}", ex.toString());
-		// 	}
-
-		// }
-
-//   public String getPrice(String name){
-		// Connection connection=null;
-		// PreparedStatement stmt = null;
-		// ResultSet rs = null;
-
-		// try{
-		// 	connection=this.getConnection();
-		// 	String pre = "SELECT price FROM menu where foodname = '"+ name+"'";
-  //   		stmt = connection.prepareStatement(pre);
-		// 	//stmt.setString(1,name); //the input
-		// 	rs = stmt.executeQuery();
-		// 	if(!rs.next()){
-		// 		return "0";
-		// 	}
-		// 	return rs.getString(1);
-		// }catch (Exception ex) {
-		// 	log.info("SQLException while getPrice: {}", ex.toString());
-		// }finally{
-		// 		try{
-		// 			connection.close();
-		// 			stmt.close();
-		// 			rs.close();
-		// 		}catch(Exception e){
-		// 			log.info("SQL get price close fail: {}", e.toString());
-		// 		}
-		// 	}
-		// return "0";
-
-  //   }

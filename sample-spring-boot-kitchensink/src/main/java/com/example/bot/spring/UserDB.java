@@ -29,12 +29,12 @@ public class UserDB{
 	 * @param id Input a user id in order to check it in the database
 	 * @return result return a boolean, if the user exist, return false, else, true
 	 */
-    public boolean check_userlist(String id){
+    public static boolean check_userlist(String id){
         Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try{
-        connection = this.getConnection();
+        connection = getConnection();
         stmt = connection.prepareStatement("SELECT * FROM user_list WHERE uid = ?");
         stmt.setString(1,id);
         rs = stmt.executeQuery();
@@ -45,8 +45,7 @@ public class UserDB{
         } finally{
             try{
                 connection.close();
-                if(stmt!=null)
-                    stmt.close();
+                stmt.close();
 
             } catch (Exception ex) {
                 log.info("SQLException while closing1: {}", ex.toString());
@@ -60,21 +59,21 @@ public class UserDB{
      * This function is going the create a new user table with the name of user id
      * @param id Input user id to be the name of the table
      */
-    public void create_usertable(String id){
+    public static void create_usertable(String id){
         Connection connection = null;
         PreparedStatement stmt = null;
         try{
-        connection = this.getConnection();
-        String sql = "CREATE TABLE " + id + " (date varchar(50), time varchar(50), food_intake varchar(200), price varchar(50), weight varchar(50), energy varchar(50), sodium varchar(50), fatty_acids_total_saturated varchar(50))";
+        	
+        connection = getConnection();
+        String sql = "CREATE TABLE IF NOT EXISTS " + id + " (date varchar(50), time varchar(50), food_intake varchar(200), price varchar(50), weight varchar(50), energy varchar(50), sodium varchar(50), fatty_acids_total_saturated varchar(50))";
         stmt = connection.prepareStatement(sql);
         stmt.executeUpdate();
         } catch (Exception e) {
-            log.info("SQLExecption while inserting user2: {}", e.toString());
+            log.info("SQLExecption whle inserting user2: {}", e.toString());
         } finally{
             try{
                 connection.close();
-                if(stmt!=null)
-                    stmt.close();
+                stmt.close();
 
             } catch (Exception ex) {
                 log.info("SQLException while closing2: {}", ex.toString());
@@ -88,11 +87,11 @@ public class UserDB{
      * The new row is initiated with the user id and haven't get coupon
      * @param id Input the user id to create a new row
      */
-    public void insert_user(String id){
+    public static void insert_user(String id){
         Connection connection = null;
         PreparedStatement stmt = null;
         try{
-        connection = this.getConnection();
+        connection = getConnection();
         String sql = "INSERT INTO user_list VALUES('" + id + "', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '0', ' ', 'yes')";
         stmt = connection.prepareStatement(sql);
         stmt.executeUpdate();
@@ -101,8 +100,7 @@ public class UserDB{
         } finally{
             try{
                 connection.close();
-                if(stmt!=null)
-                    stmt.close();
+                stmt.close();
 
             } catch (Exception ex) {
                 log.info("SQLException while closing3: {}", ex.toString());
@@ -116,13 +114,14 @@ public class UserDB{
      * @param id Input the user id to find the corresponding user table
      * @return result Return true if the table found and drop successfully, else return false
      */
-    public boolean drop_table(String id) {
+    public static boolean drop_table(String id) {
         Connection connection = null;
         PreparedStatement stmt = null;
         boolean result = false;
         try{
-        connection = this.getConnection();
-        String sql = "drop table " + id;
+        	
+        connection = getConnection();
+        String sql = "drop table if exists " + id;
         stmt = connection.prepareStatement(sql);
         stmt.executeUpdate();
         result = true;
@@ -131,8 +130,7 @@ public class UserDB{
         } finally{
             try{
                 connection.close();
-                if(stmt!=null)
-                    stmt.close();
+				stmt.close();
 
             } catch (Exception ex) {
                 log.info("SQLException while closing4: {}", ex.toString());
@@ -148,13 +146,13 @@ public class UserDB{
      * @param id Input the user id to check whether the row exist and delete the row
      * @return result Return a boolean. If the user id not exist, return false, else if the user id exist and deleted successfully, return true
      */
-    public boolean delete_user(String id) {
+    public static boolean delete_user(String id) {
         Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         boolean result = false;
         try{
-        connection = this.getConnection();
+        connection = getConnection();
         stmt = connection.prepareStatement("select FROM user_list WHERE uid = ?");
         stmt.setString(1,id);
         rs = stmt.executeQuery();
@@ -171,8 +169,7 @@ public class UserDB{
         } finally{
             try{
                 connection.close();
-                if(stmt!=null)
-                    stmt.close();
+                stmt.close();
                 rs.close();
 
             } catch (Exception ex) {
@@ -193,7 +190,7 @@ public class UserDB{
      * @param weight Input the user's weight at the time to insert into the table
      * @return Return a boolean. If all these things done successfully(can find the user table and get the information about the food), it will return true. Else, return false
      */
-    public boolean insert_record(String id, String text, String weight){
+    public static boolean insert_record(String id, String text, String weight){
         Connection connection = null;
         PreparedStatement stmt = null;
         Food foodAdapter = new Food();
@@ -206,12 +203,12 @@ public class UserDB{
         String date = dateFormat.format(current_time);
         String time = timeFormat.format(current_time);
 
-        String energy = Float.toString(foodAdapter.getQuality(text)[0]);
-        String sodium = Float.toString(foodAdapter.getQuality(text)[1]);
-        String fatty = Float.toString(foodAdapter.getQuality(text)[2]);
+        String energy = Float.toString(Food.getQuality(text)[0]);
+        String sodium = Float.toString(Food.getQuality(text)[1]);
+        String fatty = Float.toString(Food.getQuality(text)[2]);
 
         try{
-        connection = this.getConnection();
+        connection = getConnection();
         String sql = "insert into " + id + " (date, time, food_intake, price, weight, energy, sodium, fatty_acids_total_saturated) values('" + date +"','"+time+"','"+text+"','0','"+weight+"','"+energy+"','"+sodium+"','"+fatty+"')";
         stmt = connection.prepareStatement(sql);
         stmt.executeUpdate();
@@ -221,7 +218,7 @@ public class UserDB{
         } finally{
             try{
                 connection.close();
-                if(stmt!=null)
+                
                     stmt.close();
 
             } catch (Exception ex) {
@@ -238,22 +235,27 @@ public class UserDB{
      * @param text Input the food name to find the corresponding rows in the user table
      * @return result Return a boolean value if all the things done successfully
      */
-    public boolean deleteRecord(String id, String text){
+    public static boolean deleteRecord(String id, String text){
     	Connection connection = null;
         PreparedStatement stmt = null;
         boolean result = false;
+        ResultSet rs = null;
         try{
-        connection = this.getConnection();
-        String sql = "delete from "+id+" where food_intake='"+text+"'";
+        connection = getConnection();
+        String sql = "select * from "+id+" where food_intake='"+text+"'";
+        stmt = connection.prepareStatement(sql);
+        rs = stmt.executeQuery();
+        if(rs.next()){
+        sql = "delete from "+id+" where food_intake='"+text+"'";
         stmt = connection.prepareStatement(sql);
         stmt.executeUpdate();
-        result = true;
+        result = true;}
     	} catch (Exception e) {
             log.info("SQLExecption while delete record: {}", e.toString());
         } finally{
             try{
                 connection.close();
-                if(stmt!=null)
+                rs.close();
                     stmt.close();
 
             } catch (Exception ex) {
@@ -271,7 +273,7 @@ public class UserDB{
      * @param id Input the user id to find the user table
      * @return result Return a 2D arraylist(String) with one date of a row and there are five columns(date,weight,energy,sodium,fatty)
      */
-    public ArrayList<ArrayList<String>> DBsearch_record(String id){
+    public static ArrayList<ArrayList<String>> DBsearch_record(String id){
         Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -293,7 +295,7 @@ public class UserDB{
         int i = 0;
 
         try{
-            connection = this.getConnection();
+            connection = getConnection();
         	String sql = "SELECT date, weight, energy, sodium, fatty_acids_total_saturated from " + id;
         	stmt = connection.prepareStatement(sql);
         	rs = stmt.executeQuery();
@@ -368,7 +370,7 @@ public class UserDB{
         } finally{
         	try{
                 connection.close();
-                if(stmt!=null)
+                
                     stmt.close();
                 rs.close();
 
@@ -387,7 +389,7 @@ public class UserDB{
      * @param date Input the date you want to check in the user table
      * @return result Return an Arraylist which include the information on the given date by five values -- date, weight, energy, sodium, and fatty
      */
-    public ArrayList<String> DBsearch_day(String id, String date){
+    public static ArrayList<String> DBsearch_day(String id, String date){
         Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -398,7 +400,7 @@ public class UserDB{
         float z = 0;
         String weight=null;
         try{
-        connection = this.getConnection();
+        connection = getConnection();
         String sql = "SELECT date, weight, energy, sodium, fatty_acids_total_saturated from " + id + " where date = '" + date +"'";
         stmt = connection.prepareStatement(sql);
         rs = stmt.executeQuery();
@@ -412,15 +414,9 @@ public class UserDB{
                 String sodium = rs.getString(4);
                 String fatty = rs.getString(5);
 
-
-
-                if(date2.equals(date)){
-                    x = x + Float.parseFloat(energy);
-                    y = y + Float.parseFloat(sodium);
-                    z = z + Float.parseFloat(fatty);
-                }
-                else
-                    break;
+                x = x + Float.parseFloat(energy);
+                y = y + Float.parseFloat(sodium);
+                z = z + Float.parseFloat(fatty);
             }
 
             result.add(date);
@@ -434,7 +430,7 @@ public class UserDB{
         } finally{
             try{
                 connection.close();
-                if(stmt!=null)
+                
                     stmt.close();
                 rs.close();
 
@@ -451,13 +447,13 @@ public class UserDB{
      * @param column Input the column name to find the column
      * @return result Return a String which is the data found in the given row and column
      */
-    public String select_userlist(String id, String column){
+    public static String select_userlist(String id, String column){
         Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         String result = null;
         try{
-            connection = this.getConnection();
+            connection = getConnection();
             String sql = "select " + column + " from user_list where uid = '" + id + "'";
             stmt = connection.prepareStatement(sql);
             rs = stmt.executeQuery();
@@ -468,7 +464,7 @@ public class UserDB{
     } finally{
         try{
             connection.close();
-            if(stmt!=null)
+            
                 stmt.close();
             rs.close();         
             }catch (Exception ex) {
@@ -486,13 +482,13 @@ public class UserDB{
      * @param text Input the text you want to update at the given row and column in the user list
      * @return result Return a boolean value to tell whether update succeeds
      */
-    public boolean update_userlist(String id, String column, String text){
+    public static boolean update_userlist(String id, String column, String text){
         Connection connection = null;
         PreparedStatement stmt = null;
         boolean result = false;
 
         try{
-            connection = this.getConnection();
+            connection = getConnection();
             String sql = "update user_list set " + column + "='" + text + "' where uid = '" + id + "'";
             stmt = connection.prepareStatement(sql);
             stmt.executeUpdate();
@@ -502,7 +498,7 @@ public class UserDB{
         } finally{
             try{
                 connection.close();
-                if(stmt!=null)
+                
                     stmt.close();
                 
             }catch (Exception ex) {
@@ -516,7 +512,7 @@ public class UserDB{
      * This function is going to connect the data base in heroku
      * @return connection Return the connection
      */
-    public Connection getConnection() throws URISyntaxException, SQLException {
+    private static Connection getConnection() throws URISyntaxException, SQLException {
         Connection connection;
         URI dbUri = new URI(System.getenv("DATABASE_URL"));
 

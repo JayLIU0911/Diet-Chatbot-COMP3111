@@ -27,23 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class User{
 
     /**
-     * This is a FoodDB type which can let the class use functions from foodDB.class
-     */
-    private FoodDB foodDB = new FoodDB();
-
-    /**
-     * This member connect user.class to userDB.class
-     * Let the user.class connect to the database though userDB
-     */
-    private UserDB userDB = new UserDB();
-
-    /**
-     * This member connect user.class to the coupon
-     * Let the user can get coupon information in coupon.class
-     */
-    private CouponDB couponDB = new CouponDB();
-
-    /**
      * This function check the userlist and usertable and the user follow time from database
      * it calls 3 functions from userDB.class in order to connect to the database
      * it insert new user into the userlist with the followtime and create a new user table for him/her
@@ -51,21 +34,21 @@ public class User{
      * @param date input the Coupon begin date in order to check whether the user can get coupon
      * @return result Return a boolean type, if true, insert success
      */
-    public boolean insert(String id, Date date){
+    public static boolean insert(String id, Date date){
         
         boolean result = false;
         PreparedStatement stmt = null;
         
-        boolean x = userDB.check_userlist(id);
+        boolean x = UserDB.check_userlist(id);
 
         if(x==false)
-        	this.delete(id);
-        
-        userDB.create_usertable(id);
+        	delete(id);
+         
+        UserDB.create_usertable(id);
             
-        userDB.insert_user(id);
+        UserDB.insert_user(id);
 
-        this.check_followtime(id,date);
+        check_followtime(id,date);
 
         result = true;
 
@@ -78,7 +61,7 @@ public class User{
      * @param date Input the coupon begin date to check whether the user follow the chatbot before the begin date
      * @return result Return a boolean in order to tell whether the user follow the chatbot before the begin date
      */
-    public boolean check_followtime(String id, Date date){
+    public static boolean check_followtime(String id, Date date){
         Date time = new Date();
         boolean result = false;
 
@@ -97,17 +80,17 @@ public class User{
      * @param id Input user id in order to connect to the data base to delete the related things
      * @return result Return true if all there things are done
      */
-    public boolean delete(String id)
+    public static boolean delete(String id)
     {
         boolean result = false;
 
-        userDB.drop_table(id);
+        UserDB.drop_table(id);
 
-        userDB.delete_user(id);
+        UserDB.delete_user(id);
 
-        couponDB.delete_id(id);
+        CouponDB.delete_id(id);
 
-        foodDB.DBdeleteMenu(id);
+        FoodDB.DBdeleteMenu(id);
 
         result = true;
         
@@ -122,14 +105,14 @@ public class User{
      * @param text Input the food name and get other data with the food name
      * @return result Return a boolean, if all the tasks are done, return true
      */
-   public boolean updateRecord(String id, String text)
+   public static boolean updateRecord(String id, String text)
     {
         
         boolean result = false;
 
-        String weight = this.getUser(id,"weight");
+        String weight = getUser(id,"weight");
 
-        userDB.insert_record(id,text,weight);
+        UserDB.insert_record(id,text,weight);
 
         result = true;
         
@@ -145,9 +128,9 @@ public class User{
      * @param text Input the food name to find a row in the user table
      * @return result Return a boolean value to check whether the function finished
      */
-    public boolean delete_record(String id, String text){
+    public static boolean delete_record(String id, String text){
     	boolean result = false;
-    	if(userDB.deleteRecord(id,text)==true)
+    	if(UserDB.deleteRecord(id,text)==true)
     		result = true;
     	return result;
     }
@@ -159,11 +142,11 @@ public class User{
      * @param column Input the column name to find the column in the user list
      * @return result Return a String with the data in the given row and column
      */
-    public String getUser(String id, String column){
+    public static String getUser(String id, String column){
         
         String result = null;
 
-        result = userDB.select_userlist(id,column); 
+        result = UserDB.select_userlist(id,column); 
         
     	return result;
 }
@@ -176,12 +159,12 @@ public class User{
 	 * @param text Input the data you want to update
 	 * @return result Return a boolean value to check whether all the tasks are done
 	 */
-    public boolean setUser(String id, String column, String text){
+    public static boolean setUser(String id, String column, String text){
 
         boolean result = false;
 
         if(!column.equals("days_for_target"))
-            userDB.update_userlist(id,column,text);
+            UserDB.update_userlist(id,column,text);
         else
             setDay(id,text);
 
@@ -198,7 +181,7 @@ public class User{
      * @param text Input the target days(an integer but with type String)
      * @return result Return a boolean value. If update succeed, return true. else, return false.
      */
-    public boolean setDay(String id, String text){
+    public static boolean setDay(String id, String text){
     	Date day = new Date();
     	Calendar c = Calendar.getInstance();
     	c.setTime(day);
@@ -208,7 +191,7 @@ public class User{
         SimpleDateFormat dateformat = new SimpleDateFormat("dd/MM/yyyy");
         String target_date = dateformat.format(day);
 
-        userDB.update_userlist(id,"days_for_target",target_date);
+        UserDB.update_userlist(id,"days_for_target",target_date);
 
         return true;
     	
@@ -221,7 +204,7 @@ public class User{
      * @param id Input the user id to find the days_for_target column in the user list
      * @return result Return an integer which is from now to the target date
      */
-    public int check_day(String id){
+    public static int check_day(String id){
         String target = getUser(id,"days_for_target");
         SimpleDateFormat dateformat = new SimpleDateFormat("dd/MM/yyyy");
         int result = 0;
@@ -243,12 +226,12 @@ public class User{
      * @param id Input user id to get the user's weight and target weight and also the target date
      * @return result Return an integer(1,2,3,4) to tell which condition the user is in
      */
-    public int check_goal(String id){
+    public static int check_goal(String id){
         if(check_day(id)==0 && getUser(id,"weight").equals(getUser(id,"target_weight")))
             return 1;
         else if(check_day(id)!=0 && getUser(id,"weight").equals(getUser(id,"target_weight")))
             return 2;
-        else if(check_day(id)==0 && !getUser(id,"weight").equals(getUser(id,"target_weight")))
+        else if(check_day(id)==0 && (!getUser(id,"weight").equals(getUser(id,"target_weight"))))
             return 3;
         else
             return 4;
@@ -262,11 +245,12 @@ public class User{
      * @param date Input the date and search the user table with the date
      * @return result Return the energy consumed at that date. If not found, return 0
      */
-    public float getDailyIntake(String id, String date){
-        ArrayList<String> x = userDB.DBsearch_day(id,date);
+    public static float getDailyIntake(String id, String date){
+        ArrayList<String> x = UserDB.DBsearch_day(id,date);
         log.info("search daily success: {}");
 
-        if (x == null) return 0;
+        if (x.get(3).equals("0.0"))
+        	return 0;
 
         float result = Float.parseFloat(x.get(2));
         log.info("the result of daily summary is : {}");
@@ -280,28 +264,25 @@ public class User{
      * @param id Input the user id to get the user's information from the user list
      * @return IdealDailyIntake Return an integer which is the calculate result of the daily intake
      */
-    public int getIdealDailyIntake (String id){
+    public static int getIdealDailyIntake (String id){
 
-        float weight = Float.parseFloat(this.getUser(id,"weight"));
-        String status = new String(this.getUser(id,"status"));
-        float height = Float.parseFloat(this.getUser(id,"height"));
-        int age = Integer.parseInt(this.getUser(id,"age"));
+        float weight = Float.parseFloat(getUser(id,"weight"));
+        String status = new String(getUser(id,"status"));
+        float height = Float.parseFloat(getUser(id,"height"));
+        int age = Integer.parseInt(getUser(id,"age"));
 
         float BMR=0;
         if (status.equalsIgnoreCase("male")){
             BMR = (float)88.362 + ( (float)13.397*weight) + ((float)4.799*height) - ((float)5.677*age);
         }
-        else if (status.equalsIgnoreCase("female")){
+        else{
             BMR = (float)447.593 + ( (float)9.247*weight) + ( (float)3.098*height) - ((float)4.33*age);
         }
 
 
-        String targetWeightString = new String(this.getUser(id,"target_weight"));
-        if (targetWeightString.equalsIgnoreCase("no")) return (int)(BMR*(float)1.375);
+        String targetWeightString = new String(getUser(id,"target_weight"));
 
-            else{
-
-        float dayForTarget = (float)this.check_day(id);
+        float dayForTarget = (float)check_day(id);
         float targetWeight = Float.parseFloat(targetWeightString);
         float lose_weight = weight * 30;
         float maintain = weight*40;
@@ -310,7 +291,7 @@ public class User{
         float change_per_day = ( targetWeight - weight)/ dayForTarget;
         float intake_calories = change_per_day*daily_loss;
         return (int)(BMR*(float)1.375 + intake_calories);
-        }
+        
 
     }
 
@@ -321,11 +302,11 @@ public class User{
      * @param id Input the user id to get the data from user table
      * @return output Return a String with the energy, sodium, fatty consumed from the first day the user used to now
      */
-    public String generateSummary(String id) {
+    public static String generateSummary(String id) {
 
         ArrayList<ArrayList<String>> Record = new ArrayList<ArrayList<String>>();
 
-        Record = userDB.DBsearch_record(id);
+        Record = UserDB.DBsearch_record(id);
         log.info("2333331");
         int number_of_date = Record.size();
         if(Record.isEmpty())
@@ -366,8 +347,8 @@ public class User{
      * @param id Input the user id to get the user table
      * @return output Return a String with average data and everyday's data
      */
-    public String generateWeeklySummary (String id) {
-        ArrayList<ArrayList<String>> Record = new ArrayList<ArrayList<String>>(userDB.DBsearch_record(id));
+    public static String generateWeeklySummary (String id) {
+        ArrayList<ArrayList<String>> Record = new ArrayList<ArrayList<String>>(UserDB.DBsearch_record(id));
         log.info("54321");
      
         int number_of_date = Record.size();

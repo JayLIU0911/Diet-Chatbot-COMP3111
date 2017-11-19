@@ -32,17 +32,6 @@ public class Coupon{
     private static Coupon coupon;
     
     /**
-     * This is a User private member in order to call the function in User.class
-     */
-	private User user = new User();
-	
-	/**
-	 * This is a CouponDB private member
-	 * We can use this member to change and get things in database
-	 */
-	private CouponDB couponDB = new CouponDB();
-    
-    /**
      * This is a singleton implementation of the coupon object. If there is already this object, then we don't create it again.
      * @return coupon If there isn't a coupon object, we create a new one then return it. Else, we return the already existed one.
      */
@@ -72,9 +61,9 @@ public class Coupon{
 		do{
 			Random rand = new Random();
 			code = rand.nextInt((999999 - 100000) + 1) + 100000;
-		} while(couponDB.check_code(Integer.toString(code))!=null);
+		} while(CouponDB.check_code(Integer.toString(code))!=null);
 
-		couponDB.insert_code(id,Integer.toString(code));
+		CouponDB.insert_code(id,Integer.toString(code));
 
 		return Integer.toString(code);
 	}
@@ -89,18 +78,18 @@ public class Coupon{
 	 */
 	public String code_call(String id, String code){
 		String result = null;
-		if(!couponDB.check_available(id) || number>5000)
+		if(!CouponDB.check_available(id) || number>5000)
 			return "1"; //user follow before time or coupon sold out or user already use the coupon
 		else{
-			result = couponDB.check_code(code);
+			result = CouponDB.check_code(code);
 			if(result!=null){
 			if(result.equals(id))
 				return "2";
 			else
 			{
 				number++;
-				user.setUser(id,"coupon","no");
-				couponDB.delete_code(code);
+				User.setUser(id,"coupon","no");
+				CouponDB.delete_code(code);
 				return result;
 			}}
 			else
