@@ -444,7 +444,7 @@ public class FoodTester {
   	boolean thrown = false;
   	String result = null;
   	try{
-   		result = this.food.checkAppropriate("idealintaketest","pizza pizza pizza pizza pizza pizza pizza pizza pizza pizza");
+   		result = this.food.checkAppropriate("idealintaketest","pizza pizza pizza pizza pizza pizza pizza pizza pizza pizza pizza pizza pizza pizza");
   	} catch (Exception e){
    		thrown = true;
   	}
