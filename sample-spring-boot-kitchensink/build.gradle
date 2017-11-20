@@ -16,11 +16,29 @@
 
 apply plugin: 'org.springframework.boot'
 
+apply plugin: "jacoco"
+ jacocoTestReport {
+     reports {
+         xml.enabled false
+         csv.enabled false
+         html.destination file("${buildDir}/jacocoHtml")
+} }
+
 dependencies {
     compile project(':line-bot-spring-boot')
     compile group: 'postgresql', name: 'postgresql', version: '9.0-801.jdbc4'
+    // https://mvnrepository.com/artifact/org.json/json
+	compile group: 'org.json', name: 'json', version: '20090211'
+	// https://mvnrepository.com/artifact/com.asprise.ocr/java-ocr-api
+	compile group: 'com.asprise.ocr', name: 'java-ocr-api', version: '15.3.0.3'
+    // https://mvnrepository.com/artifact/org.powermock/powermock-module-junit4
+testCompile group: 'org.powermock', name: 'powermock-module-junit4', version: '1.7.1'
+// https://mvnrepository.com/artifact/org.powermock/powermock-api-mockito
+testCompile group: 'org.powermock', name: 'powermock-api-mockito', version: '1.7.3'
+// https://mvnrepository.com/artifact/org.powermock/powermock-core
+testCompile group: 'org.powermock', name: 'powermock-core', version: '1.7.3'
 }
 
 test {
-    environment "DATABASE_URL", "postgres://gmtvewrqzbabiq:2c6ddf5969639a5fa6026b75eb7331ad87b466c9111d8ea618654c71d58f4aba@ec2-54-243-255-57.compute-1.amazonaws.com:5432/d2nbhua0fk1f87" 
+    environment "DATABASE_URL", "postgres://gmtvewrqzbabiq:2c6ddf5969639a5fa6026b75eb7331ad87b466c9111d8ea618654c71d58f4aba@ec2-54-243-255-57.compute-1.amazonaws.com:5432/d2nbhua0fk1f87"
 }

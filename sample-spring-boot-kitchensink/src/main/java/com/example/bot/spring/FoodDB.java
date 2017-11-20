@@ -42,7 +42,7 @@ public class FoodDB{
 		String description = null;
 		String measure = null;
 		String weight = null;
-		int i = 1;
+		int i = 0;
 		try{
 			connection=getConnection();
 			stmt = connection.prepareStatement("SELECT ndb_no, description, measure, weight, energy_per_measure, sodium_na_per_measure, fatty_acids_total_saturated_per_measure FROM nutrition1 where description like '%'||?||'%'");
@@ -66,9 +66,14 @@ public class FoodDB{
 					z = z + Float.parseFloat(fatty);
 				i=i+1;
 			}
-			x = x/i;
-			y = y/i;
-			z = z/i;
+			if(i!=0){
+				x = x/i;
+				y = y/i;
+				z = z/i;
+			}
+			// x = x/i;
+			// y = y/i;
+			// z = z/i;
 			result.add(no);
 			result.add(description);
 			result.add(measure);
@@ -104,13 +109,12 @@ public class FoodDB{
 		ResultSet rs = null;
 		boolean result = false;
 		try{
-            connection = getConnection();
-            String pre = "SELECT FROM nutrition1 WHERE description like '%'||?||'%'";
+            connection = getConnection();        
+            stmt = connection.prepareStatement("SELECT * FROM nutrition1 WHERE description like '%'||?||'%'");
             stmt.setString(1,name);
-            stmt = connection.prepareStatement(pre);
             rs = stmt.executeQuery();
             log.info("in create menu text delete 1 {}");
-            if(rs!=null&&rs.next())
+            if(rs.next())
             	result = true;
         }catch(Exception e){
             	log.info("in DBexist() deleting rows {}",e.toString());
@@ -161,7 +165,7 @@ public class FoodDB{
             stmt = connection.prepareStatement(pre);
             rs = stmt.executeQuery();
             log.info("in create menu text delete 1 {}");
-            if(rs!=null&&rs.next()){
+            if(rs.next()){
             	pre = "DELETE FROM menu WHERE userid = '"+ id +"'";
             	stmt = connection.prepareStatement(pre);
             	stmt.executeUpdate();
