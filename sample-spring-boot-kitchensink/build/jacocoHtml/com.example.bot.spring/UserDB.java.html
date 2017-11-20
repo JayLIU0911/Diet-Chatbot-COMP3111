@@ -1,0 +1,533 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">sample-spring-boot-kitchensink</a> &gt; <a href="index.source.html" class="el_package">com.example.bot.spring</a> &gt; <span class="el_source">UserDB.java</span></div><h1>UserDB.java</h1><pre class="source lang-java linenums">package com.example.bot.spring;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.PostConstruct;
+import javax.sql.DataSource;
+import java.util.Date;
+import java.text.*;
+
+import java.sql.*;
+import java.net.URISyntaxException;
+import java.net.URI;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+/**
+ * A class use to connect to the psql database
+ * @author Liu Shuyue
+ * @since 2017-11-18
+ */
+<span class="fc" id="L24">@Slf4j</span>
+<span class="fc" id="L25">public class UserDB{</span>
+
+	/**
+	 * This function is going to check the database whether a user id is in the user list
+	 * @param id Input a user id in order to check it in the database
+	 * @return result return a boolean, if the user exist, return false, else, true
+	 */
+    public static boolean check_userlist(String id){
+<span class="fc" id="L33">        Connection connection = null;</span>
+<span class="fc" id="L34">        PreparedStatement stmt = null;</span>
+<span class="fc" id="L35">        ResultSet rs = null;</span>
+        try{
+<span class="fc" id="L37">        connection = getConnection();</span>
+<span class="fc" id="L38">        stmt = connection.prepareStatement(&quot;SELECT * FROM user_list WHERE uid = ?&quot;);</span>
+<span class="fc" id="L39">        stmt.setString(1,id);</span>
+<span class="fc" id="L40">        rs = stmt.executeQuery();</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        if(rs.next())</span>
+<span class="fc" id="L42">        		return false;</span>
+<span class="fc" id="L43">        } catch (Exception e) {</span>
+<span class="fc" id="L44">            log.info(&quot;SQLExecption while inserting user: {}&quot;, e.toString());</span>
+        } finally{
+<span class="nc" id="L46">            try{</span>
+<span class="pc" id="L47">                connection.close();</span>
+<span class="pc" id="L48">                stmt.close();</span>
+
+<span class="pc" id="L50">            } catch (Exception ex) {</span>
+<span class="pc" id="L51">                log.info(&quot;SQLException while closing1: {}&quot;, ex.toString());</span>
+<span class="pc" id="L52">            }</span>
+<span class="pc" id="L53">        }</span>
+        
+<span class="fc" id="L55">        return true;</span>
+    }
+
+    /**
+     * This function is going the create a new user table with the name of user id
+     * @param id Input user id to be the name of the table
+     */
+    public static void create_usertable(String id){
+<span class="fc" id="L63">        Connection connection = null;</span>
+<span class="fc" id="L64">        PreparedStatement stmt = null;</span>
+        try{
+        	
+<span class="fc" id="L67">        connection = getConnection();</span>
+<span class="fc" id="L68">        String sql = &quot;CREATE TABLE IF NOT EXISTS &quot; + id + &quot; (date varchar(50), time varchar(50), food_intake varchar(200), price varchar(50), weight varchar(50), energy varchar(50), sodium varchar(50), fatty_acids_total_saturated varchar(50))&quot;;</span>
+<span class="fc" id="L69">        stmt = connection.prepareStatement(sql);</span>
+<span class="nc" id="L70">        stmt.executeUpdate();</span>
+<span class="fc" id="L71">        } catch (Exception e) {</span>
+<span class="fc" id="L72">            log.info(&quot;SQLExecption whle inserting user2: {}&quot;, e.toString());</span>
+        } finally{
+<span class="nc" id="L74">            try{</span>
+<span class="pc" id="L75">                connection.close();</span>
+<span class="pc" id="L76">                stmt.close();</span>
+
+<span class="pc" id="L78">            } catch (Exception ex) {</span>
+<span class="pc" id="L79">                log.info(&quot;SQLException while closing2: {}&quot;, ex.toString());</span>
+<span class="pc" id="L80">            }</span>
+<span class="pc" id="L81">        }</span>
+        
+<span class="fc" id="L83">    }</span>
+
+    /**
+     * This function is going to insert a new row in the user list table with the user id
+     * The new row is initiated with the user id and haven't get coupon
+     * @param id Input the user id to create a new row
+     */
+    public static void insert_user(String id){
+<span class="fc" id="L91">        Connection connection = null;</span>
+<span class="fc" id="L92">        PreparedStatement stmt = null;</span>
+        try{
+<span class="fc" id="L94">        connection = getConnection();</span>
+<span class="fc" id="L95">        String sql = &quot;INSERT INTO user_list VALUES('&quot; + id + &quot;', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '0', ' ', 'yes')&quot;;</span>
+<span class="fc" id="L96">        stmt = connection.prepareStatement(sql);</span>
+<span class="fc" id="L97">        stmt.executeUpdate();</span>
+<span class="fc" id="L98">        } catch (Exception e) {</span>
+<span class="fc" id="L99">            log.info(&quot;SQLExecption while inserting user3: {}&quot;, e.toString());</span>
+        } finally{
+<span class="nc" id="L101">            try{</span>
+<span class="pc" id="L102">                connection.close();</span>
+<span class="pc" id="L103">                stmt.close();</span>
+
+<span class="pc" id="L105">            } catch (Exception ex) {</span>
+<span class="pc" id="L106">                log.info(&quot;SQLException while closing3: {}&quot;, ex.toString());</span>
+<span class="pc" id="L107">            }</span>
+<span class="pc" id="L108">        }</span>
+        
+<span class="fc" id="L110">    }</span>
+
+    /**
+     * This function is going to drop a user table with the user id
+     * @param id Input the user id to find the corresponding user table
+     * @return result Return true if the table found and drop successfully, else return false
+     */
+    public static boolean drop_table(String id) {
+<span class="fc" id="L118">        Connection connection = null;</span>
+<span class="fc" id="L119">        PreparedStatement stmt = null;</span>
+<span class="fc" id="L120">        boolean result = false;</span>
+        try{
+        	
+<span class="fc" id="L123">        connection = getConnection();</span>
+<span class="fc" id="L124">        String sql = &quot;drop table if exists &quot; + id;</span>
+<span class="fc" id="L125">        stmt = connection.prepareStatement(sql);</span>
+<span class="nc" id="L126">        stmt.executeUpdate();</span>
+<span class="nc" id="L127">        result = true;</span>
+<span class="fc" id="L128">        } catch (Exception e) {</span>
+<span class="fc" id="L129">            log.info(&quot;SQLExecption while deleting1: {}&quot;, e.toString());</span>
+        } finally{
+<span class="nc" id="L131">            try{</span>
+<span class="pc" id="L132">                connection.close();</span>
+<span class="pc" id="L133">				stmt.close();</span>
+
+<span class="nc" id="L135">            } catch (Exception ex) {</span>
+<span class="nc" id="L136">                log.info(&quot;SQLException while closing4: {}&quot;, ex.toString());</span>
+<span class="pc" id="L137">            }</span>
+<span class="nc" id="L138">        }</span>
+<span class="fc" id="L139">        return result;</span>
+    }
+
+    /**
+     * This function is going to delete the user's row from the user list table
+     * First to check whether the user's row exist
+     * And then delete the corresponding user row
+     * @param id Input the user id to check whether the row exist and delete the row
+     * @return result Return a boolean. If the user id not exist, return false, else if the user id exist and deleted successfully, return true
+     */
+    public static boolean delete_user(String id) {
+<span class="fc" id="L150">        Connection connection = null;</span>
+<span class="fc" id="L151">        PreparedStatement stmt = null;</span>
+<span class="fc" id="L152">        ResultSet rs = null;</span>
+<span class="fc" id="L153">        boolean result = false;</span>
+        try{
+<span class="fc" id="L155">        connection = getConnection();</span>
+<span class="fc" id="L156">        stmt = connection.prepareStatement(&quot;select FROM user_list WHERE uid = ?&quot;);</span>
+<span class="fc" id="L157">        stmt.setString(1,id);</span>
+<span class="fc" id="L158">        rs = stmt.executeQuery();</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">        if(rs.next()){</span>
+<span class="fc" id="L160">        stmt = connection.prepareStatement(&quot;DELETE FROM user_list WHERE uid = ?&quot;);</span>
+<span class="fc" id="L161">        stmt.setString(1,id);</span>
+<span class="fc" id="L162">        stmt.executeUpdate();</span>
+<span class="fc" id="L163">        result = true;}</span>
+        else
+<span class="fc" id="L165">        	result = false;</span>
+<span class="nc" id="L166">        } catch (Exception e) {</span>
+<span class="nc" id="L167">            log.info(&quot;SQLExecption while deleting2: {}&quot;, e.toString());</span>
+<span class="nc" id="L168">            result = false;</span>
+        } finally{
+<span class="nc" id="L170">            try{</span>
+<span class="pc" id="L171">                connection.close();</span>
+<span class="pc" id="L172">                stmt.close();</span>
+<span class="pc" id="L173">                rs.close();</span>
+
+<span class="nc" id="L175">            } catch (Exception ex) {</span>
+<span class="nc" id="L176">                log.info(&quot;SQLException while closing5: {}&quot;, ex.toString());</span>
+<span class="pc" id="L177">            }</span>
+<span class="nc" id="L178">        }</span>
+<span class="fc" id="L179">        return result;</span>
+        
+    }
+
+    /**
+     * This function is going to insert the record into the user table with food name, user's weight, food's qualities
+     * First we will get the current time
+     * And we will call food.class to the corresponding nutrition depending on the food name
+     * Finally we use all these information to insert a new row in the user table
+     * @param id Input the user id to get corresponding user's weight and select the user table
+     * @param text Input the food name to get information about the food
+     * @param weight Input the user's weight at the time to insert into the table
+     * @return Return a boolean. If all these things done successfully(can find the user table and get the information about the food), it will return true. Else, return false
+     */
+    public static boolean insert_record(String id, String text, String weight){
+<span class="fc" id="L194">        Connection connection = null;</span>
+<span class="fc" id="L195">        PreparedStatement stmt = null;</span>
+<span class="fc" id="L196">        Food foodAdapter = new Food();</span>
+<span class="fc" id="L197">        Date current_time = new Date();</span>
+<span class="fc" id="L198">        SimpleDateFormat dateFormat = new SimpleDateFormat(&quot;dd/MM/yyyy&quot;);</span>
+<span class="fc" id="L199">        SimpleDateFormat timeFormat = new SimpleDateFormat(&quot;hh/mm/ss&quot;);</span>
+
+<span class="fc" id="L201">        boolean result = false;</span>
+
+<span class="fc" id="L203">        String date = dateFormat.format(current_time);</span>
+<span class="fc" id="L204">        String time = timeFormat.format(current_time);</span>
+
+<span class="fc" id="L206">        String energy = Float.toString(Food.getQuality(text)[0]);</span>
+<span class="fc" id="L207">        String sodium = Float.toString(Food.getQuality(text)[1]);</span>
+<span class="fc" id="L208">        String fatty = Float.toString(Food.getQuality(text)[2]);</span>
+
+        try{
+<span class="fc" id="L211">        connection = getConnection();</span>
+<span class="fc" id="L212">        String sql = &quot;insert into &quot; + id + &quot; (date, time, food_intake, price, weight, energy, sodium, fatty_acids_total_saturated) values('&quot; + date +&quot;','&quot;+time+&quot;','&quot;+text+&quot;','0','&quot;+weight+&quot;','&quot;+energy+&quot;','&quot;+sodium+&quot;','&quot;+fatty+&quot;')&quot;;</span>
+<span class="fc" id="L213">        stmt = connection.prepareStatement(sql);</span>
+<span class="fc" id="L214">        stmt.executeUpdate();</span>
+<span class="fc" id="L215">        result = true;</span>
+<span class="fc" id="L216">        } catch (Exception e) {</span>
+<span class="fc" id="L217">            log.info(&quot;SQLExecption while update record: {}&quot;, e.toString());</span>
+        } finally{
+<span class="nc" id="L219">            try{</span>
+<span class="pc" id="L220">                connection.close();</span>
+                
+<span class="pc" id="L222">                    stmt.close();</span>
+
+<span class="nc" id="L224">            } catch (Exception ex) {</span>
+<span class="nc" id="L225">                log.info(&quot;SQLException while closing6: {}&quot;, ex.toString());</span>
+<span class="pc" id="L226">            }</span>
+<span class="nc" id="L227">        }</span>
+<span class="fc" id="L228">        return result;</span>
+    }
+
+    /**
+     * This function is just created for the test case in order to delete the corresponding record we insert through the test case
+     * It is not used in the controller
+     * @param id Input the user id to find the user table
+     * @param text Input the food name to find the corresponding rows in the user table
+     * @return result Return a boolean value if all the things done successfully
+     */
+    public static boolean deleteRecord(String id, String text){
+<span class="fc" id="L239">    	Connection connection = null;</span>
+<span class="fc" id="L240">        PreparedStatement stmt = null;</span>
+<span class="fc" id="L241">        boolean result = false;</span>
+<span class="fc" id="L242">        ResultSet rs = null;</span>
+        try{
+<span class="fc" id="L244">        connection = getConnection();</span>
+<span class="fc" id="L245">        String sql = &quot;select * from &quot;+id+&quot; where food_intake='&quot;+text+&quot;'&quot;;</span>
+<span class="fc" id="L246">        stmt = connection.prepareStatement(sql);</span>
+<span class="fc" id="L247">        rs = stmt.executeQuery();</span>
+<span class="fc bfc" id="L248" title="All 2 branches covered.">        if(rs.next()){</span>
+<span class="fc" id="L249">        sql = &quot;delete from &quot;+id+&quot; where food_intake='&quot;+text+&quot;'&quot;;</span>
+<span class="fc" id="L250">        stmt = connection.prepareStatement(sql);</span>
+<span class="fc" id="L251">        stmt.executeUpdate();</span>
+<span class="fc" id="L252">        result = true;}</span>
+<span class="fc" id="L253">    	} catch (Exception e) {</span>
+<span class="fc" id="L254">            log.info(&quot;SQLExecption while delete record: {}&quot;, e.toString());</span>
+        } finally{
+<span class="nc" id="L256">            try{</span>
+<span class="pc" id="L257">                connection.close();</span>
+<span class="pc" id="L258">                rs.close();</span>
+<span class="pc" id="L259">                    stmt.close();</span>
+
+<span class="pc" id="L261">            } catch (Exception ex) {</span>
+<span class="pc" id="L262">                log.info(&quot;SQLException while closing11: {}&quot;, ex.toString());</span>
+<span class="pc" id="L263">            }</span>
+<span class="pc" id="L264">        }</span>
+<span class="fc" id="L265">        return result;</span>
+
+    }
+
+    /**
+     * This function is going to search the whole user table
+     * It will search the table depending on the date and add the information on the same date together
+     * It will return the data in a 2D arraylist with one date added together
+     * @param id Input the user id to find the user table
+     * @return result Return a 2D arraylist(String) with one date of a row and there are five columns(date,weight,energy,sodium,fatty)
+     */
+    public static ArrayList&lt;ArrayList&lt;String&gt;&gt; DBsearch_record(String id){
+<span class="fc" id="L277">        Connection connection = null;</span>
+<span class="fc" id="L278">        PreparedStatement stmt = null;</span>
+<span class="fc" id="L279">        ResultSet rs = null;</span>
+        
+<span class="fc" id="L281">        ArrayList&lt;ArrayList&lt;String&gt;&gt; result = new ArrayList&lt;ArrayList&lt;String&gt;&gt;();</span>
+        //ArrayList&lt;String&gt; a = new ArrayList&lt;String&gt;(5);
+        
+<span class="fc" id="L284">        float x = 0;</span>
+<span class="fc" id="L285">        float y = 0;</span>
+<span class="fc" id="L286">        float z = 0;</span>
+<span class="fc" id="L287">        String weight = &quot;0&quot;;</span>
+<span class="fc" id="L288">        String date2 = &quot;0&quot;;</span>
+<span class="fc" id="L289">        String date = &quot;0&quot;;</span>
+<span class="fc" id="L290">        String energy = &quot;0&quot;;</span>
+<span class="fc" id="L291">        String sodium = &quot;0&quot;;</span>
+<span class="fc" id="L292">        String fatty = &quot;0&quot;;</span>
+<span class="fc" id="L293">        String weight2 = &quot;0&quot;;</span>
+
+<span class="fc" id="L295">        int i = 0;</span>
+
+        try{
+<span class="fc" id="L298">            connection = getConnection();</span>
+<span class="fc" id="L299">        	String sql = &quot;SELECT date, weight, energy, sodium, fatty_acids_total_saturated from &quot; + id;</span>
+<span class="fc" id="L300">        	stmt = connection.prepareStatement(sql);</span>
+<span class="fc" id="L301">        	rs = stmt.executeQuery();</span>
+
+<span class="fc bfc" id="L303" title="All 2 branches covered.">            while(rs.next())</span>
+            {
+<span class="fc" id="L305">                date = rs.getString(1);</span>
+<span class="fc" id="L306">                energy = rs.getString(3);</span>
+<span class="fc" id="L307">                sodium = rs.getString(4);</span>
+<span class="fc" id="L308">                fatty = rs.getString(5);</span>
+<span class="fc" id="L309">                weight = rs.getString(2);</span>
+
+<span class="fc bfc" id="L311" title="All 2 branches covered.">                if(date2.equals(&quot;0&quot;)){</span>
+<span class="fc" id="L312">                    x = Float.parseFloat(energy);</span>
+<span class="fc" id="L313">                    y = Float.parseFloat(sodium);</span>
+<span class="fc" id="L314">                    z = Float.parseFloat(fatty);</span>
+<span class="fc" id="L315">                    date2 = date;</span>
+<span class="fc" id="L316">                    weight2 = weight;</span>
+<span class="fc" id="L317">                    log.info(&quot;12345-6, {}&quot;, x);</span>
+<span class="fc" id="L318">                    log.info(&quot;12345-6, {}&quot;, y);</span>
+<span class="fc" id="L319">                    log.info(&quot;12345-6, {}&quot;, z);</span>
+                }
+
+<span class="fc bfc" id="L322" title="All 2 branches covered.">                else if(!date.equals(date2))</span>
+                {
+
+<span class="fc" id="L325">                    ArrayList&lt;String&gt; a = new ArrayList&lt;String&gt;(5);</span>
+        
+<span class="fc" id="L327">                    a.add(date2);</span>
+<span class="fc" id="L328">                    a.add(weight2);</span>
+<span class="fc" id="L329">                    a.add(Float.toString(x));</span>
+<span class="fc" id="L330">                    a.add(Float.toString(y));</span>
+<span class="fc" id="L331">                    a.add(Float.toString(z));</span>
+
+<span class="fc" id="L333">                    log.info(&quot;12345-5, {}&quot;, x);</span>
+<span class="fc" id="L334">                    log.info(&quot;12345-5, {}&quot;, y);</span>
+<span class="fc" id="L335">                    log.info(&quot;12345-5, {}&quot;, z);</span>
+
+<span class="fc" id="L337">                    result.add(a);</span>
+
+<span class="fc" id="L339">                    x = Float.parseFloat(energy);</span>
+<span class="fc" id="L340">                    y = Float.parseFloat(sodium);</span>
+<span class="fc" id="L341">                    z = Float.parseFloat(fatty);</span>
+
+<span class="fc" id="L343">                    date2 = date;</span>
+<span class="fc" id="L344">                    weight2 = weight;</span>
+<span class="fc" id="L345">                    i = i + 1;</span>
+<span class="fc" id="L346">                    log.info(&quot;123456-2&quot;);</span>
+<span class="fc" id="L347">                }</span>
+                else{
+<span class="fc" id="L349">                    x = x + Float.parseFloat(energy);</span>
+<span class="fc" id="L350">                    y = y + Float.parseFloat(sodium);</span>
+<span class="fc" id="L351">                    z = z + Float.parseFloat(fatty);</span>
+<span class="fc" id="L352">                    log.info(&quot;12345-7, {}&quot;, x);</span>
+<span class="fc" id="L353">                    log.info(&quot;12345-7, {}&quot;, y);</span>
+<span class="fc" id="L354">                    log.info(&quot;12345-7, {}&quot;, z);</span>
+<span class="fc" id="L355">                    weight2 = weight;</span>
+                }
+            }
+<span class="fc bfc" id="L358" title="All 2 branches covered.">            if(!date2.equals(&quot;0&quot;)){</span>
+<span class="fc" id="L359">            ArrayList&lt;String&gt; b = new ArrayList&lt;String&gt;(5);</span>
+           
+<span class="fc" id="L361">            b.add(date);</span>
+<span class="fc" id="L362">            b.add(weight);</span>
+<span class="fc" id="L363">            b.add(Float.toString(x));</span>
+<span class="fc" id="L364">            b.add(Float.toString(y));</span>
+<span class="fc" id="L365">            b.add(Float.toString(z));</span>
+<span class="fc" id="L366">            result.add(b);}</span>
+
+<span class="nc" id="L368">        }catch(Exception e){</span>
+<span class="nc" id="L369">            log.info(&quot;In searchRecord,{}&quot;,e.toString());</span>
+        } finally{
+<span class="nc" id="L371">        	try{</span>
+<span class="pc" id="L372">                connection.close();</span>
+                
+<span class="pc" id="L374">                    stmt.close();</span>
+<span class="pc" id="L375">                rs.close();</span>
+
+<span class="nc" id="L377">            } catch (Exception ex) {</span>
+<span class="nc" id="L378">                log.info(&quot;SQLException while closing7: {}&quot;, ex.toString());</span>
+<span class="pc" id="L379">            }</span>
+<span class="nc" id="L380">        }</span>
+        
+<span class="fc" id="L382">        return result;</span>
+    }
+
+    /**
+     * This function is going the search the data in the user table on a exact given date
+     * It will return the data on the given day
+     * @param id Input the user id to find the user table
+     * @param date Input the date you want to check in the user table
+     * @return result Return an Arraylist which include the information on the given date by five values -- date, weight, energy, sodium, and fatty
+     */
+    public static ArrayList&lt;String&gt; DBsearch_day(String id, String date){
+<span class="fc" id="L393">        Connection connection = null;</span>
+<span class="fc" id="L394">        PreparedStatement stmt = null;</span>
+<span class="fc" id="L395">        ResultSet rs = null;</span>
+<span class="fc" id="L396">        ArrayList&lt;String&gt; result = new ArrayList&lt;String&gt;();</span>
+
+<span class="fc" id="L398">        float x = 0;</span>
+<span class="fc" id="L399">        float y = 0;</span>
+<span class="fc" id="L400">        float z = 0;</span>
+<span class="fc" id="L401">        String weight=null;</span>
+        try{
+<span class="fc" id="L403">        connection = getConnection();</span>
+<span class="fc" id="L404">        String sql = &quot;SELECT date, weight, energy, sodium, fatty_acids_total_saturated from &quot; + id + &quot; where date = '&quot; + date +&quot;'&quot;;</span>
+<span class="fc" id="L405">        stmt = connection.prepareStatement(sql);</span>
+<span class="fc" id="L406">        rs = stmt.executeQuery();</span>
+        
+
+<span class="fc bfc" id="L409" title="All 2 branches covered.">        while(rs.next())</span>
+            {
+<span class="fc" id="L411">                String date2 = rs.getString(1);</span>
+<span class="fc" id="L412">                weight = rs.getString(2);</span>
+<span class="fc" id="L413">                String energy = rs.getString(3);</span>
+<span class="fc" id="L414">                String sodium = rs.getString(4);</span>
+<span class="fc" id="L415">                String fatty = rs.getString(5);</span>
+
+<span class="fc" id="L417">                x = x + Float.parseFloat(energy);</span>
+<span class="fc" id="L418">                y = y + Float.parseFloat(sodium);</span>
+<span class="fc" id="L419">                z = z + Float.parseFloat(fatty);</span>
+<span class="fc" id="L420">            }</span>
+
+<span class="fc" id="L422">            result.add(date);</span>
+<span class="fc" id="L423">            result.add(weight);</span>
+<span class="fc" id="L424">            result.add(Float.toString(x));</span>
+<span class="fc" id="L425">            result.add(Float.toString(y));</span>
+<span class="fc" id="L426">            result.add(Float.toString(z));</span>
+
+<span class="fc" id="L428">        } catch (Exception e) {</span>
+<span class="fc" id="L429">            log.info(&quot;SQLExecption while search record2: {}&quot;, e.toString());</span>
+        } finally{
+<span class="nc" id="L431">            try{</span>
+<span class="pc" id="L432">                connection.close();</span>
+                
+<span class="pc" id="L434">                    stmt.close();</span>
+<span class="pc" id="L435">                rs.close();</span>
+
+<span class="pc" id="L437">            } catch (Exception ex) {</span>
+<span class="pc" id="L438">                log.info(&quot;SQLException while closing8: {}&quot;, ex.toString());</span>
+<span class="pc" id="L439">            }</span>
+<span class="pc" id="L440">        }</span>
+<span class="fc" id="L441">        return result;</span>
+    }
+
+    /**
+     * This function the going to get the data on a given column and a given row in the user list table
+     * @param id Input the user id to find the corresponding row in the user list
+     * @param column Input the column name to find the column
+     * @return result Return a String which is the data found in the given row and column
+     */
+    public static String select_userlist(String id, String column){
+<span class="fc" id="L451">        Connection connection = null;</span>
+<span class="fc" id="L452">        PreparedStatement stmt = null;</span>
+<span class="fc" id="L453">        ResultSet rs = null;</span>
+<span class="fc" id="L454">        String result = null;</span>
+        try{
+<span class="fc" id="L456">            connection = getConnection();</span>
+<span class="fc" id="L457">            String sql = &quot;select &quot; + column + &quot; from user_list where uid = '&quot; + id + &quot;'&quot;;</span>
+<span class="fc" id="L458">            stmt = connection.prepareStatement(sql);</span>
+<span class="fc" id="L459">            rs = stmt.executeQuery();</span>
+<span class="fc bfc" id="L460" title="All 2 branches covered.">            if(rs.next())</span>
+<span class="fc" id="L461">            	result = rs.getString(1);</span>
+<span class="fc" id="L462">        } catch (Exception e){</span>
+<span class="fc" id="L463">        log.info(&quot;SQLException while get user: {}&quot;, e.toString());</span>
+    } finally{
+<span class="nc" id="L465">        try{</span>
+<span class="pc" id="L466">            connection.close();</span>
+            
+<span class="pc" id="L468">                stmt.close();</span>
+<span class="pc" id="L469">            rs.close();         </span>
+<span class="pc" id="L470">            }catch (Exception ex) {</span>
+<span class="pc" id="L471">                log.info(&quot;SQLException while closing9: {}&quot;, ex.toString());</span>
+<span class="pc" id="L472">            }</span>
+<span class="pc" id="L473">    }</span>
+<span class="fc" id="L474">    return result;</span>
+    }
+
+    /**
+     * This function is going to update the information in the user list table
+     * It will update the data in the given row and given column
+     * @param id Input the user id to find the corresponding row in the user list
+     * @param column Input the column name to find the column
+     * @param text Input the text you want to update at the given row and column in the user list
+     * @return result Return a boolean value to tell whether update succeeds
+     */
+    public static boolean update_userlist(String id, String column, String text){
+<span class="fc" id="L486">        Connection connection = null;</span>
+<span class="fc" id="L487">        PreparedStatement stmt = null;</span>
+<span class="fc" id="L488">        boolean result = false;</span>
+
+        try{
+<span class="fc" id="L491">            connection = getConnection();</span>
+<span class="fc" id="L492">            String sql = &quot;update user_list set &quot; + column + &quot;='&quot; + text + &quot;' where uid = '&quot; + id + &quot;'&quot;;</span>
+<span class="fc" id="L493">            stmt = connection.prepareStatement(sql);</span>
+<span class="fc" id="L494">            stmt.executeUpdate();</span>
+<span class="fc" id="L495">            result = true;</span>
+<span class="fc" id="L496">        } catch (Exception e){</span>
+<span class="fc" id="L497">            log.info(&quot;SQLException while setting state: {}&quot;, e.toString());</span>
+        } finally{
+<span class="nc" id="L499">            try{</span>
+<span class="pc" id="L500">                connection.close();</span>
+                
+<span class="pc" id="L502">                    stmt.close();</span>
+                
+<span class="pc" id="L504">            }catch (Exception ex) {</span>
+<span class="pc" id="L505">                log.info(&quot;SQLException while closing10: {}&quot;, ex.toString());</span>
+<span class="pc" id="L506">            }</span>
+<span class="pc" id="L507">        }</span>
+<span class="fc" id="L508">        return result;</span>
+    }
+
+    /**
+     * This function is going to connect the data base in heroku
+     * @return connection Return the connection
+     */
+    private static Connection getConnection() throws URISyntaxException, SQLException {
+        Connection connection;
+<span class="fc" id="L517">        URI dbUri = new URI(System.getenv(&quot;DATABASE_URL&quot;));</span>
+
+<span class="fc" id="L519">        String username = dbUri.getUserInfo().split(&quot;:&quot;)[0];</span>
+<span class="fc" id="L520">        String password = dbUri.getUserInfo().split(&quot;:&quot;)[1];</span>
+<span class="fc" id="L521">        String dbUrl = &quot;jdbc:postgresql://&quot; + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath() +  &quot;?ssl=true&amp;sslfactory=org.postgresql.ssl.NonValidatingFactory&quot;;</span>
+
+<span class="fc" id="L523">        log.info(&quot;Username: {} Password: {}&quot;, username, password);</span>
+<span class="fc" id="L524">        log.info (&quot;dbUrl: {}&quot;, dbUrl);</span>
+
+<span class="fc" id="L526">        connection = DriverManager.getConnection(dbUrl, username, password);</span>
+
+<span class="fc" id="L528">        return connection;</span>
+    }
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.8.201612092310</span></div></body></html>

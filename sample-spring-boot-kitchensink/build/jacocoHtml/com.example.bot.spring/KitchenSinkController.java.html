@@ -1,0 +1,1010 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>KitchenSinkController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">sample-spring-boot-kitchensink</a> &gt; <a href="index.source.html" class="el_package">com.example.bot.spring</a> &gt; <span class="el_source">KitchenSinkController.java</span></div><h1>KitchenSinkController.java</h1><pre class="source lang-java linenums"> /*
+ * Copyright 2016 LINE Corporation
+ *
+ * LINE Corporation licenses this file to you under the Apache License,
+ * version 2.0 (the &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.example.bot.spring;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.io.OutputStream;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
+import com.linecorp.bot.model.profile.UserProfileResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import com.google.common.io.ByteStreams;
+
+import com.linecorp.bot.client.LineMessagingClient;
+import com.linecorp.bot.client.MessageContentResponse;
+import com.linecorp.bot.model.ReplyMessage;
+import com.linecorp.bot.model.action.MessageAction;
+import com.linecorp.bot.model.action.PostbackAction;
+import com.linecorp.bot.model.action.URIAction;
+import com.linecorp.bot.model.event.BeaconEvent;
+import com.linecorp.bot.model.event.Event;
+import com.linecorp.bot.model.event.FollowEvent;
+import com.linecorp.bot.model.event.JoinEvent;
+import com.linecorp.bot.model.event.MessageEvent;
+import com.linecorp.bot.model.event.PostbackEvent;
+import com.linecorp.bot.model.event.UnfollowEvent;
+import com.linecorp.bot.model.event.message.AudioMessageContent;
+import com.linecorp.bot.model.event.message.ImageMessageContent;
+import com.linecorp.bot.model.event.message.LocationMessageContent;
+import com.linecorp.bot.model.event.message.StickerMessageContent;
+import com.linecorp.bot.model.event.message.TextMessageContent;
+import com.linecorp.bot.model.event.source.GroupSource;
+import com.linecorp.bot.model.event.source.RoomSource;
+import com.linecorp.bot.model.event.source.Source;
+import com.linecorp.bot.model.message.AudioMessage;
+import com.linecorp.bot.model.message.ImageMessage;
+import com.linecorp.bot.model.message.ImagemapMessage;
+import com.linecorp.bot.model.message.LocationMessage;
+import com.linecorp.bot.model.message.Message;
+import com.linecorp.bot.model.message.StickerMessage;
+import com.linecorp.bot.model.message.TemplateMessage;
+import com.linecorp.bot.model.message.TextMessage;
+import com.linecorp.bot.model.message.imagemap.ImagemapArea;
+import com.linecorp.bot.model.message.imagemap.ImagemapBaseSize;
+import com.linecorp.bot.model.message.imagemap.MessageImagemapAction;
+import com.linecorp.bot.model.message.imagemap.URIImagemapAction;
+import com.linecorp.bot.model.message.template.ButtonsTemplate;
+import com.linecorp.bot.model.message.template.CarouselColumn;
+import com.linecorp.bot.model.message.template.CarouselTemplate;
+import com.linecorp.bot.model.message.template.ConfirmTemplate;
+import com.linecorp.bot.model.response.BotApiResponse;
+import com.linecorp.bot.spring.boot.annotation.EventMapping;
+import com.linecorp.bot.spring.boot.annotation.LineMessageHandler;
+
+import lombok.NonNull;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+
+import java.net.URI;
+
+import java.util.*;
+import java.util.Calendar;
+
+import java.util.Date;
+import com.linecorp.bot.model.PushMessage;
+import java.util.*;
+import java.text.*;
+
+import com.asprise.ocr.*;
+import java.io.*;
+
+<span class="fc" id="L99">@Slf4j</span>
+@LineMessageHandler
+<span class="fc" id="L101">public class KitchenSinkController {</span>
+
+
+    /**
+     * This object is used to reply message to user
+     */
+	@Autowired
+	private LineMessagingClient lineMessagingClient;
+
+    /**
+     * This array contains the order for users to update their states
+     */
+<span class="fc" id="L113">	private String[] setOrder = {&quot;name&quot;, &quot;status&quot;, &quot;age&quot;, &quot;weight&quot;, &quot;target_weight&quot;, &quot;height&quot;, &quot;days_for_target&quot;};</span>
+
+    /**
+     * Starting date of the ice cream coupon activity as an calendar obejct
+     */
+<span class="fc" id="L118">	private Calendar calendar = new GregorianCalendar(2017,10,11);</span>
+
+
+    /**
+     * Starting date of the ice cream coupon activity as an date obejct
+     */
+<span class="fc" id="L124">	private Date coupon_date =  calendar.getTime();</span>
+
+
+    /**
+     * This method is used to handle text message event from user, the detailed handling is passed to handleTextContent function
+     * @param event This is the event from user
+     * @throws Exception for all errors
+     */
+	@EventMapping
+	public void handleTextMessageEvent(MessageEvent&lt;TextMessageContent&gt; event) throws Exception {
+<span class="fc" id="L134">		log.info(&quot;XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX&quot;);</span>
+<span class="fc" id="L135">		log.info(&quot;This is your entry point:&quot;);</span>
+<span class="fc" id="L136">		log.info(&quot;XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX&quot;);</span>
+<span class="fc" id="L137">		TextMessageContent message = event.getMessage();</span>
+<span class="fc" id="L138">		handleTextContent(event.getReplyToken(), event, message);</span>
+<span class="fc" id="L139">	}</span>
+
+    /**
+     * This method is used to handle sticker message event from the user by replying the same sticker back to user.
+     * @param event This is the corresponding sticker event object
+     */
+	@EventMapping
+	public void handleStickerMessageEvent(MessageEvent&lt;StickerMessageContent&gt; event) {
+<span class="nc" id="L147">		handleSticker(event.getReplyToken(), event.getMessage());</span>
+<span class="nc" id="L148">	}</span>
+
+    /**
+     * This method is used to handle location message event from the user by replying the same location back to user.
+     * @param event This is the corresponding location message event object
+     */
+	@EventMapping
+	public void handleLocationMessageEvent(MessageEvent&lt;LocationMessageContent&gt; event) {
+<span class="nc" id="L156">		LocationMessageContent locationMessage = event.getMessage();</span>
+<span class="nc" id="L157">		reply(event.getReplyToken(), new LocationMessage(locationMessage.getTitle(), locationMessage.getAddress(),</span>
+<span class="nc" id="L158">				locationMessage.getLatitude(), locationMessage.getLongitude()));</span>
+<span class="nc" id="L159">	}</span>
+
+    /**
+     * This method is used to handle image message event from the user by replying the same image back to user.
+     * @param event This is the corresponding image event object
+     * @throws IOException if an input error occurs
+     */
+	 @EventMapping
+	 public void handleImageMessageEvent(MessageEvent&lt;ImageMessageContent&gt; event) throws IOException {
+<span class="nc" id="L168">	 		String replyToken = event.getReplyToken();</span>
+<span class="nc" id="L169">	 		String userID = event.getSource().getUserId();</span>
+	 		final MessageContentResponse response;
+
+<span class="nc" id="L172">	 		String messageId = event.getMessage().getId();</span>
+	 		try {
+<span class="nc" id="L174">	 			response = lineMessagingClient.getMessageContent(messageId).get();</span>
+<span class="nc" id="L175">	 		} catch (InterruptedException | ExecutionException e) {</span>
+<span class="nc" id="L176">	 			reply(replyToken, new TextMessage(&quot;Cannot get image: &quot; + e.getMessage()));</span>
+<span class="nc" id="L177">	 			throw new RuntimeException(e);</span>
+<span class="nc" id="L178">	 		}</span>
+<span class="nc" id="L179">	 		DownloadedContent jpg = saveContent(&quot;jpg&quot;, response);</span>
+	 		// reply(((MessageEvent) event).getReplyToken(), new ImageMessage(jpg.getUri(), jpg.getUri()));
+
+<span class="nc" id="L182">	 		String state = User.getUser(userID, &quot;state&quot;);</span>
+         
+<span class="nc bnc" id="L184" title="All 2 branches missed.">	 		if (state == null) {</span>
+<span class="nc" id="L185">	 			this.replyText(replyToken, &quot;Get user state failed: &quot; + userID);</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">	 		}	else if (state.equals(&quot;menu jpeg&quot;)) {</span>
+	 			try {
+<span class="nc bnc" id="L188" title="All 2 branches missed.">	 				if (!Food.createMenuImage(userID, new URI(jpg.getUri()))) {</span>
+<span class="nc" id="L189">	 					this.replyText(replyToken, &quot;createMenuImage() failed with userID: &quot; + userID + &quot; and menu URI: &quot; + jpg.getUri());</span>
+<span class="nc" id="L190">	 					User.setUser(userID, &quot;state&quot;, &quot;0&quot;);</span>
+<span class="nc" id="L191">	 					return;</span>
+	 				}
+<span class="nc" id="L193">	 			} catch (URISyntaxException e) {</span>
+<span class="nc" id="L194">	 				this.replyText(replyToken, &quot;URISyntaxException in createMenuImage(): &quot; + e.getMessage());</span>
+<span class="nc" id="L195">	 				User.setUser(userID, &quot;state&quot;, &quot;0&quot;);</span>
+<span class="nc" id="L196">	 				return;</span>
+<span class="nc" id="L197">	 			}</span>
+
+<span class="nc" id="L199">	 			String recommendation = Food.getMenuInfo(userID);</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">	 			if (recommendation != null)</span>
+<span class="nc" id="L201">	 				this.replyText(replyToken, recommendation + &quot;\nWhat do you want to choose?&quot;);</span>
+	 			else
+<span class="nc" id="L203">	 				this.replyText(replyToken, &quot;getMenuInfo() failed with userID: &quot; + userID);</span>
+<span class="nc" id="L204">	 		} else {</span>
+<span class="nc" id="L205">	 			this.replyText(replyToken, &quot;Wrong state in handleImageMessageEvent(): &quot; + state);</span>
+	 		}
+
+<span class="nc" id="L208">	 		User.setUser(userID, &quot;state&quot;, &quot;0&quot;);</span>
+<span class="nc" id="L209">	 }</span>
+
+    /**
+     * This method is used to handle audio message event from the user by replying the same audio back to user.
+     * @param event This is the corresponding audio message event object
+     * @throws IOException if an input error occurs
+     */
+	@EventMapping
+	public void handleAudioMessageEvent(MessageEvent&lt;AudioMessageContent&gt; event) throws IOException {
+		final MessageContentResponse response;
+<span class="nc" id="L219">		String replyToken = event.getReplyToken();</span>
+<span class="nc" id="L220">		String messageId = event.getMessage().getId();</span>
+		try {
+<span class="nc" id="L222">			response = lineMessagingClient.getMessageContent(messageId).get();</span>
+<span class="nc" id="L223">		} catch (InterruptedException | ExecutionException e) {</span>
+<span class="nc" id="L224">			reply(replyToken, new TextMessage(&quot;Cannot get image: &quot; + e.getMessage()));</span>
+<span class="nc" id="L225">			throw new RuntimeException(e);</span>
+<span class="nc" id="L226">		}</span>
+<span class="nc" id="L227">		DownloadedContent mp4 = saveContent(&quot;mp4&quot;, response);</span>
+<span class="nc" id="L228">		reply(event.getReplyToken(), new AudioMessage(mp4.getUri(), 100));</span>
+<span class="nc" id="L229">	}</span>
+
+    /**
+     * This method is used to handle unfollwer event from user by deleting the user from user database
+     * @param event this is the corresponding unfollow event object
+     */
+	@EventMapping
+	public void handleUnfollowEvent(UnfollowEvent event) {
+<span class="nc" id="L237">		log.info(&quot;unfollowed this bot: {}&quot;, event);</span>
+
+<span class="nc" id="L239">		String userID = event.getSource().getUserId();</span>
+<span class="nc" id="L240">        User.delete(userID);</span>
+	
+<span class="nc" id="L242">	}</span>
+
+    /**
+     * This method is used to handle follow event from new user by inserting the new into user database
+     * , setting state of user to be &quot;set name&quot; and giving welcoming message
+     * @param event this is the corresponding follow event object
+     */
+	@EventMapping
+	public void handleFollowEvent(FollowEvent event) {
+<span class="fc" id="L251">		String userID = event.getSource().getUserId();</span>
+<span class="fc" id="L252">		String replyToken = event.getReplyToken();</span>
+
+<span class="pc bpc" id="L254" title="1 of 2 branches missed.">		if (!User.insert(userID,coupon_date)) {</span>
+<span class="fc" id="L255">			this.replyText(replyToken, &quot;Insert user failed: &quot; + userID);</span>
+<span class="fc" id="L256">			return;</span>
+		}
+
+<span class="nc" id="L259">		String state = new String(&quot;set name&quot;);</span>
+<span class="nc bnc" id="L260" title="All 2 branches missed.">		if (!User.setUser(userID, &quot;state&quot;, state)) {</span>
+<span class="nc" id="L261">			this.replyText(replyToken, &quot;Set state failed: &quot; + state);</span>
+<span class="nc" id="L262">			return;</span>
+		}
+
+<span class="nc" id="L265">		String message = new String(&quot;Welcome! This is a helpful chatbot. We would like to collect your personal information. May I know your name?&quot;);</span>
+<span class="nc" id="L266">		this.replyText(replyToken, message);</span>
+<span class="nc" id="L267">	}</span>
+
+    /**
+     * This method is used to handle join event from user by sending a text message
+     * @param event this is the corresponding join event object
+     */
+	@EventMapping
+	public void handleJoinEvent(JoinEvent event) {
+<span class="nc" id="L275">		String replyToken = event.getReplyToken();</span>
+<span class="nc" id="L276">		this.replyText(replyToken, &quot;Joined &quot; + event.getSource());</span>
+<span class="nc" id="L277">	}</span>
+
+    /**
+     * This method is used to handle postback event from users
+     * @param event This is the corresponding event from user
+     */
+	@EventMapping
+	public void handlePostbackEvent(PostbackEvent event) {
+<span class="fc" id="L285">			String userID = event.getSource().getUserId();</span>
+<span class="fc" id="L286">			String replyToken = event.getReplyToken();</span>
+			//this.replyText(replyToken, &quot;Got postback &quot; + event.getPostbackContent().getData());
+<span class="fc" id="L288">			String postback = event.getPostbackContent().getData();</span>
+<span class="fc" id="L289">			String[] postbackArr = postback.split(&quot; &quot;);</span>
+
+<span class="fc bfc" id="L291" title="All 2 branches covered.">			if(postbackArr[0].equals(&quot;update&quot;)){</span>
+						
+<span class="fc bfc" id="L293" title="All 2 branches covered.">							if(postbackArr[1].equals(&quot;food&quot;)){ this.replyText(replyToken, &quot;What did you eat?&quot;);}</span>
+<span class="fc bfc" id="L294" title="All 2 branches covered.">							else if(postbackArr[1].equals(&quot;weight&quot;)){ this.replyText(replyToken, &quot;What is your current weight(kg)? (Please input a number)&quot;);}</span>
+<span class="fc bfc" id="L295" title="All 2 branches covered.">							else if(postbackArr[1].equals(&quot;target_weight&quot;)){ this.replyText(replyToken, &quot;What is your new target weight(kg)? (Please input a number)&quot;);}</span>
+<span class="fc" id="L296">							else{ this.replyText(replyToken, &quot;Wrong postback: &quot; + postback); User.setUser(userID, &quot;state&quot;, &quot;0&quot;);}</span>
+						
+<span class="fc" id="L298">						User.setUser(userID, &quot;state&quot;, postback);</span>
+						
+					}
+<span class="fc bfc" id="L301" title="All 2 branches covered.">			else if(postbackArr[0].equals(&quot;menu&quot;)){</span>
+<span class="fc" id="L302">						this.replyText(replyToken, &quot;Please input your &quot; + postbackArr[1] + &quot; menu&quot;);</span>
+<span class="fc" id="L303">						User.setUser(userID, &quot;state&quot;, postback);</span>
+						
+					}
+<span class="fc bfc" id="L306" title="All 2 branches covered.">			else if(postbackArr[0].equals(&quot;summary&quot;)){</span>
+						
+<span class="pc bpc" id="L308" title="1 of 2 branches missed.">							if(postbackArr[1].equals(&quot;daily&quot;)){</span>
+<span class="nc" id="L309">                                Date current_time = new Date();</span>
+<span class="nc" id="L310">                                SimpleDateFormat dateFormat = new SimpleDateFormat(&quot;dd/MM/yyyy&quot;);</span>
+<span class="nc" id="L311">                                String date = dateFormat.format(current_time);</span>
+<span class="nc" id="L312">                                float calories = User.getDailyIntake(userID, date);</span>
+
+<span class="nc" id="L314">								float idealCalories = User.getIdealDailyIntake(userID);</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">								if (calories == idealCalories)</span>
+<span class="nc" id="L316">									this.replyText(replyToken, &quot;Today you consumed &quot; + calories + &quot; kcal. Based on your personal information, we recommand you to consume &quot; + idealCalories + &quot; kcal per day. &quot;</span>
+										+ &quot;Good Job! Continue on your current consumption plan.&quot;);
+<span class="nc bnc" id="L318" title="All 2 branches missed.">								else if (calories &lt; idealCalories)</span>
+<span class="nc" id="L319">									this.replyText(replyToken, &quot;Today you consumed &quot; + calories + &quot; kcal. Based on your personal information, we recommand you to consume &quot; + idealCalories + &quot; kcal per day. &quot;</span>
+										+ &quot;Therefore we recommand you to increase your food consumption.&quot;);
+								else
+<span class="nc" id="L322">									this.replyText(replyToken, &quot;Today you consumed &quot; + calories + &quot; kcal. Based on your personal information, we recommand you to consume &quot; + idealCalories + &quot; kcal per day. &quot;</span>
+										+ &quot;Therefore we recommand you to decrease your food consumption.&quot;);
+								
+<span class="nc" id="L325">							}</span>
+<span class="fc bfc" id="L326" title="All 2 branches covered.">							else if(postbackArr[1].equals(&quot;weekly&quot;)){</span>
+<span class="fc" id="L327">								this.replyText(replyToken, User.generateWeeklySummary(userID));</span>
+								
+							}
+<span class="fc bfc" id="L330" title="All 2 branches covered.">							else if(postbackArr[1].equals(&quot;overall&quot;)){</span>
+<span class="fc" id="L331">								this.replyText(replyToken, User.generateSummary(userID));</span>
+								
+							}
+							else{
+<span class="fc" id="L335">								this.replyText(replyToken, &quot;Wrong postback: &quot; + postback);</span>
+<span class="fc" id="L336">								User.setUser(userID, &quot;state&quot;, &quot;0&quot;);</span>
+			        	
+							}
+						
+					}
+<span class="fc bfc" id="L341" title="All 2 branches covered.">					else if(postbackArr[0].equals(&quot;check&quot;)){</span>
+						
+<span class="pc bpc" id="L343" title="1 of 4 branches missed.">							if(postbackArr[1].equals(&quot;nutrition&quot;) || postbackArr[1].equals(&quot;appropriate&quot;)){</span>
+							
+<span class="fc" id="L345">								User.setUser(userID, &quot;state&quot;, postback);</span>
+<span class="fc" id="L346">								this.replyText(replyToken, &quot;Please input a food name&quot;);</span>
+								
+							}
+<span class="fc bfc" id="L349" title="All 2 branches covered.">							else if(postbackArr[1].equals(&quot;tips&quot;)) {</span>
+<span class="fc" id="L350">								this.replyText(replyToken, Food.getTip());</span>
+								
+							}
+							else{
+<span class="fc" id="L354">								this.replyText(replyToken, &quot;Wrong postback: &quot; + postback);</span>
+<span class="fc" id="L355">								User.setUser(userID, &quot;state&quot;, &quot;0&quot;);</span>
+			        	
+							}
+						
+					}
+	        else{
+<span class="fc" id="L361">	        	this.replyText(replyToken, &quot;Wrong postback: &quot; + postback);</span>
+<span class="fc" id="L362">						User.setUser(userID, &quot;state&quot;, &quot;0&quot;);</span>
+	        	
+	        }
+<span class="fc" id="L365">		}</span>
+	
+
+    /**
+     * This method is used to handle beacon event from user by sending a text message
+     * @param event this is the corresponding beacon event object
+     */
+	@EventMapping
+	public void handleBeaconEvent(BeaconEvent event) {
+<span class="nc" id="L374">		String replyToken = event.getReplyToken();</span>
+<span class="nc" id="L375">		this.replyText(replyToken, &quot;Got beacon message &quot; + event.getBeacon().getHwid());</span>
+<span class="nc" id="L376">	}</span>
+
+    /**
+     * This method is used to handle other events not metioned in the class from user by sending a text message
+     * @param event this is the corresponding event object
+     */
+	@EventMapping
+	public void handleOtherEvent(Event event) {
+<span class="nc" id="L384">		log.info(&quot;Received message(Ignored): {}&quot;, event);</span>
+<span class="nc" id="L385">	}</span>
+
+
+
+
+    /**
+     * This method is used to handle other events not metioned in the class from user by sending a text message
+     * @param message this is the corresponding event object
+     * @param replyToken this is the replyToken from event
+     */
+<span class="pc bpc" id="L395" title="2 of 4 branches missed.">	private void reply(@NonNull String replyToken, @NonNull Message message) {</span>
+<span class="fc" id="L396">		reply(replyToken, Collections.singletonList(message));</span>
+<span class="fc" id="L397">	}</span>
+
+    /**
+     * This method is used to reply message according to replyToken
+     * @param replyToken This is the replyToken for the message
+     * @param messages This is the message to be replied
+     */
+<span class="pc bpc" id="L404" title="2 of 4 branches missed.">	private void reply(@NonNull String replyToken, @NonNull List&lt;Message&gt; messages) {</span>
+		try {
+<span class="fc" id="L406">			BotApiResponse apiResponse = lineMessagingClient.replyMessage(new ReplyMessage(replyToken, messages)).get();</span>
+<span class="fc" id="L407">			log.info(&quot;Sent messages: {}&quot;, apiResponse);</span>
+<span class="nc" id="L408">		} catch (InterruptedException | ExecutionException e) {</span>
+<span class="nc" id="L409">			throw new RuntimeException(e);</span>
+<span class="fc" id="L410">		}</span>
+<span class="fc" id="L411">	}</span>
+
+    /**
+     * This method is used to simplify text reply function
+     * @param replyToken This is the replyToken for the message
+     * @param message This is the message to be replied
+     * @throws IllegalArgumentException If replyToken is empty
+     */
+<span class="pc bpc" id="L419" title="2 of 4 branches missed.">	private void replyText(@NonNull String replyToken, @NonNull String message) {</span>
+<span class="pc bpc" id="L420" title="1 of 2 branches missed.">		if (replyToken.isEmpty()) {</span>
+<span class="nc" id="L421">			throw new IllegalArgumentException(&quot;replyToken must not be empty&quot;);</span>
+		}
+<span class="pc bpc" id="L423" title="1 of 2 branches missed.">		if (message.length() &gt; 1000) {</span>
+<span class="nc" id="L424">			message = message.substring(0, 1000 - 2) + &quot;..&quot;;</span>
+		}
+<span class="fc" id="L426">		this.reply(replyToken, new TextMessage(message));</span>
+<span class="fc" id="L427">	}</span>
+
+    /**
+     * This method is used to reply sticker to user
+     * @param replyToken This is the replyToken for the sticker message
+     * @param content This is the content of the sticker to be reply
+     */
+	private void handleSticker(String replyToken, StickerMessageContent content) {
+<span class="nc" id="L435">		reply(replyToken, new StickerMessage(content.getPackageId(), content.getStickerId()));</span>
+<span class="nc" id="L436">	}</span>
+
+    /**
+     * This method is to handle in valid input from users for age , weight, target weight,
+     * height, days for target and gender
+     * @param state This is the corresponding state of user for the input
+     * @param input This is the input from the user
+     * @return boolean Return true for valid input and false for invalid input
+     */
+	private boolean isValidInput(String state, String input) {
+<span class="fc" id="L446">		String[] numberInput = {&quot;age&quot;, &quot;weight&quot;, &quot;target_weight&quot;, &quot;height&quot;, &quot;days_for_target&quot;};</span>
+<span class="fc bfc" id="L447" title="All 2 branches covered.">		if (Arrays.asList(numberInput).contains(state)) {</span>
+			try {
+<span class="fc" id="L449">				Integer.parseInt(input);</span>
+<span class="fc" id="L450">			} catch (Exception e1) {</span>
+				try {
+<span class="nc" id="L452">					Float.parseFloat(input);</span>
+<span class="fc" id="L453">				} catch (Exception e2) {</span>
+<span class="fc" id="L454">					return false;</span>
+<span class="nc" id="L455">				}</span>
+<span class="fc" id="L456">			}</span>
+		}
+<span class="fc bfc" id="L458" title="All 2 branches covered.">		if (state.equals(&quot;status&quot;)) {</span>
+<span class="pc bpc" id="L459" title="1 of 4 branches missed.">			if (!input.equals(&quot;male&quot;) &amp;&amp; !input.equals(&quot;female&quot;))</span>
+<span class="fc" id="L460">				return false;</span>
+		}
+<span class="fc" id="L462">		return true;</span>
+	}
+
+    /**
+     * This method is used to handle user state setting in order to update users' basic information
+     * @param replyToken This is the replyToken from user
+     * @param userID This is the user id
+     * @param stateArr This is a array store the user state
+     * @param input Thie is the user input
+     */
+	private void handleSetState(String replyToken, String userID, String[] stateArr, String input) throws Exception {
+<span class="fc bfc" id="L473" title="All 2 branches covered.">		if (!isValidInput(stateArr[1], input)) {</span>
+<span class="fc" id="L474">			this.replyText(replyToken, &quot;Please follow the input instruction (•ૢ⚈͒⌄⚈͒•ૢ)&quot;);</span>
+<span class="fc" id="L475">			return;</span>
+		}
+
+<span class="fc bfc" id="L478" title="All 2 branches covered.">		if (User.setUser(userID, stateArr[1], input)) {</span>
+<span class="fc" id="L479">			int i = 0;</span>
+<span class="fc bfc" id="L480" title="All 2 branches covered.">			for (; i &lt; setOrder.length - 1; ++i) {</span>
+<span class="fc bfc" id="L481" title="All 2 branches covered.">				if (stateArr[1].equals(setOrder[i])) {</span>
+<span class="fc" id="L482">					stateArr[1] = setOrder[i+1];</span>
+<span class="fc" id="L483">					break;</span>
+				}
+			}
+<span class="fc bfc" id="L486" title="All 2 branches covered.">			if (i == setOrder.length - 1) {</span>
+<span class="fc" id="L487">				this.replyText(replyToken, &quot;Great! Nice to meet you! You can input anything at any time to wake me up ✧⁺⸜(●˙▾˙●)⸝⁺✧&quot;);</span>
+<span class="fc" id="L488">				User.setUser(userID, &quot;state&quot;, &quot;0&quot;);</span>
+
+                
+<span class="fc" id="L491">                Timer T1 = new Timer(userID);</span>
+<span class="fc" id="L492">                T1.start();</span>
+
+<span class="fc" id="L494">			}	else {</span>
+				
+<span class="fc bfc" id="L496" title="All 2 branches covered.">					if(stateArr[1].equals(&quot;status&quot;)) { this.replyText(replyToken, &quot;What is your gender(male/female)?&quot;);}</span>
+<span class="fc bfc" id="L497" title="All 2 branches covered.">					else if(stateArr[1].equals(&quot;age&quot;)) { this.replyText(replyToken, &quot;How old are you? (Please input a number)&quot;);}</span>
+<span class="fc bfc" id="L498" title="All 2 branches covered.">					else if(stateArr[1].equals(&quot;weight&quot;)) { this.replyText(replyToken, &quot;What is your weight(kg)? (Please input a number)&quot;);}</span>
+<span class="fc bfc" id="L499" title="All 2 branches covered.">					else if(stateArr[1].equals(&quot;target_weight&quot;)) { this.replyText(replyToken, &quot;What is your target weight(kg)? (Please input a number)&quot;);}</span>
+<span class="fc bfc" id="L500" title="All 2 branches covered.">					else if(stateArr[1].equals(&quot;height&quot;)) { this.replyText(replyToken, &quot;What is your height(cm)? (Please input a number)&quot;);}</span>
+<span class="pc bpc" id="L501" title="1 of 2 branches missed.">					else if(stateArr[1].equals(&quot;days_for_target&quot;)) { this.replyText(replyToken, &quot;How long do you plan to achieve your goal? (Please input a day number)&quot;);}</span>
+<span class="nc" id="L502">					else { this.replyText(replyToken, &quot;Wrong state in handleSetState(): &quot; + String.join(&quot; &quot;, stateArr)); User.setUser(userID, &quot;state&quot;, &quot;0&quot;);}</span>
+				
+<span class="fc" id="L504">				User.setUser(userID, &quot;state&quot;, String.join(&quot; &quot;, stateArr));</span>
+			}
+<span class="fc" id="L506">		} else</span>
+<span class="fc" id="L507">			this.replyText(replyToken, &quot;Set &quot; + stateArr[1] + &quot; failed. Please try to input again :(&quot;);</span>
+<span class="fc" id="L508">	}</span>
+
+    /**
+     * This method is used to input users' basic information.
+     * @param replyToken This is the replyToken of the event
+     * @param userID This is the userID of the user
+     * @param stateArr This is the state array for the basic information
+     * @param input This is the input from the users for their basic information
+     */
+	private void handleUpdateState(String replyToken, String userID, String[] stateArr, String input) throws Exception {
+<span class="fc bfc" id="L518" title="All 2 branches covered.">		if (!isValidInput(stateArr[1], input)) {</span>
+<span class="fc" id="L519">			this.replyText(replyToken, &quot;Please input a number (๑•́₃•̀๑)&quot;);</span>
+<span class="fc" id="L520">			return;</span>
+		}
+
+		
+<span class="fc bfc" id="L524" title="All 2 branches covered.">			if(stateArr[1].equals(&quot;weight&quot;)) {</span>
+<span class="fc bfc" id="L525" title="All 2 branches covered.">				if (User.setUser(userID, stateArr[1], input)) {</span>
+<span class="fc" id="L526">					this.replyText(replyToken, &quot;Update &quot; + stateArr[1] + &quot; succeeded&quot;);</span>
+				} else {
+<span class="fc" id="L528">					this.replyText(replyToken, &quot;Update &quot; + stateArr[1] + &quot; failed&quot;);</span>
+				}
+				
+<span class="pc bpc" id="L531" title="2 of 4 branches missed.">                if (User.check_goal(userID)==1 || User.check_goal(userID)==2){</span>
+<span class="nc" id="L532">                        push(userID, new TextMessage(&quot;You have successfully reached your target weight! \n What is your next target weight&quot;));</span>
+<span class="nc" id="L533">                    User.setUser(userID, &quot;state&quot;, &quot;update target_weight&quot;);}</span>
+<span class="pc bpc" id="L534" title="1 of 2 branches missed.">                else if (User.check_goal(userID)==3) {</span>
+<span class="nc" id="L535">                    push(userID, new TextMessage(&quot;I'm sorry to inform you fail to reach your target weight within your planned period. \n Please update your new goal. \n What is your next target weight&quot;));</span>
+<span class="nc" id="L536">                    User.setUser(userID, &quot;state&quot;, &quot;update target_weight&quot;);</span>
+                    }
+                else
+<span class="fc" id="L539">                    User.setUser(userID, &quot;state&quot;, &quot;0&quot;);</span>
+      
+			}
+<span class="fc bfc" id="L542" title="All 2 branches covered.">			else if(stateArr[1].equals(&quot;food&quot;)) {</span>
+<span class="fc bfc" id="L543" title="All 2 branches covered.">				if (User.updateRecord(userID, input)) {</span>
+<span class="fc" id="L544">					this.replyText(replyToken, &quot;Update &quot; + stateArr[1] + &quot; succeeded&quot;);</span>
+<span class="fc" id="L545">					User.setUser(userID, &quot;state&quot;, &quot;0&quot;);</span>
+				} else {
+<span class="fc" id="L547">					this.replyText(replyToken, &quot;Update &quot; + stateArr[1] + &quot; failed&quot;);</span>
+<span class="fc" id="L548">					User.setUser(userID, &quot;state&quot;, &quot;0&quot;);</span>
+				}
+				
+			}
+<span class="fc bfc" id="L552" title="All 2 branches covered.">			else if(stateArr[1].equals(&quot;target_weight&quot;)) {</span>
+<span class="fc bfc" id="L553" title="All 2 branches covered.">				if (User.setUser(userID, &quot;target_weight&quot;, input)) {</span>
+<span class="fc" id="L554">					this.replyText(replyToken, &quot;How long do you plan to achieve your new goal? (Please input a day number)&quot;);</span>
+<span class="fc" id="L555">					User.setUser(userID, &quot;state&quot;, &quot;update days_for_target&quot;);</span>
+				} else {
+<span class="fc" id="L557">					User.setUser(userID, &quot;state&quot;, &quot;0&quot;);</span>
+<span class="fc" id="L558">					this.replyText(replyToken, &quot;Update &quot; + stateArr[1] + &quot; failed&quot;);</span>
+				}
+				
+			}
+<span class="fc bfc" id="L562" title="All 2 branches covered.">			else if(stateArr[1].equals(&quot;days_for_target&quot;)) {</span>
+<span class="fc bfc" id="L563" title="All 2 branches covered.">				if (User.setUser(userID, &quot;days_for_target&quot;, input)) {</span>
+<span class="fc" id="L564">					this.replyText(replyToken, &quot;Update goal succeeded&quot;);</span>
+				} else {
+<span class="fc" id="L566">					this.replyText(replyToken, &quot;Update &quot; + stateArr[1] + &quot; failed&quot;);</span>
+				}
+<span class="fc" id="L568">				User.setUser(userID, &quot;state&quot;, &quot;0&quot;);</span>
+				
+			}
+			else {
+<span class="fc" id="L572">				this.replyText(replyToken, &quot;Wrong state in handleUpdateState(): &quot; + String.join(&quot; &quot;, stateArr));</span>
+<span class="fc" id="L573">				User.setUser(userID, &quot;state&quot;, &quot;0&quot;);</span>
+			
+			}
+		
+<span class="fc" id="L577">	}</span>
+
+    /**
+     * This method is used to handle text content of a message from user
+     * @param replyToken this is the relpyToken to for replying to user
+     * @param event this is the message event to be handled
+     * @param content this is the text content contained in the message event
+     */
+	private void handleTextContent(String replyToken, Event event, TextMessageContent content)
+            throws Exception {
+<span class="fc" id="L587">        String text = content.getText();</span>
+<span class="fc" id="L588">				String userID = event.getSource().getUserId();</span>
+<span class="fc" id="L589">				String state = User.getUser(userID, &quot;state&quot;);</span>
+<span class="fc bfc" id="L590" title="All 2 branches covered.">				if (state == null) {</span>
+<span class="fc" id="L591">					this.replyText(replyToken, &quot;Get user state failed: &quot; + userID);</span>
+<span class="fc" id="L592">					return;</span>
+				}
+<span class="fc" id="L594">				String[] stateArr = state.split(&quot; &quot;);</span>
+
+<span class="fc" id="L596">        log.info(&quot;Got text message from {}: {}&quot;, replyToken, text);</span>
+
+<span class="fc bfc" id="L598" title="All 2 branches covered.">				if (text.length() &gt;= 6) {</span>
+<span class="pc bpc" id="L599" title="1 of 2 branches missed.">					if (text.equalsIgnoreCase(&quot;friend&quot;)) {</span>
+<span class="nc" id="L600">						this.replyText(replyToken, Coupon.getCoupon().friend_call(userID));</span>
+<span class="nc" id="L601">						return;</span>
+					}
+<span class="pc bpc" id="L603" title="1 of 2 branches missed.">					if (text.substring(0, 4).equalsIgnoreCase(&quot;code&quot;)) {</span>
+<span class="nc" id="L604">						String s = Coupon.getCoupon().code_call(userID, text.substring(4));</span>
+<span class="nc" id="L605">                        String couponImage = createUri(&quot;/static/coupon.jpg&quot;);</span>
+<span class="nc bnc" id="L606" title="All 14 branches missed.">                        switch(s){</span>
+                                case &quot;1&quot;:
+<span class="nc" id="L608">                                    this.replyText(replyToken, &quot;The coupon has been sold out or you have already used the coupon&quot;);</span>
+<span class="nc" id="L609">                                    break;</span>
+                                case &quot;2&quot;:
+<span class="nc" id="L611">                                    this.replyText(replyToken, &quot;You cannot use your own code&quot;);</span>
+<span class="nc" id="L612">                                    break;</span>
+                                case &quot;3&quot;:
+<span class="nc" id="L614">                                    this.replyText(replyToken,&quot;Code not found&quot;);</span>
+<span class="nc" id="L615">                                    break;</span>
+                                default:
+<span class="nc" id="L617">                                    reply(replyToken, new ImageMessage(couponImage,couponImage));</span>
+<span class="nc" id="L618">                                    push (s, new TextMessage(&quot;You have one extra ice coupon since your friend has claimed the ice-cream coupon! &quot;));</span>
+<span class="nc" id="L619">                                    push(s,new ImageMessage(couponImage,couponImage) );</span>
+                        }
+<span class="nc" id="L621">						return;</span>
+					}
+				}
+<span class="fc bfc" id="L624" title="All 2 branches covered.">if(stateArr[0].equals(&quot;set&quot;)) {</span>
+<span class="fc" id="L625">                        handleSetState(replyToken, userID, stateArr, text);</span>
+                        
+                    }
+<span class="fc bfc" id="L628" title="All 2 branches covered.">                    else if(stateArr[0].equals(&quot;update&quot;)) {</span>
+<span class="fc" id="L629">                        handleUpdateState(replyToken, userID, stateArr, text);</span>
+                        
+                    }
+<span class="fc bfc" id="L632" title="All 2 branches covered.">                    else if(stateArr[0].equals(&quot;menu&quot;)) {</span>
+                        
+<span class="fc bfc" id="L634" title="All 2 branches covered.">                            if(stateArr[1].equals(&quot;text&quot;)) {</span>
+<span class="fc bfc" id="L635" title="All 2 branches covered.">                                if (!Food.createMenuText(userID, text)) {</span>
+<span class="fc" id="L636">                                    this.replyText(replyToken, &quot;createMenuText() failed with userID: &quot; + userID + &quot; and menu: &quot; + text);</span>
+<span class="fc" id="L637">                                    User.setUser(userID, &quot;state&quot;, &quot;0&quot;);</span>
+<span class="fc" id="L638">                                    return;</span>
+                                }
+                                
+                            }
+<span class="fc bfc" id="L642" title="All 2 branches covered.">                            else if(stateArr[1].equals(&quot;json&quot;)) {</span>
+<span class="fc bfc" id="L643" title="All 2 branches covered.">                                if (!Food.createMenuJson(userID, text)) {</span>
+<span class="fc" id="L644">                                    this.replyText(replyToken, &quot;createMenuJson() failed with userID: &quot; + userID + &quot; and menu: &quot; + text);</span>
+<span class="fc" id="L645">                                    User.setUser(userID, &quot;state&quot;, &quot;0&quot;);</span>
+<span class="fc" id="L646">                                    return;</span>
+                                }
+                                
+                            }
+                            else{
+<span class="fc" id="L651">                                this.replyText(replyToken, &quot;Wrong state in handleTextContent(): &quot; + state);</span>
+<span class="fc" id="L652">                                User.setUser(userID, &quot;state&quot;, &quot;0&quot;);</span>
+<span class="fc" id="L653">                                return;</span>
+                            }
+                        
+<span class="fc" id="L656">                        String recommendation = Food.getMenuInfo(userID);</span>
+<span class="fc bfc" id="L657" title="All 2 branches covered.">                        if (!recommendation.contains(&quot;You haven't input a menu&quot;)) {</span>
+<span class="fc" id="L658">                            this.replyText(replyToken, recommendation + &quot;\nWhat do you want to choose?&quot;);</span>
+<span class="fc" id="L659">                            User.setUser(userID, &quot;state&quot;, &quot;warning&quot;);</span>
+                        } else {
+<span class="fc" id="L661">                            this.replyText(replyToken, recommendation);</span>
+<span class="fc" id="L662">                            User.setUser(userID, &quot;state&quot;, &quot;0&quot;);</span>
+<span class="fc" id="L663">                            return;</span>
+                        }
+                        
+<span class="fc" id="L666">                    }</span>
+<span class="fc bfc" id="L667" title="All 2 branches covered.">                    else if(stateArr[0].equals(&quot;warning&quot;)) {</span>
+<span class="fc" id="L668">                        String response = new String();</span>
+<span class="fc bfc" id="L669" title="All 2 branches covered.">                        if(Food.WarningforFoodSelection(userID,text).contains(&quot;database&quot;))</span>
+<span class="fc" id="L670">                        {response+=Food.WarningforFoodSelection(userID, text);</span>
+<span class="fc" id="L671">                            this.replyText(replyToken, response);</span>
+<span class="fc" id="L672">                            User.setUser(userID, &quot;state&quot;, &quot;0&quot;);</span>
+                            }
+<span class="fc bfc" id="L674" title="All 2 branches covered.">                        else if(!Food.FoodinMenu(userID, text)){</span>
+<span class="fc" id="L675">                            response += &quot;Your selection is not in the menu you've provided. However we still make the following recommendation based on your food selection. \n&quot;;</span>
+<span class="fc" id="L676">                            response += Food.WarningforFoodSelection(userID, text) + &quot; If you are going to select this food we suggest you to eat &quot; + Food.foodPortion(userID, text) + &quot; of the food.&quot;;</span>
+<span class="fc" id="L677">                            this.replyText(replyToken, response);</span>
+                            
+<span class="fc" id="L679">                            User.setUser(userID, &quot;state&quot;, &quot;0&quot;);</span>
+                        }
+                        else{
+<span class="fc" id="L682">                        response += Food.WarningforFoodSelection(userID, text) + &quot; If you are going to select this food we suggest you to eat &quot; + Food.foodPortion(userID, text) + &quot; of the food.&quot;;</span>
+<span class="fc" id="L683">                        this.replyText(replyToken, response);</span>
+
+<span class="fc" id="L685">                            User.setUser(userID, &quot;state&quot;, &quot;0&quot;);}</span>
+                        
+<span class="fc" id="L687">                    }</span>
+<span class="fc bfc" id="L688" title="All 2 branches covered.">                    else if(stateArr[0].equals(&quot;check&quot;)) {</span>
+                        
+<span class="fc bfc" id="L690" title="All 2 branches covered.">                            if(stateArr[1].equals(&quot;nutrition&quot;)) { this.replyText(replyToken, Food.checkNutrition(text)); }</span>
+<span class="fc bfc" id="L691" title="All 2 branches covered.">                            else if(stateArr[1].equals(&quot;appropriate&quot;)) { this.replyText(replyToken, Food.checkAppropriate(userID, text)); }</span>
+<span class="fc" id="L692">                            else { this.replyText(replyToken, &quot;Wrong state in handleTextContent(): &quot; + state); }</span>
+                        
+<span class="fc" id="L694">                        User.setUser(userID, &quot;state&quot;, &quot;0&quot;);</span>
+                        
+                    }
+<span class="pc bpc" id="L697" title="1 of 2 branches missed.">                    else if(stateArr[0].equals(&quot;0&quot;)) {</span>
+<span class="nc" id="L698">                        String updateImage = createUri(&quot;/static/buttons/update.jpg&quot;);</span>
+<span class="nc" id="L699">                        String recommendationImage = createUri(&quot;/static/buttons/recommend.jpg&quot;);</span>
+<span class="nc" id="L700">                        String summaryImage = createUri(&quot;/static/buttons/summary.jpg&quot;);</span>
+<span class="nc" id="L701">                        String checkImage = createUri(&quot;/static/buttons/check.jpg&quot;);</span>
+                        // String imageUrl = createUri(&quot;/static/buttons/1040.jpg&quot;);
+<span class="nc" id="L703">                        CarouselTemplate carouselTemplate = new CarouselTemplate(</span>
+<span class="nc" id="L704">                                        Arrays.asList(</span>
+<span class="nc" id="L705">                                                        new CarouselColumn(updateImage, &quot;Update&quot;, &quot;update&quot;, Arrays.asList(</span>
+                                                                        new PostbackAction(&quot;weight&quot;, &quot;update weight&quot;),
+                                                                        new PostbackAction(&quot;food&quot;, &quot;update food&quot;),
+                                                                        new PostbackAction(&quot;goal&quot;, &quot;update target_weight&quot;)
+                                                        )),
+<span class="nc" id="L710">                                                        new CarouselColumn(recommendationImage, &quot;Get recommendation from menu&quot;, &quot;get recommendation from menu&quot;, Arrays.asList(</span>
+                                                                        new PostbackAction(&quot;text menu&quot;, &quot;menu text&quot;),
+                                                                        new PostbackAction(&quot;json menu&quot;, &quot;menu json&quot;),
+                                                                        new PostbackAction(&quot;jpeg menu&quot;, &quot;menu jpeg&quot;)
+                                                        )),
+<span class="nc" id="L715">                                                        new CarouselColumn(summaryImage, &quot;Summary&quot;, &quot;summary&quot;, Arrays.asList(</span>
+                                                                        new PostbackAction(&quot;daily summary&quot;, &quot;summary daily&quot;),
+                                                                        new PostbackAction(&quot;weekly summary&quot;, &quot;summary weekly&quot;),
+                                                                        new PostbackAction(&quot;overall summary&quot;, &quot;summary overall&quot;)
+                                                        )),
+<span class="nc" id="L720">                                                        new CarouselColumn(checkImage, &quot;Check&quot;, &quot;check&quot;, Arrays.asList(</span>
+                                                                        new PostbackAction(&quot;check nutrition&quot;, &quot;check nutrition&quot;),
+                                                                        new PostbackAction(&quot;should I eat this?&quot;, &quot;check appropriate&quot;),
+                                                                        new PostbackAction(&quot;healthy tips&quot;, &quot;check tips&quot;)
+                                                        ))
+                                        ));
+<span class="nc" id="L726">                        TemplateMessage templateMessage = new TemplateMessage(&quot;general options&quot;, carouselTemplate);</span>
+<span class="nc" id="L727">                        this.reply(replyToken, templateMessage);</span>
+                        
+<span class="nc" id="L729">                }</span>
+                else {
+<span class="fc" id="L731">                    this.replyText(replyToken, &quot;Wrong state in handleTextContent(): &quot; + state);</span>
+<span class="fc" id="L732">                    User.setUser(userID, &quot;state&quot;, &quot;0&quot;);</span>
+                    
+                }
+<span class="fc" id="L735">    }</span>
+
+    /**
+     * This method create URL string for the object on the corresponding path
+     * @param path This the path for the object needed to create URL
+     * @return String This is the URL after transformation
+     */
+	static String createUri(String path) {
+<span class="nc" id="L743">		return ServletUriComponentsBuilder.fromCurrentContextPath().path(path).build().toUriString();</span>
+	}
+
+	private void system(String... args) {
+<span class="nc" id="L747">		ProcessBuilder processBuilder = new ProcessBuilder(args);</span>
+		try {
+<span class="nc" id="L749">			Process start = processBuilder.start();</span>
+<span class="nc" id="L750">			int i = start.waitFor();</span>
+<span class="nc" id="L751">			log.info(&quot;result: {} =&gt;  {}&quot;, Arrays.toString(args), i);</span>
+<span class="nc" id="L752">		} catch (IOException e) {</span>
+<span class="nc" id="L753">			throw new UncheckedIOException(e);</span>
+<span class="nc" id="L754">		} catch (InterruptedException e) {</span>
+<span class="nc" id="L755">			log.info(&quot;Interrupted&quot;, e);</span>
+<span class="nc" id="L756">			Thread.currentThread().interrupt();</span>
+<span class="nc" id="L757">		}</span>
+<span class="nc" id="L758">	}</span>
+
+	private static DownloadedContent saveContent(String ext, MessageContentResponse responseBody) {
+<span class="nc" id="L761">		log.info(&quot;Got content-type: {}&quot;, responseBody);</span>
+
+<span class="nc" id="L763">		DownloadedContent tempFile = createTempFile(ext);</span>
+<span class="nc" id="L764">		try (OutputStream outputStream = Files.newOutputStream(tempFile.path)) {</span>
+<span class="nc" id="L765">			ByteStreams.copy(responseBody.getStream(), outputStream);</span>
+<span class="nc" id="L766">			log.info(&quot;Saved {}: {}&quot;, ext, tempFile);</span>
+<span class="nc" id="L767">			return tempFile;</span>
+<span class="nc bnc" id="L768" title="All 8 branches missed.">		} catch (IOException e) {</span>
+<span class="nc" id="L769">			throw new UncheckedIOException(e);</span>
+		}
+	}
+
+    /**
+     * This method is used to created temperory file for downloaded content
+     * @param ext This is the file extension of the temperory file
+     * @return DownloadedContent Return a DownloadedContent object as an temporary file
+     */
+	private static DownloadedContent createTempFile(String ext) {
+<span class="nc" id="L779">		String fileName = LocalDateTime.now().toString() + '-' + UUID.randomUUID().toString() + '.' + ext;</span>
+<span class="nc" id="L780">		Path tempFile = KitchenSinkApplication.downloadedContentDir.resolve(fileName);</span>
+<span class="nc" id="L781">		tempFile.toFile().deleteOnExit();</span>
+<span class="nc" id="L782">		return new DownloadedContent(tempFile, createUri(&quot;/downloaded/&quot; + tempFile.getFileName()));</span>
+	}
+
+
+
+    /**
+     * This class is to generate constructor and getter for the class below
+     * see example at https://projectlombok.org/features/Value
+     */
+<span class="nc bnc" id="L791" title="All 20 branches missed.">    @Value //The annontation @Value is from the package lombok.Value</span>
+    public static class DownloadedContent {
+
+        /**
+         * path of the downloaded content
+         */
+<span class="nc" id="L797">        Path path;</span>
+
+        /**
+         * URI of the downloaded content
+         */
+<span class="nc" id="L802">        String uri;</span>
+    }
+
+
+
+    /**
+     * This class is to get user profile and status message
+     */
+	class ProfileGetter implements BiConsumer&lt;UserProfileResponse, Throwable&gt; {
+
+
+		private KitchenSinkController ksc;
+
+		private String replyToken;
+
+        /**
+         * This is the constructor for the class
+         * @param ksc This is the kitChenSinController object
+         * @param replyToken This is the replyToken from user
+         */
+<span class="nc" id="L822">		public ProfileGetter(KitchenSinkController ksc, String replyToken) {</span>
+<span class="nc" id="L823">			this.ksc = ksc;</span>
+<span class="nc" id="L824">			this.replyToken = replyToken;</span>
+<span class="nc" id="L825">		}</span>
+
+
+		@Override
+    	public void accept(UserProfileResponse profile, Throwable throwable) {
+<span class="nc bnc" id="L830" title="All 2 branches missed.">    		if (throwable != null) {</span>
+<span class="nc" id="L831">            	ksc.replyText(replyToken, throwable.getMessage());</span>
+<span class="nc" id="L832">            	return;</span>
+        	}
+<span class="nc" id="L834">        	ksc.reply(</span>
+                	replyToken,
+<span class="nc" id="L836">                	Arrays.asList(new TextMessage(</span>
+<span class="nc" id="L837">                		&quot;Display name: &quot; + profile.getDisplayName()),</span>
+                              	new TextMessage(&quot;Status message: &quot;
+<span class="nc" id="L839">                            		  + profile.getStatusMessage()))</span>
+        	);
+<span class="nc" id="L841">    	}</span>
+    }
+
+    /**
+     * This medthod simplifys the input of function &quot;push&quot;
+     * @param userID This is the userID of the receiver of pushed message
+     * @param message This is the message to be pushed to the receiver
+     */
+<span class="nc bnc" id="L849" title="All 4 branches missed.">    private void push(@NonNull String userID, @NonNull Message message) {</span>
+<span class="nc" id="L850">        push(userID, Collections.singletonList(message));</span>
+<span class="nc" id="L851">    }</span>
+
+    /**
+     * This method is used to push message to user
+     * @param userID This is the user ID for the receiver of pushed message
+     * @param messages This is the message being pushed
+     */
+<span class="pc bpc" id="L858" title="2 of 4 branches missed.">    private void push(@NonNull String userID, @NonNull List&lt;Message&gt; messages) {</span>
+        try {
+<span class="nc" id="L860">            BotApiResponse apiResponse = lineMessagingClient.pushMessage(new PushMessage(userID, messages)).get();</span>
+<span class="nc" id="L861">            log.info(&quot;Push messages: {}&quot;, apiResponse);</span>
+<span class="nc" id="L862">        } catch (InterruptedException | ExecutionException e) {</span>
+<span class="nc" id="L863">            throw new RuntimeException(e);</span>
+<span class="nc" id="L864">        }</span>
+<span class="nc" id="L865">    }</span>
+
+
+    /**
+     * The Timer class works as a remainder with two functions to
+     * remaind user to update intaked food at specific time (hk time 10am, 2pm and 9pm)
+     */
+    private class Timer implements Runnable {
+        
+        /**
+         * A new thread for immplementation of Timer class
+         */
+        private Thread t;
+        
+        /**
+         * user ID of the receiver for pushing remainder mesasge
+         */
+        private String userID;
+        
+        
+        
+        /**
+         * constructor for Timer class
+         * @param userID This is the string input assigned to the data member userID
+         */
+<span class="fc" id="L890">        Timer(String userID) {</span>
+<span class="fc" id="L891">            this.userID=userID;</span>
+            
+            
+<span class="fc" id="L894">        }</span>
+        
+        
+        /**
+         * This method implements the functions of timer class. By checking the current time in specific time,
+         * this function able to send update food remainder at specific time.
+         */
+        public void run() {
+            while(true){
+<span class="fc" id="L903">                Date current = new Date();</span>
+<span class="fc" id="L904">                SimpleDateFormat minuteFormat = new SimpleDateFormat(&quot;mm&quot;);</span>
+<span class="fc" id="L905">                SimpleDateFormat hourFormat = new SimpleDateFormat(&quot;HH&quot;);</span>
+<span class="fc" id="L906">                SimpleDateFormat timeFormat = new SimpleDateFormat(&quot;HH:mm:ss&quot;);</span>
+<span class="fc" id="L907">                String current_time_string = timeFormat.format(current);</span>
+<span class="fc" id="L908">                String current_minute_string = minuteFormat.format(current);</span>
+<span class="fc" id="L909">                String current_hour_string = hourFormat.format(current);</span>
+<span class="fc" id="L910">                int current_hour = Integer.parseInt(current_hour_string);</span>
+<span class="fc" id="L911">                int current_minutes = Integer.parseInt(current_minute_string);</span>
+                
+<span class="fc" id="L913">                int b_t=11;</span>
+<span class="fc" id="L914">                int l_t=12;</span>
+<span class="fc" id="L915">                int d_t = 13;</span>
+<span class="fc" id="L916">                int target_min = 27;</span>
+                
+<span class="fc" id="L918">                int breakfast_call_distant = b_t - current_hour;</span>
+<span class="fc" id="L919">                int lunch_call_distant = l_t -current_hour;</span>
+<span class="fc" id="L920">                int dinner_call_distant = d_t-current_hour;</span>
+                
+                
+                
+<span class="fc" id="L924">                int waithour = 0;</span>
+<span class="fc" id="L925">                int waitminute =0;</span>
+                
+                
+<span class="pc bpc" id="L928" title="3 of 6 branches missed.">                if (breakfast_call_distant==0 || lunch_call_distant==0 || dinner_call_distant==0){</span>
+<span class="nc bnc" id="L929" title="All 2 branches missed.">                    if(breakfast_call_distant==0) waithour = l_t - b_t -1;</span>
+<span class="nc bnc" id="L930" title="All 2 branches missed.">                    else if(lunch_call_distant==0) waithour = d_t - l_t -1;</span>
+<span class="nc" id="L931">                    else waithour = 24 - d_t + b_t - 1;</span>
+                    
+                }
+                
+                
+                else {
+                    
+<span class="pc bpc" id="L938" title="3 of 6 branches missed.">                    if ( breakfast_call_distant &lt; 0 &amp;&amp; lunch_call_distant&lt;0 &amp;&amp; dinner_call_distant&lt;0){</span>
+<span class="fc" id="L939">                        waithour = b_t + 24 -current_hour-1;</span>
+                    }
+                    
+<span class="nc bnc" id="L942" title="All 4 branches missed.">                    else if ( breakfast_call_distant &lt; 0 &amp;&amp; lunch_call_distant&lt;0 ){</span>
+<span class="nc" id="L943">                        waithour =dinner_call_distant-1;</span>
+                    }
+                    
+<span class="nc bnc" id="L946" title="All 2 branches missed.">                    else if (breakfast_call_distant &lt; 0){</span>
+<span class="nc" id="L947">                        waithour=lunch_call_distant-1;</span>
+                    }
+                    
+                    else
+<span class="nc" id="L951">                        waithour=breakfast_call_distant-1;</span>
+                }
+                
+                
+<span class="pc bpc" id="L955" title="1 of 2 branches missed.">                if (target_min==0){</span>
+<span class="nc" id="L956">                    waitminute = 60 - current_minutes;</span>
+                }
+<span class="pc bpc" id="L958" title="2 of 4 branches missed.">                else if (current_minutes&gt;target_min &amp;&amp; target_min!=0){</span>
+<span class="fc" id="L959">                    waitminute = current_minutes - target_min;</span>
+                }
+                else
+<span class="nc" id="L962">                    waitminute = target_min - current_minutes;</span>
+                
+                
+                
+<span class="fc" id="L966">                int totalSleepTime = (60*60*waithour+60*waitminute-2*60)*1000;</span>
+<span class="fc" id="L967">                int totalmin=60*waithour+waitminute ;</span>
+                
+<span class="nc" id="L969">                push(userID, new TextMessage(&quot;sleep&quot;+ Integer.toString(totalmin)));</span>
+                
+                try {
+<span class="nc" id="L972">                    Thread.sleep(totalSleepTime);</span>
+<span class="nc" id="L973">                } catch (Exception e) {</span>
+<span class="nc" id="L974">                    log.info(&quot;thread fail&quot;);</span>
+<span class="nc" id="L975">                    push(userID, new TextMessage(&quot;fail&quot;));</span>
+<span class="nc" id="L976">                }</span>
+                
+<span class="nc" id="L978">                push(userID, new TextMessage(&quot;wake up&quot;));</span>
+                
+                while(true){
+<span class="nc bnc" id="L981" title="All 6 branches missed.">                    if (current_time_string.equals(&quot;11:00:00&quot;) || current_time_string.equals(&quot;12:27:00&quot;) || current_time_string.equals(&quot;13:27:00&quot;)){</span>
+                        
+                        
+<span class="nc" id="L984">                        push(userID, new TextMessage(&quot;Please update food of your lasr meal if you have not done yet.&quot;));</span>
+                        try {
+<span class="nc" id="L986">                            Thread.sleep(1000); // thread to sleep for 1000 milliseconds</span>
+<span class="nc" id="L987">                        } catch (Exception e) {</span>
+<span class="nc" id="L988">                            log.info(&quot;thread fail&quot;);</span>
+<span class="nc" id="L989">                        }</span>
+<span class="nc" id="L990">                        break;</span>
+                    }
+                }
+ 
+<span class="nc" id="L994">            }</span>
+        }
+        
+        /**
+         * This method starts the new thread of the Timer class
+         */
+        public void start() {
+<span class="pc bpc" id="L1001" title="1 of 2 branches missed.">            if (t==null){</span>
+<span class="fc" id="L1002">                t = new Thread (this, &quot;Timer&quot;);</span>
+            }
+<span class="fc" id="L1004">            t.start();</span>
+            
+<span class="fc" id="L1006">        }</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.8.201612092310</span></div></body></html>

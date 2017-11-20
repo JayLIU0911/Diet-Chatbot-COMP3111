@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>User.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">sample-spring-boot-kitchensink</a> &gt; <a href="index.source.html" class="el_package">com.example.bot.spring</a> &gt; <span class="el_source">User.java</span></div><h1>User.java</h1><pre class="source lang-java linenums">package com.example.bot.spring;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.PostConstruct;
+import javax.sql.DataSource;
+import java.util.Date;
+import java.text.*;
+import java.util.Calendar;
+
+import java.sql.*;
+import java.net.URISyntaxException;
+import java.net.URI;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+/**
+ * A class used to do tasks directly related to the user
+ * It will use many functions in userDB.class
+ * @author Liu Shuyue, Sun Yusen
+ * @since 2017-11-18
+ */
+<span class="fc" id="L26">@Slf4j</span>
+<span class="fc" id="L27">public class User{</span>
+
+    /**
+     * This function check the userlist and usertable and the user follow time from database
+     * it calls 3 functions from userDB.class in order to connect to the database
+     * it insert new user into the userlist with the followtime and create a new user table for him/her
+     * @param id input the user id in order to check and create table
+     * @param date input the Coupon begin date in order to check whether the user can get coupon
+     * @return result Return a boolean type, if true, insert success
+     */
+    public static boolean insert(String id, Date date){
+        
+<span class="fc" id="L39">        boolean result = false;</span>
+<span class="fc" id="L40">        PreparedStatement stmt = null;</span>
+        
+<span class="fc" id="L42">        boolean x = UserDB.check_userlist(id);</span>
+
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        if(x==false)</span>
+<span class="fc" id="L45">        	delete(id);</span>
+         
+<span class="fc" id="L47">        UserDB.create_usertable(id);</span>
+            
+<span class="fc" id="L49">        UserDB.insert_user(id);</span>
+
+<span class="fc" id="L51">        check_followtime(id,date);</span>
+
+<span class="fc" id="L53">        result = true;</span>
+
+<span class="fc" id="L55">        return result;</span>
+    }
+
+    /**
+     * This function check the user's follow time depending on the coupon begin date
+     * @param id Input the user id and change the user list at this user id with the follow time
+     * @param date Input the coupon begin date to check whether the user follow the chatbot before the begin date
+     * @return result Return a boolean in order to tell whether the user follow the chatbot before the begin date
+     */
+    public static boolean check_followtime(String id, Date date){
+<span class="fc" id="L65">        Date time = new Date();</span>
+<span class="fc" id="L66">        boolean result = false;</span>
+
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if(time.getTime()-date.getTime()&gt;=0)</span>
+<span class="fc" id="L69">            {setUser(id,&quot;follow&quot;,&quot;yes&quot;);</span>
+<span class="fc" id="L70">        	result = true;}</span>
+        else
+<span class="fc" id="L72">            {setUser(id,&quot;follow&quot;,&quot;no&quot;);</span>
+<span class="fc" id="L73">        	result = false;}</span>
+
+<span class="fc" id="L75">        return result;</span>
+    }
+
+    /**
+     * This function is going to delete the user from user list and also delete the user table and the user's coupon in coupon table
+     * @param id Input user id in order to connect to the data base to delete the related things
+     * @return result Return true if all there things are done
+     */
+    public static boolean delete(String id)
+    {
+<span class="fc" id="L85">        boolean result = false;</span>
+
+<span class="fc" id="L87">        UserDB.drop_table(id);</span>
+
+<span class="fc" id="L89">        UserDB.delete_user(id);</span>
+
+<span class="fc" id="L91">        CouponDB.delete_id(id);</span>
+
+<span class="fc" id="L93">        FoodDB.DBdeleteMenu(id);</span>
+
+<span class="fc" id="L95">        result = true;</span>
+        
+<span class="fc" id="L97">        return result;</span>
+    }
+
+
+    /**
+     * This function is to update user table with the input text and the user's weight at this time
+     * it get the user's weight at this time from the user list table
+     * @param id Input the user id in order to search user's weight and insert record in to the user table
+     * @param text Input the food name and get other data with the food name
+     * @return result Return a boolean, if all the tasks are done, return true
+     */
+   public static boolean updateRecord(String id, String text)
+    {
+        
+<span class="fc" id="L111">        boolean result = false;</span>
+
+<span class="fc" id="L113">        String weight = getUser(id,&quot;weight&quot;);</span>
+
+<span class="fc" id="L115">        UserDB.insert_record(id,text,weight);</span>
+
+<span class="fc" id="L117">        result = true;</span>
+        
+<span class="fc" id="L119">        return result;</span>
+    }
+
+    /**
+     * This function is just created for the test case
+     * This function is going to delete the corresponding row in the user table
+     * And it is not used in the controller
+     * it just use one function in the userDB class to connection to the database
+     * @param id Input the user id to find the user table
+     * @param text Input the food name to find a row in the user table
+     * @return result Return a boolean value to check whether the function finished
+     */
+    public static boolean delete_record(String id, String text){
+<span class="fc" id="L132">    	boolean result = false;</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">    	if(UserDB.deleteRecord(id,text)==true)</span>
+<span class="fc" id="L134">    		result = true;</span>
+<span class="fc" id="L135">    	return result;</span>
+    }
+
+    /**
+     * This function is going to get user data from the user list
+     * it calls the function select_userlist in the userDB.class to get the result
+     * @param id Input the user id to find the row in the user list
+     * @param column Input the column name to find the column in the user list
+     * @return result Return a String with the data in the given row and column
+     */
+    public static String getUser(String id, String column){
+        
+<span class="fc" id="L147">        String result = null;</span>
+
+<span class="fc" id="L149">        result = UserDB.select_userlist(id,column); </span>
+        
+<span class="fc" id="L151">    	return result;</span>
+}
+
+	/**
+	 * This function is going to set the data in the given row and column in the user list
+	 * It calls the function update_userlist in userDB.class
+	 * @param id Input the user id to find the row in user list
+	 * @param column Input the column name to find the column in the user list
+	 * @param text Input the data you want to update
+	 * @return result Return a boolean value to check whether all the tasks are done
+	 */
+    public static boolean setUser(String id, String column, String text){
+
+<span class="fc" id="L164">        boolean result = false;</span>
+
+<span class="fc bfc" id="L166" title="All 2 branches covered.">        if(!column.equals(&quot;days_for_target&quot;))</span>
+<span class="fc" id="L167">            UserDB.update_userlist(id,column,text);</span>
+        else
+<span class="fc" id="L169">            setDay(id,text);</span>
+
+<span class="fc" id="L171">        result = true;</span>
+
+<span class="fc" id="L173">        return result;</span>
+    }
+
+    /**
+     * This function is going to change an integer the user input for the days to target into a date format
+     * And then change the date into the format dd/mm/yyyy and insert it into the user list table
+     * it will be more precise for the further checking
+     * @param id Input the user id to find the corresponding row in the user list
+     * @param text Input the target days(an integer but with type String)
+     * @return result Return a boolean value. If update succeed, return true. else, return false.
+     */
+    public static boolean setDay(String id, String text){
+<span class="fc" id="L185">    	Date day = new Date();</span>
+<span class="fc" id="L186">    	Calendar c = Calendar.getInstance();</span>
+<span class="fc" id="L187">    	c.setTime(day);</span>
+<span class="fc" id="L188">    	c.add(Calendar.DATE, Integer.parseInt(text));</span>
+<span class="fc" id="L189">    	day = c.getTime();</span>
+
+<span class="fc" id="L191">        SimpleDateFormat dateformat = new SimpleDateFormat(&quot;dd/MM/yyyy&quot;);</span>
+<span class="fc" id="L192">        String target_date = dateformat.format(day);</span>
+
+<span class="fc" id="L194">        UserDB.update_userlist(id,&quot;days_for_target&quot;,target_date);</span>
+
+<span class="fc" id="L196">        return true;</span>
+    	
+    }
+
+    /**
+     * This function is going to check the days from now to the target date
+     * if get the target date from the user list and change it into the Date type
+     * And then we calculate the days by the two date
+     * @param id Input the user id to find the days_for_target column in the user list
+     * @return result Return an integer which is from now to the target date
+     */
+    public static int check_day(String id){
+<span class="fc" id="L208">        String target = getUser(id,&quot;days_for_target&quot;);</span>
+<span class="fc" id="L209">        SimpleDateFormat dateformat = new SimpleDateFormat(&quot;dd/MM/yyyy&quot;);</span>
+<span class="fc" id="L210">        int result = 0;</span>
+
+        try{
+<span class="fc" id="L213">            Date target_date = dateformat.parse(target);</span>
+<span class="fc" id="L214">            Date day = new Date();</span>
+<span class="fc" id="L215">            result = (int)((target_date.getTime() - day.getTime()) / (1000 * 60 * 60 * 24));</span>
+<span class="fc" id="L216">        } catch(Exception e){</span>
+<span class="fc" id="L217">            log.info(&quot;check_day error!!!&quot;);</span>
+<span class="fc" id="L218">        }</span>
+
+<span class="fc" id="L220">        return result;</span>
+    }
+
+    /**
+     * This function is going to check whether the user achieve the goal or meet the target date
+     * It has four different conditions which can be used in the controller to push message to the user
+     * @param id Input user id to get the user's weight and target weight and also the target date
+     * @return result Return an integer(1,2,3,4) to tell which condition the user is in
+     */
+    public static int check_goal(String id){
+<span class="fc bfc" id="L230" title="All 4 branches covered.">        if(check_day(id)==0 &amp;&amp; getUser(id,&quot;weight&quot;).equals(getUser(id,&quot;target_weight&quot;)))</span>
+<span class="fc" id="L231">            return 1;</span>
+<span class="fc bfc" id="L232" title="All 4 branches covered.">        else if(check_day(id)!=0 &amp;&amp; getUser(id,&quot;weight&quot;).equals(getUser(id,&quot;target_weight&quot;)))</span>
+<span class="fc" id="L233">            return 2;</span>
+<span class="pc bpc" id="L234" title="1 of 4 branches missed.">        else if(check_day(id)==0 &amp;&amp; (!getUser(id,&quot;weight&quot;).equals(getUser(id,&quot;target_weight&quot;))))</span>
+<span class="fc" id="L235">            return 3;</span>
+        else
+<span class="fc" id="L237">            return 4;</span>
+
+    }
+
+    /**
+     * This function is going to get the energy the user has consumed at certain day
+     * It use the function DBsearch_day in the userDB.class to get the record at certain day
+     * @param id Input the user id to get the user table
+     * @param date Input the date and search the user table with the date
+     * @return result Return the energy consumed at that date. If not found, return 0
+     */
+    public static float getDailyIntake(String id, String date){
+<span class="fc" id="L249">        ArrayList&lt;String&gt; x = UserDB.DBsearch_day(id,date);</span>
+<span class="fc" id="L250">        log.info(&quot;search daily success: {}&quot;);</span>
+
+<span class="fc bfc" id="L252" title="All 2 branches covered.">        if (x.get(3).equals(&quot;0.0&quot;))</span>
+<span class="fc" id="L253">        	return 0;</span>
+
+<span class="fc" id="L255">        float result = Float.parseFloat(x.get(2));</span>
+<span class="fc" id="L256">        log.info(&quot;the result of daily summary is : {}&quot;);</span>
+<span class="fc" id="L257">        return result;</span>
+    }
+
+
+    /**
+     * This function is going to calculate the ideal daily intake of the user depend on the information in the user list
+     * It will get the data from user list and divide them into daily intake
+     * @param id Input the user id to get the user's information from the user list
+     * @return IdealDailyIntake Return an integer which is the calculate result of the daily intake
+     */
+    public static int getIdealDailyIntake (String id){
+
+<span class="fc" id="L269">        float weight = Float.parseFloat(getUser(id,&quot;weight&quot;));</span>
+<span class="fc" id="L270">        String status = new String(getUser(id,&quot;status&quot;));</span>
+<span class="fc" id="L271">        float height = Float.parseFloat(getUser(id,&quot;height&quot;));</span>
+<span class="fc" id="L272">        int age = Integer.parseInt(getUser(id,&quot;age&quot;));</span>
+
+<span class="fc" id="L274">        float BMR=0;</span>
+<span class="fc bfc" id="L275" title="All 2 branches covered.">        if (status.equalsIgnoreCase(&quot;male&quot;)){</span>
+<span class="fc" id="L276">            BMR = (float)88.362 + ( (float)13.397*weight) + ((float)4.799*height) - ((float)5.677*age);</span>
+        }
+        else{
+<span class="fc" id="L279">            BMR = (float)447.593 + ( (float)9.247*weight) + ( (float)3.098*height) - ((float)4.33*age);</span>
+        }
+
+
+<span class="fc" id="L283">        String targetWeightString = new String(getUser(id,&quot;target_weight&quot;));</span>
+
+<span class="fc" id="L285">        float dayForTarget = (float)check_day(id);</span>
+<span class="fc" id="L286">        float targetWeight = Float.parseFloat(targetWeightString);</span>
+<span class="fc" id="L287">        float lose_weight = weight * 30;</span>
+<span class="fc" id="L288">        float maintain = weight*40;</span>
+<span class="fc" id="L289">        float gain_weight = weight*50;</span>
+<span class="fc" id="L290">        float daily_loss = 3500*3/7;</span>
+<span class="fc" id="L291">        float change_per_day = ( targetWeight - weight)/ dayForTarget;</span>
+<span class="fc" id="L292">        float intake_calories = change_per_day*daily_loss;</span>
+<span class="fc" id="L293">        return (int)(BMR*(float)1.375 + intake_calories);</span>
+        
+
+    }
+
+    /**
+     * This function is going to generate a summary from the user table
+     * It will calculate all the data since the user first user the chatbot and add them together
+     * And then it will output a simple summary of the user's intake overall
+     * @param id Input the user id to get the data from user table
+     * @return output Return a String with the energy, sodium, fatty consumed from the first day the user used to now
+     */
+    public static String generateSummary(String id) {
+
+<span class="fc" id="L307">        ArrayList&lt;ArrayList&lt;String&gt;&gt; Record = new ArrayList&lt;ArrayList&lt;String&gt;&gt;();</span>
+
+<span class="fc" id="L309">        Record = UserDB.DBsearch_record(id);</span>
+<span class="fc" id="L310">        log.info(&quot;2333331&quot;);</span>
+<span class="fc" id="L311">        int number_of_date = Record.size();</span>
+<span class="fc bfc" id="L312" title="All 2 branches covered.">        if(Record.isEmpty())</span>
+<span class="fc" id="L313">        	number_of_date = 0;</span>
+<span class="fc" id="L314">        log.info(&quot;record size = , {}&quot;, number_of_date);</span>
+
+<span class="fc bfc" id="L316" title="All 2 branches covered.">        if (number_of_date == 0)</span>
+<span class="fc" id="L317">        	return &quot;You have not input any data yet!&quot;;</span>
+
+       
+<span class="fc" id="L320">        float[][] float_Record = new float[number_of_date][3];  // calories, sodium, fat</span>
+
+<span class="fc bfc" id="L322" title="All 2 branches covered.">        for (int i=0;i&lt;number_of_date;i++){</span>
+<span class="fc bfc" id="L323" title="All 2 branches covered.">            for(int j=0; j&lt;3; j++){</span>
+<span class="fc" id="L324">                float_Record[i][j] = Float.parseFloat(Record.get(i).get(j+2));</span>
+<span class="fc" id="L325">                log.info(&quot;232,{}&quot;, j);</span>
+            }
+        }
+
+<span class="fc" id="L329">        float[] overall = {0,0,0} ; // total calories, sodium, fat</span>
+<span class="fc bfc" id="L330" title="All 2 branches covered.">        for (int i=0; i&lt;number_of_date; i++){</span>
+<span class="fc bfc" id="L331" title="All 2 branches covered.">            for (int j=0; j&lt;3; j++){</span>
+<span class="fc" id="L332">                overall[j] += float_Record[i][j];</span>
+            }
+        }
+
+<span class="fc" id="L336">        String first_day = Record.get(0).get(0);</span>
+<span class="fc" id="L337">        String output = &quot;Starting from &quot; + first_day + &quot; , you have totally consumed: \n&quot;+&quot;Energy: &quot;+ (int)overall[0]+&quot;kcal, \n&quot; + &quot;Sodium: &quot;+(int)overall[1]+&quot;mg, \n&quot;+&quot;Saturated Fatty Acids: &quot;+(int)overall[2]+&quot;g.&quot;;     </span>
+
+<span class="fc" id="L339">        return output;</span>
+
+    }
+
+    /**
+     * This function is going to generate at most 7 days summary from the user table record
+     * It will calculate the average intake and weight of the user
+     * And also output everyday's record
+     * @param id Input the user id to get the user table
+     * @return output Return a String with average data and everyday's data
+     */
+    public static String generateWeeklySummary (String id) {
+<span class="fc" id="L351">        ArrayList&lt;ArrayList&lt;String&gt;&gt; Record = new ArrayList&lt;ArrayList&lt;String&gt;&gt;(UserDB.DBsearch_record(id));</span>
+<span class="fc" id="L352">        log.info(&quot;54321&quot;);</span>
+     
+<span class="fc" id="L354">        int number_of_date = Record.size();</span>
+<span class="fc" id="L355">        log.info(&quot;65432&quot;);</span>
+
+<span class="fc bfc" id="L357" title="All 2 branches covered.">        if(Record.isEmpty())</span>
+<span class="fc" id="L358">        	number_of_date = 0;</span>
+
+<span class="fc bfc" id="L360" title="All 2 branches covered.">        if (number_of_date == 0)</span>
+<span class="fc" id="L361">        	return &quot;You have not input any data yet!&quot;;</span>
+        
+<span class="fc" id="L363">        int date_for_summary = number_of_date;</span>
+
+<span class="pc bpc" id="L365" title="1 of 2 branches missed.">        if (date_for_summary&gt;7){</span>
+<span class="nc" id="L366">            date_for_summary=7;</span>
+        }
+
+
+<span class="fc" id="L370">        float[] sum= {0,0,0,0}; // calories, sodium, fat</span>
+
+<span class="fc bfc" id="L372" title="All 2 branches covered.">        for (int i=0;i&lt;date_for_summary;i++){</span>
+
+<span class="fc bfc" id="L374" title="All 2 branches covered.">            for (int j=0; j&lt;4; j++){</span>
+<span class="fc" id="L375">                sum[j] += Float.parseFloat(Record.get(number_of_date-i-1).get(j+1));</span>
+            }
+        }
+        
+<span class="fc" id="L379">        String output = &quot;In the past &quot; + date_for_summary + &quot; days, your daily energy intake and average weight are: \n&quot; + &quot;Energy: &quot; +(int)(sum[1]/date_for_summary) +</span>
+<span class="fc" id="L380">        &quot;kcal/day,\n&quot;+ &quot;the standard daily calorie consumption: &quot;+ getIdealDailyIntake(id) + &quot;kcal/day\n&quot; + &quot;Average Weight: &quot; + (int)(sum[0]/date_for_summary) + &quot;kg. \n\n&quot; + &quot;The detailed daily record of weight and energy intake: \n&quot;;</span>
+       
+<span class="fc bfc" id="L382" title="All 2 branches covered.">        for ( int i=0; i&lt;date_for_summary; i++){</span>
+<span class="fc" id="L383">            output =output + Record.get(number_of_date-i-1).get(0) +&quot;: \n&quot;+&quot;Energy: &quot;+Record.get(number_of_date-i-1).get(2)+&quot;kcal \n&quot;+&quot;Weight: &quot;+Record.get(number_of_date-i-1).get(1)+&quot;kg\n&quot;;</span>
+        } 
+        
+<span class="fc" id="L386">        return output;</span>
+
+    }
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.8.201612092310</span></div></body></html>

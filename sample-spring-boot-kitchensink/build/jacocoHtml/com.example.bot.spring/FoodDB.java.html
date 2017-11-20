@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FoodDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">sample-spring-boot-kitchensink</a> &gt; <a href="index.source.html" class="el_package">com.example.bot.spring</a> &gt; <span class="el_source">FoodDB.java</span></div><h1>FoodDB.java</h1><pre class="source lang-java linenums">package com.example.bot.spring;
+
+import lombok.extern.slf4j.Slf4j;
+import java.net.URISyntaxException;
+import java.net.URI;
+import javax.annotation.PostConstruct;
+import javax.sql.DataSource;
+import java.sql.*;
+import java.net.URISyntaxException;
+import java.net.URI;
+import java.util.*;
+import java.util.Date;
+import java.text.*;
+
+
+/**
+ * This class is going to connect the psql datebase menu and nutrition
+ * @author Gao Huaxuan
+ * @since 2017-11-18
+ */
+<span class="fc" id="L21">@Slf4j</span>
+<span class="fc" id="L22">public class FoodDB{</span>
+
+	/**
+	 * This function is going to search a ingredient of the food in the database
+	 * It search for the given food name and get the average of all those data found
+	 * @param ingredient An ingredient in a food in order to search the corresponding food in the database
+	 * @return An arraylist with all the information(average) of that food
+	 */
+	public static ArrayList&lt;String&gt; DBSearchIngredient(String ingredient){
+<span class="fc" id="L31">		Connection connection=null;</span>
+<span class="fc" id="L32">		PreparedStatement stmt = null;</span>
+<span class="fc" id="L33">		ResultSet rs = null;</span>
+<span class="fc" id="L34">		ArrayList&lt;String&gt; result = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L35">		float x = 0;</span>
+<span class="fc" id="L36">		float y = 0;</span>
+<span class="fc" id="L37">		float z = 0;</span>
+<span class="fc" id="L38">		String energy = null;</span>
+<span class="fc" id="L39">		String sodium = null;</span>
+<span class="fc" id="L40">		String fatty = null;</span>
+<span class="fc" id="L41">		String no = null;</span>
+<span class="fc" id="L42">		String description = null;</span>
+<span class="fc" id="L43">		String measure = null;</span>
+<span class="fc" id="L44">		String weight = null;</span>
+<span class="fc" id="L45">		int i = 0;</span>
+		try{
+<span class="fc" id="L47">			connection=getConnection();</span>
+<span class="fc" id="L48">			stmt = connection.prepareStatement(&quot;SELECT ndb_no, description, measure, weight, energy_per_measure, sodium_na_per_measure, fatty_acids_total_saturated_per_measure FROM nutrition1 where description like '%'||?||'%'&quot;);</span>
+
+<span class="fc" id="L50">			stmt.setString(1,ingredient); </span>
+
+<span class="fc" id="L52">			rs = stmt.executeQuery();</span>
+
+<span class="fc bfc" id="L54" title="All 2 branches covered.">			while(rs.next()){</span>
+<span class="fc" id="L55">				no = rs.getString(1);</span>
+<span class="fc" id="L56">				description = rs.getString(2);</span>
+<span class="fc" id="L57">				measure = rs.getString(3);</span>
+<span class="fc" id="L58">				weight = rs.getString(4);</span>
+<span class="fc" id="L59">				energy = rs.getString(5);</span>
+<span class="fc" id="L60">				sodium = rs.getString(6);</span>
+<span class="fc" id="L61">				fatty = rs.getString(7);</span>
+<span class="fc" id="L62">				x = x + Float.parseFloat(energy);</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">				if(!sodium.equals(&quot;--&quot;))</span>
+<span class="fc" id="L64">					y = y + Float.parseFloat(sodium);</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">				if(!fatty.equals(&quot;--&quot;))</span>
+<span class="fc" id="L66">					z = z + Float.parseFloat(fatty);</span>
+<span class="fc" id="L67">				i=i+1;</span>
+			}
+<span class="fc bfc" id="L69" title="All 2 branches covered.">			if(i!=0){</span>
+<span class="fc" id="L70">				x = x/i;</span>
+<span class="fc" id="L71">				y = y/i;</span>
+<span class="fc" id="L72">				z = z/i;</span>
+			}
+			// x = x/i;
+			// y = y/i;
+			// z = z/i;
+<span class="fc" id="L77">			result.add(no);</span>
+<span class="fc" id="L78">			result.add(description);</span>
+<span class="fc" id="L79">			result.add(measure);</span>
+<span class="fc" id="L80">			result.add(weight);</span>
+<span class="fc" id="L81">			result.add(Float.toString(x));</span>
+<span class="fc" id="L82">			result.add(Float.toString(y));</span>
+<span class="fc" id="L83">			result.add(Float.toString(z));</span>
+
+<span class="fc" id="L85">			return result;</span>
+		
+<span class="nc" id="L87">		}catch (Exception ex) {</span>
+<span class="nc" id="L88">			log.info(&quot;SQLException while searching ingredient: {}&quot;, ex.toString());</span>
+		}finally{
+<span class="nc" id="L90">			try{</span>
+<span class="pc" id="L91">				connection.close();</span>
+<span class="pc" id="L92">				rs.close();</span>
+<span class="pc" id="L93">				stmt.close();</span>
+<span class="nc" id="L94">			}catch (Exception ex) {</span>
+<span class="nc" id="L95">				log.info(&quot;SQLException while closing: {}&quot;, ex.toString());</span>
+<span class="pc" id="L96">			}</span>
+<span class="nc" id="L97">		}</span>
+<span class="nc" id="L98">		return null;</span>
+	}
+
+	/**
+	 * This function is going to check whether a food name can be found in the database
+	 * @param name The food name to search in the database
+	 * @return result Return a boolean value to tell whether the food is exist in the database. If exist, return true, else false
+	 */
+	public static boolean DBexist(String name){
+<span class="fc" id="L107">		Connection connection=null;</span>
+<span class="fc" id="L108">		PreparedStatement stmt = null;</span>
+<span class="fc" id="L109">		ResultSet rs = null;</span>
+<span class="fc" id="L110">		boolean result = false;</span>
+		try{
+<span class="fc" id="L112">            connection = getConnection();        </span>
+<span class="fc" id="L113">            stmt = connection.prepareStatement(&quot;SELECT * FROM nutrition1 WHERE description like '%'||?||'%'&quot;);</span>
+<span class="fc" id="L114">            stmt.setString(1,name);</span>
+<span class="fc" id="L115">            rs = stmt.executeQuery();</span>
+<span class="fc" id="L116">            log.info(&quot;in create menu text delete 1 {}&quot;);</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">            if(rs.next())</span>
+<span class="fc" id="L118">            	result = true;</span>
+<span class="fc" id="L119">        }catch(Exception e){</span>
+<span class="fc" id="L120">            	log.info(&quot;in DBexist() deleting rows {}&quot;,e.toString());</span>
+        }finally{
+<span class="nc" id="L122">			try{</span>
+<span class="pc" id="L123">				connection.close();</span>
+<span class="pc" id="L124">				rs.close();</span>
+<span class="pc" id="L125">				stmt.close();</span>
+<span class="pc" id="L126">			}catch (Exception ex) {</span>
+<span class="pc" id="L127">				log.info(&quot;SQLException while closing: {}&quot;, ex.toString());</span>
+<span class="pc" id="L128">			}</span>
+<span class="pc" id="L129">		}</span>
+<span class="fc" id="L130">        return result;</span>
+	}
+
+	/**
+	 * This function is going to connect the psql in heroku
+	 */
+	private static Connection getConnection() throws URISyntaxException, SQLException {
+		Connection connection;
+<span class="fc" id="L138">		URI dbUri = new URI(System.getenv(&quot;DATABASE_URL&quot;));</span>
+
+<span class="fc" id="L140">		String username = dbUri.getUserInfo().split(&quot;:&quot;)[0];</span>
+<span class="fc" id="L141">		String password = dbUri.getUserInfo().split(&quot;:&quot;)[1];</span>
+<span class="fc" id="L142">		String dbUrl = &quot;jdbc:postgresql://&quot; + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath() +  &quot;?ssl=true&amp;sslfactory=org.postgresql.ssl.NonValidatingFactory&quot;;</span>
+
+<span class="fc" id="L144">		log.info(&quot;Username: {} Password: {}&quot;, username, password);</span>
+<span class="fc" id="L145">		log.info (&quot;dbUrl: {}&quot;, dbUrl);</span>
+
+<span class="fc" id="L147">		connection = DriverManager.getConnection(dbUrl, username, password);</span>
+
+<span class="fc" id="L149">		return connection;</span>
+	}
+
+	/**
+	 * This function is going to delete all the rows in menu table of the given user id
+	 * @param id The user id to search and delete in the menu table
+	 * @return result Return a boolean value whether the rows exist and been deleted from the menu table. If all these done, return true. Else, false.
+	 */
+	public static boolean DBdeleteMenu(String id){
+<span class="fc" id="L158">		Connection connection=null;</span>
+<span class="fc" id="L159">		PreparedStatement stmt = null;</span>
+<span class="fc" id="L160">		ResultSet rs = null;</span>
+<span class="fc" id="L161">		boolean result = false;</span>
+		try{
+<span class="fc" id="L163">            connection = getConnection();</span>
+<span class="fc" id="L164">            String pre = &quot;SELECT * FROM menu WHERE userid = '&quot;+ id +&quot;'&quot;;</span>
+<span class="fc" id="L165">            stmt = connection.prepareStatement(pre);</span>
+<span class="fc" id="L166">            rs = stmt.executeQuery();</span>
+<span class="fc" id="L167">            log.info(&quot;in create menu text delete 1 {}&quot;);</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">            if(rs.next()){</span>
+<span class="fc" id="L169">            	pre = &quot;DELETE FROM menu WHERE userid = '&quot;+ id +&quot;'&quot;;</span>
+<span class="fc" id="L170">            	stmt = connection.prepareStatement(pre);</span>
+<span class="fc" id="L171">            	stmt.executeUpdate();</span>
+<span class="fc" id="L172">                rs.close();</span>
+<span class="fc" id="L173">                stmt.close();</span>
+<span class="fc" id="L174">                log.info(&quot;in create menu text delete2&quot;);</span>
+<span class="fc" id="L175">                result = true;</span>
+            }
+<span class="nc" id="L177">        }catch(Exception e){</span>
+<span class="nc" id="L178">            	log.info(&quot;in create menu text deleting rows {}&quot;,e.toString());</span>
+<span class="fc" id="L179">        }</span>
+<span class="fc" id="L180">        return result;</span>
+	}
+
+	/**
+	 * This function is going to insert a row into the menu table with the user id and the food name and price
+	 * @param id The user id which will be inserted in the menu table
+	 * @param name The food name which will be inserted in the menu table
+	 * @param p The food price which will be inserted in the menu table
+	 * @return result Return a boolean value to check whether the task is completed
+	 */
+	public static boolean DBInsertMenu(String id, String name, String p){
+<span class="fc" id="L191">		Connection connection=null;</span>
+<span class="fc" id="L192">		PreparedStatement stmt = null;</span>
+<span class="fc" id="L193">		boolean result = false;</span>
+		try{
+<span class="fc" id="L195">				connection = getConnection();</span>
+<span class="fc" id="L196">				String pre = &quot;INSERT INTO menu VALUES('&quot; +id+ &quot;','&quot; + name+&quot;','&quot; + p+&quot;')&quot;;</span>
+<span class="fc" id="L197">    			stmt = connection.prepareStatement(pre);</span>
+<span class="fc" id="L198">    			log.info(&quot;nowin create Menu prepare stmt: {}&quot;, stmt.toString());</span>
+<span class="fc" id="L199">				stmt.executeUpdate();</span>
+<span class="fc" id="L200">				result = true;</span>
+<span class="fc" id="L201">		}catch(Exception e){</span>
+<span class="fc" id="L202">			log.info(&quot;SQLException while updating menu: {}&quot;, e.toString());</span>
+<span class="fc" id="L203">			result = false;</span>
+		}finally{
+<span class="nc" id="L205">			try{</span>
+<span class="pc" id="L206">				connection.close();</span>
+<span class="pc" id="L207">				stmt.close();</span>
+<span class="nc" id="L208">			}catch(Exception e){</span>
+<span class="nc" id="L209">				log.info(&quot;SQL create menu close fail: {}&quot;, e.toString());</span>
+<span class="nc" id="L210">				result = false;</span>
+<span class="pc" id="L211">			}</span>
+<span class="nc" id="L212">		}</span>
+<span class="fc" id="L213">		return result;</span>
+    }
+
+    /**
+     * This function is going to search in the menu table
+     * And get a arraylist with food name
+     * @param foods An arraylist with food name inside
+     * @param id The user id to search in the menu table
+     * @return foods An arraylist added some food name selected from the database
+     */
+    public static ArrayList&lt;String&gt; DBgetMenu(ArrayList&lt;String&gt; foods, String id){
+<span class="fc" id="L224">    	Connection connection=null;</span>
+<span class="fc" id="L225">		PreparedStatement stmt = null;</span>
+<span class="fc" id="L226">		ResultSet rs = null;</span>
+
+		try{
+<span class="fc" id="L229">			connection=getConnection();</span>
+<span class="fc" id="L230">			String pre = &quot;SELECT foodname FROM menu where userid = '&quot; + id+&quot;'&quot;;</span>
+<span class="fc" id="L231">    	   	stmt = connection.prepareStatement(pre);</span>
+<span class="fc" id="L232">    	   	log.info(&quot;in getMenu info : {}&quot;, stmt.toString());</span>
+<span class="fc" id="L233">			rs = stmt.executeQuery();</span>
+
+<span class="fc bfc" id="L235" title="All 2 branches covered.">            while(rs.next()){</span>
+<span class="fc" id="L236">            	foods.add(rs.getString(1));</span>
+<span class="fc" id="L237">            	log.info(&quot;rs in menuinfo has next : {}&quot;, foods.get(0));</span>
+        	}
+<span class="fc" id="L239">        	return foods;</span>
+
+<span class="nc" id="L241">    	}catch (Exception ex) {</span>
+<span class="nc" id="L242">				log.info(&quot;SQLException in menuinfo execute: {}&quot;, ex.toString());</span>
+		}finally{
+<span class="nc" id="L244">			try{</span>
+<span class="pc" id="L245">				connection.close();</span>
+<span class="pc" id="L246">				stmt.close();</span>
+<span class="pc" id="L247">				rs.close();</span>
+<span class="nc" id="L248">			}catch(Exception e){</span>
+<span class="nc" id="L249">				log.info(&quot;SQL find optimal close fail: {}&quot;, e.toString());</span>
+<span class="pc" id="L250">			}</span>
+<span class="nc" id="L251">		}</span>
+<span class="nc" id="L252">		return null;</span>
+	}
+
+
+	/**
+	 * This function is going to get tips from database
+	 * @param n An index number in order to find the corresponding tips in the tips table
+	 * @return tips Return a String(tips)
+	 */
+    public static String DBgetTip(int n){
+<span class="fc" id="L262">    	Connection connection=null;</span>
+<span class="fc" id="L263">		PreparedStatement stmt = null;</span>
+<span class="fc" id="L264">		ResultSet rs = null;</span>
+		
+		try{
+<span class="fc" id="L267">            connection = getConnection();</span>
+<span class="fc" id="L268">            String pre = &quot;SELECT tips FROM tips WHERE id = '&quot;+ n +&quot;'&quot;;</span>
+            //log.info(&quot;23333333: {}&quot;,stmt.toString());
+<span class="fc" id="L270">            stmt = connection.prepareStatement(pre);</span>
+<span class="fc" id="L271">            log.info(&quot;23333333: {}&quot;,stmt.toString());</span>
+<span class="fc" id="L272">            rs = stmt.executeQuery();</span>
+<span class="fc bfc" id="L273" title="All 2 branches covered.">            if(rs.next()){</span>
+<span class="fc" id="L274">            	log.info(&quot;result= {}&quot;,rs.getString(1));</span>
+<span class="fc" id="L275">            	return rs.getString(1);</span>
+            }
+<span class="nc" id="L277">        }catch(Exception e){</span>
+<span class="nc" id="L278">            	log.info(&quot;SQL Exception in tips {}&quot;,e.toString());</span>
+        }finally{
+<span class="nc" id="L280">			try{</span>
+<span class="pc" id="L281">				connection.close();</span>
+<span class="pc" id="L282">				stmt.close();</span>
+<span class="pc" id="L283">				rs.close();</span>
+<span class="nc" id="L284">			}catch(Exception e){</span>
+<span class="nc" id="L285">				log.info(&quot;SQL tips close fail: {}&quot;, e.toString());</span>
+<span class="pc" id="L286">			}</span>
+<span class="nc" id="L287">		}</span>
+<span class="fc" id="L288">		return &quot;Keep healthy!&quot;;</span>
+    }
+
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.8.201612092310</span></div></body></html>

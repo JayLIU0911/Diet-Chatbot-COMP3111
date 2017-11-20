@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CouponDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">sample-spring-boot-kitchensink</a> &gt; <a href="index.source.html" class="el_package">com.example.bot.spring</a> &gt; <span class="el_source">CouponDB.java</span></div><h1>CouponDB.java</h1><pre class="source lang-java linenums">package com.example.bot.spring;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.PostConstruct;
+import javax.sql.DataSource;
+import java.util.Date;
+import java.text.*;
+import java.util.Calendar;
+
+import java.sql.*;
+import java.net.URISyntaxException;
+import java.net.URI;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+/**
+ * This class is going to connect to the psql database and change/get the data in coupon table
+ * @author Liu Shuyue
+ * @since 2017-11-18
+ */
+<span class="fc" id="L25">@Slf4j</span>
+<span class="fc" id="L26">public class CouponDB{</span>
+
+    /**
+     * This function is going to insert a coupon code into the coupon table with the user id
+     * @param id The user id
+     * @param code The coupon code
+     * @return result Return a boolean value to tell wether the insert is succeed
+     */
+	public static boolean insert_code(String id, String code){
+<span class="fc" id="L35">		Connection connection = null;</span>
+<span class="fc" id="L36">        PreparedStatement stmt = null;</span>
+<span class="fc" id="L37">        boolean result = false;</span>
+
+        try{
+<span class="fc" id="L40">        	connection = getConnection();</span>
+<span class="fc" id="L41">        	String sql = &quot;insert into coupon values('&quot; + id + &quot;', '&quot; + code + &quot;')&quot;;</span>
+<span class="fc" id="L42">        	stmt = connection.prepareStatement(sql);</span>
+<span class="fc" id="L43">        	stmt.executeUpdate();</span>
+<span class="fc" id="L44">            result = true;</span>
+<span class="nc" id="L45">        } catch (Exception e) {</span>
+<span class="nc" id="L46">            log.info(&quot;SQLExecption while inserting coupon: {}&quot;, e.toString());</span>
+        } finally{
+<span class="nc" id="L48">            try{</span>
+<span class="pc" id="L49">                connection.close();</span>
+                
+<span class="pc" id="L51">                    stmt.close();</span>
+<span class="nc" id="L52">            } catch (Exception ex) {</span>
+<span class="nc" id="L53">                log.info(&quot;SQLException while closing2-1: {}&quot;, ex.toString());</span>
+<span class="pc" id="L54">            }</span>
+<span class="nc" id="L55">        }</span>
+<span class="fc" id="L56">        return result;</span>
+	}
+
+    /**
+     * This function is going to check the coupon code in coupon table
+     * If exist return the user id
+     * If not exist return null
+     * @param code The coupon code to check in the coupon table
+     * @return id The user id found in the coupon table corresponding to the coupon code
+     */
+	public static String check_code(String code){
+<span class="fc" id="L67">		Connection connection = null;</span>
+<span class="fc" id="L68">        PreparedStatement stmt = null;</span>
+<span class="fc" id="L69">        ResultSet rs = null;</span>
+<span class="fc" id="L70">        String result = null;</span>
+
+        try{
+<span class="fc" id="L73">        	connection = getConnection();</span>
+<span class="fc" id="L74">        	String sql = &quot;select * from coupon where code='&quot; + code + &quot;'&quot;;</span>
+<span class="fc" id="L75">        	stmt = connection.prepareStatement(sql);</span>
+<span class="fc" id="L76">        	rs = stmt.executeQuery();</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        	if(rs.next())</span>
+<span class="fc" id="L78">        		result = rs.getString(1);</span>
+<span class="nc" id="L79">        } catch (Exception e) {</span>
+<span class="nc" id="L80">            log.info(&quot;SQLExecption while checking coupon: {}&quot;, e.toString());</span>
+        } finally{
+<span class="nc" id="L82">            try{</span>
+<span class="pc" id="L83">                connection.close();</span>
+                
+<span class="pc" id="L85">                    stmt.close();</span>
+<span class="pc" id="L86">                rs.close();</span>
+<span class="nc" id="L87">            } catch (Exception ex) {</span>
+<span class="nc" id="L88">                log.info(&quot;SQLException while closing2-2: {}&quot;, ex.toString());</span>
+<span class="pc" id="L89">            }</span>
+<span class="nc" id="L90">        }</span>
+<span class="fc" id="L91">        return result;</span>
+	}
+
+    /**
+     * This function is going to check the user list whether a user can get the coupon or not
+     * It depends on the message stored in the follow and coupon column in the user list table
+     * @param id the user id to search the row in the user list table
+     * @return result A boolean value, if succeed, return true, else return false
+     */
+	public static boolean check_available(String id){
+<span class="fc" id="L101">		Connection connection = null;</span>
+<span class="fc" id="L102">        PreparedStatement stmt = null;</span>
+<span class="fc" id="L103">        ResultSet rs = null;</span>
+
+<span class="fc" id="L105">        String follow = null;</span>
+<span class="fc" id="L106">        String coupon = null;</span>
+
+        try{
+<span class="fc" id="L109">        	connection = getConnection();</span>
+<span class="fc" id="L110">        	String sql = &quot;select follow,coupon from user_list where uid = '&quot;+id+&quot;'&quot;;</span>
+<span class="fc" id="L111">        	stmt = connection.prepareStatement(sql);</span>
+<span class="fc" id="L112">        	rs = stmt.executeQuery();</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">        	while(rs.next()){</span>
+<span class="fc" id="L114">        		follow = rs.getString(1);</span>
+<span class="fc" id="L115">        		coupon  = rs.getString(2);</span>
+        	}
+<span class="nc" id="L117">        } catch (Exception e) {</span>
+<span class="nc" id="L118">            log.info(&quot;SQLExecption while check userlist: {}&quot;, e.toString());</span>
+        } finally{
+<span class="nc" id="L120">            try{</span>
+<span class="pc" id="L121">                connection.close();</span>
+                
+<span class="pc" id="L123">                    stmt.close();</span>
+<span class="pc" id="L124">                rs.close();</span>
+<span class="nc" id="L125">            } catch (Exception ex) {</span>
+<span class="nc" id="L126">                log.info(&quot;SQLException while closing2-3: {}&quot;, ex.toString());</span>
+<span class="pc" id="L127">            }</span>
+<span class="nc" id="L128">        }</span>
+
+<span class="fc bfc" id="L130" title="All 4 branches covered.">        if(follow.equals(&quot;yes&quot;) &amp;&amp; coupon.equals(&quot;yes&quot;))</span>
+<span class="fc" id="L131">			return true;</span>
+		else
+<span class="fc" id="L133">			return false;</span>
+	}
+
+    /**
+     * This function is going the delete the coupon code in the coupon table(the whole role)
+     * @param code The coupon code in oder to search the row in the coupon table
+     * @return result A boolean value to tell whether the delete is completed or not
+     */
+    public static boolean delete_code(String code){
+<span class="fc" id="L142">        Connection connection = null;</span>
+<span class="fc" id="L143">        PreparedStatement stmt = null;</span>
+<span class="fc" id="L144">        ResultSet rs = null;</span>
+<span class="fc" id="L145">        boolean result = false;</span>
+
+        try{
+<span class="fc" id="L148">            connection = getConnection();</span>
+<span class="fc" id="L149">            String sql = &quot;select from coupon where code = '&quot;+code+&quot;'&quot;;</span>
+<span class="fc" id="L150">            stmt = connection.prepareStatement(sql);</span>
+<span class="fc" id="L151">            rs = stmt.executeQuery();</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">            if(rs.next())</span>
+<span class="fc" id="L153">            {sql = &quot;delete from coupon where code='&quot; + code + &quot;'&quot;;</span>
+<span class="fc" id="L154">            stmt = connection.prepareStatement(sql);</span>
+<span class="fc" id="L155">            stmt.executeUpdate();</span>
+<span class="fc" id="L156">            result = true;}</span>
+<span class="nc" id="L157">        } catch (Exception e) {</span>
+<span class="nc" id="L158">            log.info(&quot;SQLExecption while deleting coupon: {}&quot;, e.toString());</span>
+        } finally{
+<span class="nc" id="L160">            try{</span>
+<span class="pc" id="L161">                connection.close();</span>
+                
+<span class="pc" id="L163">                    stmt.close();</span>
+<span class="pc" id="L164">                rs.close();</span>
+<span class="nc" id="L165">            } catch (Exception ex) {</span>
+<span class="nc" id="L166">                log.info(&quot;SQLException while closing2-4: {}&quot;, ex.toString());</span>
+<span class="pc" id="L167">            }</span>
+<span class="nc" id="L168">        }</span>
+<span class="fc" id="L169">        return result;</span>
+    }
+
+    /**
+     * This function is going to delete the coupon table's row with the given user id
+     * It will delete all the rows with the given user id
+     * @param id The user id in order to search in the coupon table
+     * @return result A boolean value whether the delete is completed or not
+     */
+    public static boolean delete_id(String id){
+<span class="fc" id="L179">        Connection connection = null;</span>
+<span class="fc" id="L180">        PreparedStatement stmt = null;</span>
+<span class="fc" id="L181">        ResultSet rs = null;</span>
+<span class="fc" id="L182">        boolean result = false;</span>
+
+        try{
+<span class="fc" id="L185">            connection = getConnection();</span>
+<span class="fc" id="L186">            String sql = &quot;select from coupon where id = '&quot;+id+&quot;'&quot;;</span>
+<span class="fc" id="L187">            stmt = connection.prepareStatement(sql);</span>
+<span class="fc" id="L188">            rs = stmt.executeQuery();</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">            if(!rs.next())</span>
+<span class="fc" id="L190">                result = false;</span>
+            else{
+<span class="fc" id="L192">            sql = &quot;delete from coupon where id='&quot; + id + &quot;'&quot;;</span>
+<span class="fc" id="L193">            stmt = connection.prepareStatement(sql);</span>
+<span class="fc" id="L194">            stmt.executeUpdate();</span>
+<span class="fc" id="L195">            result = true;}</span>
+<span class="nc" id="L196">        } catch (Exception e) {</span>
+<span class="nc" id="L197">            log.info(&quot;SQLExecption while deleting coupon--id: {}&quot;, e.toString());</span>
+        } finally{
+<span class="nc" id="L199">            try{</span>
+<span class="pc" id="L200">                connection.close();</span>
+                
+<span class="pc" id="L202">                    stmt.close();</span>
+<span class="pc" id="L203">                rs.close();</span>
+<span class="nc" id="L204">            } catch (Exception ex) {</span>
+<span class="nc" id="L205">                log.info(&quot;SQLException while closing2-5: {}&quot;, ex.toString());</span>
+<span class="pc" id="L206">            }</span>
+<span class="nc" id="L207">        }</span>
+<span class="fc" id="L208">        return result;</span>
+    }
+
+    /**
+     * This function is going to get connection to the psql in heroku
+     */
+	private static Connection getConnection() throws URISyntaxException, SQLException {
+        Connection connection;
+<span class="fc" id="L216">        URI dbUri = new URI(System.getenv(&quot;DATABASE_URL&quot;));</span>
+
+<span class="fc" id="L218">        String username = dbUri.getUserInfo().split(&quot;:&quot;)[0];</span>
+<span class="fc" id="L219">        String password = dbUri.getUserInfo().split(&quot;:&quot;)[1];</span>
+<span class="fc" id="L220">        String dbUrl = &quot;jdbc:postgresql://&quot; + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath() +  &quot;?ssl=true&amp;sslfactory=org.postgresql.ssl.NonValidatingFactory&quot;;</span>
+
+<span class="fc" id="L222">        log.info(&quot;Username: {} Password: {}&quot;, username, password);</span>
+<span class="fc" id="L223">        log.info (&quot;dbUrl: {}&quot;, dbUrl);</span>
+
+<span class="fc" id="L225">        connection = DriverManager.getConnection(dbUrl, username, password);</span>
+
+<span class="fc" id="L227">        return connection;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.8.201612092310</span></div></body></html>

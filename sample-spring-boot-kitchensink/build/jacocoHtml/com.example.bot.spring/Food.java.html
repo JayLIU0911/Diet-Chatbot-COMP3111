@@ -1,0 +1,476 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Food.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">sample-spring-boot-kitchensink</a> &gt; <a href="index.source.html" class="el_package">com.example.bot.spring</a> &gt; <span class="el_source">Food.java</span></div><h1>Food.java</h1><pre class="source lang-java linenums">package com.example.bot.spring;
+
+import lombok.extern.slf4j.Slf4j;
+// import java.net.URISyntaxException;
+// import java.net.URI;
+import javax.annotation.PostConstruct;
+//import javax.sql.DataSource;
+import java.sql.*;
+// import java.net.URISyntaxException;
+// import java.net.URI;
+import java.util.*;
+//import java.util.Date;
+import java.text.*;
+
+import java.net.*;
+import java.io.*;
+import org.json.*;
+import java.util.Date;
+import com.asprise.ocr.*;
+
+// import org.apache.commons.io.FileUtils;
+
+
+
+<span class="fc" id="L25">@Slf4j</span>
+//@Autowired
+
+/**
+ * This is the Food class that act as a mediator between Controller and FoodDB class
+ */
+<span class="fc" id="L31">public class Food {</span>
+
+
+   /**
+    * This method takes a food name and search it in the database, and return data
+    * @param food a food name(can have more than one ingredients)
+    * @return result a 2D arraylist(String) that stores the data of a given food
+    */
+	public static ArrayList&lt;ArrayList&lt;String&gt;&gt; searchFood(String food){
+
+<span class="fc" id="L41">		ArrayList&lt;ArrayList&lt;String&gt;&gt; result = new ArrayList&lt;ArrayList&lt;String&gt;&gt;();</span>
+
+<span class="fc" id="L43">		String[] words = food.split(&quot; &quot;);</span>
+
+<span class="fc bfc" id="L45" title="All 2 branches covered.">        for(int i=1;i&lt;words.length;i++){</span>
+            try{
+<span class="fc" id="L47">                String currentName = &quot;&quot;;</span>
+<span class="fc" id="L48">                ArrayList&lt;String&gt; temp = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L49">                StringJoiner joiner = new StringJoiner(&quot; &quot;);</span>
+<span class="fc" id="L50">                joiner.add(words[i-1]);</span>
+<span class="fc" id="L51">                joiner.add(words[i]);</span>
+<span class="fc" id="L52">                currentName = joiner.toString();</span>
+<span class="fc" id="L53">                log.info(&quot;now in search food, {}&quot;,currentName);</span>
+
+<span class="fc bfc" id="L55" title="All 2 branches covered.">                if(FoodDB.DBexist(currentName)){</span>
+<span class="fc" id="L56">                    words[i]=currentName;</span>
+                }
+                    
+                else{
+<span class="fc" id="L60">                    temp = FoodDB.DBSearchIngredient(words[i-1]);</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">                    if(temp.get(0)==null)</span>
+<span class="fc" id="L62">                        continue;</span>
+<span class="fc" id="L63">                    result.add(temp);</span>
+                    //temp.clear();
+                }
+
+<span class="nc" id="L67">             }catch(Exception e){</span>
+<span class="nc" id="L68">                log.info(&quot;Exception while searching food: {}&quot;, e.toString());</span>
+<span class="fc" id="L69">             }</span>
+        }
+
+<span class="fc" id="L72">        ArrayList&lt;String&gt; temp = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L73">        temp = FoodDB.DBSearchIngredient(words[words.length-1]);</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        if(temp.get(0)!=null){result.add(temp);}</span>
+        
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        if(result.isEmpty()){return null;}</span>
+<span class="fc" id="L77">        return result;</span>
+	}
+    
+    //         
+    //     }
+                    // for(int j=0;j&lt;words.length;j++){
+                    //     log.info(&quot;now print word,{}&quot;, words[j]);
+                    // }
+
+                // ArrayList&lt;String&gt; temp = new ArrayList&lt;String&gt;();
+
+                // temp = FoodDB.DBSearchIngredient(words[i]);
+                // if(temp.get(0)==null)
+                //     {continue;}
+                // result.add(temp);
+
+    /**
+    * This method takes a food name and return the energy, sodium, fatty data
+    * @param name a food name(can have more than one ingredients)
+    * @return quality float[3] that stores the data of a given food in this order: energy, sodium, fatty
+    */
+	public static float[] getQuality(String name){
+
+<span class="fc" id="L100">    	float[] quality = new float[3];</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        for(int i=0;i&lt;3;i++){</span>
+<span class="fc" id="L102">            quality[i] = 0;</span>
+        }
+
+<span class="fc" id="L105">        ArrayList&lt;ArrayList&lt;String&gt;&gt; food = searchFood(name);</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        if(food==null){return quality;}</span>
+<span class="fc" id="L107">        float energy=0;</span>
+<span class="fc" id="L108">    	float sodium=0;</span>
+<span class="fc" id="L109">    	float fat=0;</span>
+
+<span class="fc bfc" id="L111" title="All 2 branches covered.">    	for(int i=0;i&lt;food.size();i++){</span>
+    		//sum energy&amp;sodium&amp;fat
+<span class="fc bfc" id="L113" title="All 2 branches covered.">    		for(int j=0;j&lt;3;j++){</span>
+<span class="fc" id="L114">    			quality[j]+=Float.parseFloat(food.get(i).get(j+4));</span>
+    		}
+    	}
+<span class="fc" id="L117">    	return quality;</span>
+    }
+
+    /**
+    * This method insert row(s) into the database, with a user ID and the name of the foods in the menu
+    * @param id a user ID
+    * @param txt a food name(can have more than one ingredients)
+    * @return boolean whether the insert is success or not
+    */
+    public static boolean createMenuText(String id, String txt){
+    	//only one word
+    	//no price input
+    	//multiple line
+
+    	//if the user already has menu stored, delete them
+<span class="fc" id="L132">    	FoodDB.DBdeleteMenu(id);</span>
+
+<span class="fc" id="L134">		boolean result = true;</span>
+<span class="fc" id="L135">        int items = 0;</span>
+<span class="fc" id="L136">        ArrayList&lt;String&gt; menu = new ArrayList&lt;&gt;();</span>
+        try {
+<span class="fc" id="L138">        	Scanner scanner = new Scanner(txt);</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">            while (scanner.hasNextLine()){</span>
+<span class="fc" id="L140">                menu.add(scanner.nextLine());</span>
+<span class="fc" id="L141">                items ++;</span>
+            }
+                //scanner.close();
+<span class="nc" id="L144">        }catch(Exception e){</span>
+<span class="nc" id="L145">            log.info(&quot;in create Menu scanner:{}&quot;,e.toString());</span>
+<span class="fc" id="L146">        }</span>
+
+<span class="fc bfc" id="L148" title="All 2 branches covered.">            for (int i=0; i &lt; items; i++){</span>
+
+<span class="fc bfc" id="L150" title="All 4 branches covered.">                if(menu.get(i).contains(&quot;..&quot;)||menu.get(i).contains(&quot;--&quot;))</span>
+<span class="fc" id="L151">                    continue;</span>
+                //menu.get(i).matches(&quot;.*\\d+.*&quot;)
+<span class="fc" id="L153">                String[] c = menu.get(i).split(&quot;\\s&quot;);</span>
+<span class="fc" id="L154">                String[] chart = new String [c.length];</span>
+<span class="fc" id="L155">                chart[c.length-1] = &quot;&quot;;</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">                for (int j = 0; j&lt;c.length-1;j++){</span>
+<span class="fc" id="L157">                    chart[j]=c[j];</span>
+                }
+<span class="fc" id="L159">                log.info(&quot;create menu 1,{}&quot;);</span>
+
+<span class="fc" id="L161">                String p = &quot;0&quot;;</span>
+
+                try{
+<span class="fc" id="L164">                    float price = Float.valueOf(c[c.length-1]);</span>
+<span class="fc" id="L165">                    p = Float.toString(price);</span>
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">                    if(c.length-1==0){</span>
+<span class="nc" id="L167">                        continue;</span>
+                    }
+<span class="fc" id="L169">                }catch(NumberFormatException e){</span>
+<span class="fc" id="L170">                    log.info(&quot;the menu contains no price&quot;);</span>
+<span class="fc" id="L171">                    chart[c.length-1]=c[c.length-1];</span>
+<span class="fc" id="L172">                }</span>
+
+<span class="fc" id="L174">                String name = String.join(&quot; &quot;,chart);</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">                if(searchFood(name)==null)</span>
+<span class="fc" id="L176">                    continue;</span>
+                //food[i] = new Food(name,p);
+                //food[i] = new Food(name,p,null);
+<span class="fc bfc" id="L179" title="All 4 branches covered.">                result = result &amp;&amp; FoodDB.DBInsertMenu(id,name,p);</span>
+            }
+<span class="fc" id="L181">        return result;</span>
+    }
+
+    /**
+    * This method insert menu of json type into the database, with a user ID and the name of the foods in the menu
+    * @param id a user ID
+    * @param txt a url string that refers to the Json file
+    * @return boolean whether the insert is success or not
+    */
+    public static boolean createMenuJson(String id, String txt){
+
+            //https://github.com/khwang0/2017F-COMP3111/blob/master/Project/topic%202/project%20guidelines.md#json
+<span class="fc" id="L193">            FoodDB.DBdeleteMenu(id);</span>
+
+<span class="fc" id="L195">            boolean result = true;</span>
+<span class="fc" id="L196">            log.info(&quot;enter json branch&quot;);</span>
+<span class="fc" id="L197">            BufferedReader reader = null;</span>
+            try {
+<span class="fc" id="L199">                URL url = new URL(txt);</span>
+
+<span class="fc" id="L201">                reader = new BufferedReader(new InputStreamReader(url.openStream()));</span>
+<span class="fc" id="L202">                StringBuffer buffer = new StringBuffer();</span>
+                int read;
+<span class="fc" id="L204">                char[] chars = new char[1024];</span>
+<span class="fc bfc" id="L205" title="All 2 branches covered.">                while ((read = reader.read(chars)) != -1)</span>
+<span class="fc" id="L206">                    buffer.append(chars, 0, read);</span>
+
+<span class="fc" id="L208">                log.info(&quot;enter json branch see buffer,{}&quot;,buffer.toString());</span>
+<span class="fc" id="L209">                JSONArray json = new JSONArray(buffer.toString());</span>
+
+                String name;
+                //int price;
+
+<span class="fc bfc" id="L214" title="All 2 branches covered.">                for(int i=0;i&lt;json.length();i++){</span>
+<span class="fc" id="L215">                    JSONObject obj = json.getJSONObject(i);</span>
+<span class="fc" id="L216">                    name = obj.getString(&quot;name&quot;);</span>
+                    //price = obj.getInt(&quot;price&quot;);
+<span class="fc" id="L218">                    log.info(&quot;enter json for loop,{}&quot;,name);</span>
+                    //String p = String.valueOf(price);
+<span class="fc" id="L220">                    String p = obj.getString(&quot;price&quot;);</span>
+<span class="pc bpc" id="L221" title="2 of 4 branches missed.">                    result = result &amp;&amp; FoodDB.DBInsertMenu(id,name,p);</span>
+                }
+<span class="fc" id="L223">                reader.close();</span>
+<span class="fc" id="L224">            }catch(Exception e) {</span>
+                // if (reader != null)
+<span class="fc" id="L226">                log.info(&quot;create menu json,{}&quot;,e.toString());</span>
+<span class="fc" id="L227">            }</span>
+
+<span class="fc" id="L229">            return result;</span>
+
+    }
+
+    /**
+    * This method insert menu of image type into the database, with a user ID and the name of the foods in the menu
+    * @param id a user ID
+    * @param uri a URI object that refers to the Image file
+    * @return boolean whether the insert is success or not
+    */
+    public static boolean createMenuImage(String id, URI uri){
+
+            //throw new Exception(&quot;create menu failed&quot;); //
+        try{
+            //File image = new File(URLEncoder.encode(uri.getPath(), &quot;UTF-8&quot;));
+            //URI uri = image.toURI();
+<span class="fc" id="L245">            Properties propSpec = new Properties();</span>
+
+
+<span class="fc" id="L248">            Ocr.setUp(); // one time setup</span>
+<span class="fc" id="L249">            Ocr ocr = new Ocr(); // create a new OCR engine</span>
+
+<span class="fc" id="L251">            ocr.startEngine(&quot;eng&quot;, Ocr.SPEED_FAST, &quot;START_PROP_DICT_CUSTOM_DICT_FILE=dict.txt&quot;); // English</span>
+
+<span class="fc" id="L253">            String s = ocr.recognize(new URL[]{new URL(uri.toString())}, Ocr.RECOGNIZE_TYPE_ALL, Ocr.OUTPUT_FORMAT_PLAINTEXT, &quot;PROP_IMG_PREPROCESS_TYPE=custom|PROP_IMG_PREPROCESS_CUSTOM_CMDS=scale(2);gayscale();sharpen()&quot;);</span>
+            
+
+<span class="fc" id="L256">            log.info(&quot;create from image,{}&quot;,s);</span>
+            //System.out.println(&quot;Result: &quot; + s);  
+            // ocr more images here ...
+<span class="pc bpc" id="L259" title="1 of 2 branches missed.">            if(s==null){</span>
+<span class="nc" id="L260">                return false;</span>
+            }
+<span class="fc" id="L262">            createMenuText(id, s);</span>
+<span class="fc" id="L263">            ocr.stopEngine();</span>
+<span class="fc" id="L264">            return true;</span>
+
+<span class="fc" id="L266">        }catch(Exception e){</span>
+<span class="fc" id="L267">            log.info(&quot;create menu image fail&quot;);</span>
+<span class="fc" id="L268">            return false;</span>
+        }
+}
+
+
+    /**
+    * This method find the most suitable food from the menu
+    * @param id a user ID
+    * @param foods a arraylist of food name
+    * @return String the name of the best food
+    */
+    public static String findOptimal(String id, ArrayList&lt;String&gt; foods){
+
+<span class="fc" id="L281"> 	   	log.info(&quot;now in findOptimal&quot;);</span>
+<span class="fc bfc" id="L282" title="All 2 branches covered.">	   	if(foods.size()&lt;=1){</span>
+<span class="fc" id="L283">	   		return &quot;\nSince you have only input one food... my recommendation can only be &quot; + foods.get(0) + &quot;\n&quot;;</span>
+	   	}
+
+<span class="fc" id="L286">	   	log.info(&quot;now in findOptimal, the input size is : {}&quot;,foods.size());</span>
+
+<span class="fc" id="L288">		int intake = User.getIdealDailyIntake(id);</span>
+<span class="fc" id="L289">		log.info(&quot;now in findOptimal get ideal intake: {}&quot;, intake);</span>
+<span class="fc" id="L290">    	intake = (intake/3);</span>
+<span class="fc" id="L291">    	float min = getQuality(foods.get(0))[0]- intake;</span>
+
+<span class="fc" id="L293">    	log.info(&quot;now in findOptimal get min: {}&quot;, min);</span>
+<span class="fc" id="L294">    	int index = 0;</span>
+<span class="fc bfc" id="L295" title="All 2 branches covered.">    	for (int i = 1; i &lt; foods.size()-1; i++){</span>
+<span class="fc" id="L296">        	float diff = getQuality(foods.get(i))[0] - intake;</span>
+<span class="fc" id="L297">        	log.info(&quot;now in findOptimal get QUA: {}&quot;, i);</span>
+<span class="pc bpc" id="L298" title="1 of 2 branches missed.">        	if (diff &lt; min){</span>
+<span class="nc" id="L299">            	min = diff;</span>
+<span class="nc" id="L300">            	index = i;</span>
+        	}
+    	}
+<span class="fc" id="L303">    	log.info(&quot;now in findOptimal get index: {}&quot;, index);</span>
+<span class="fc" id="L304">    	return foods.get(index);</span>
+}
+
+    /**
+    * This method check for the nutrition of a given food
+    * @param name name of the food
+    * @return String that contain information of the food
+    */
+
+	public static String checkNutrition(String name){
+<span class="fc" id="L314">    	String result = &quot;The nutrition for &quot; + name + &quot; is \n&quot;;</span>
+<span class="fc" id="L315">    	float[] qua = getQuality(name);</span>
+<span class="fc bfc" id="L316" title="All 2 branches covered.">        if(qua[0]==0){</span>
+<span class="fc" id="L317">            result += &quot;Not found... QAQ&quot;;</span>
+<span class="fc" id="L318">            return result;</span>
+        }
+
+<span class="fc" id="L321">    	String[] quas = new String[3];</span>
+<span class="fc bfc" id="L322" title="All 2 branches covered.">    	for (int i = 0; i &lt; qua.length; ++i) {</span>
+<span class="fc" id="L323">    		quas[i] = String.format(&quot;%.1f&quot;, qua[i]);</span>
+    	}
+<span class="fc" id="L325">    	result+= &quot;energy: &quot;+ quas[0] + &quot;kcal\n&quot;;</span>
+<span class="fc" id="L326">    	result+= &quot;sodium: &quot;+ quas[1] + &quot;mg\n&quot;;</span>
+<span class="fc" id="L327">    	result+= &quot;fatty acid: &quot;+ quas[2] +&quot;g&quot;;</span>
+<span class="fc" id="L328">    	return result;</span>
+    }
+
+    /**
+    * This method print out the menu information of a user
+    * @param id a user ID
+    * @return String containing the nutrition info of each food, followed by a recommendation
+    */
+    public static String getMenuInfo(String id){
+
+<span class="fc" id="L338">		ArrayList&lt;String&gt;foods=new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L339">   	   	String result = &quot;&quot;;</span>
+
+<span class="fc" id="L341">        foods = FoodDB.DBgetMenu(foods, id);</span>
+<span class="fc bfc" id="L342" title="All 2 branches covered.">        if(foods.isEmpty()){</span>
+<span class="fc" id="L343">            return &quot;You haven't input a menu or your menu is not recognized, please input again\n&quot;;</span>
+        }
+
+<span class="fc" id="L346">		Iterator&lt;String&gt; itr = foods.iterator();</span>
+<span class="fc bfc" id="L347" title="All 2 branches covered.">		while (itr.hasNext()) {</span>
+<span class="fc" id="L348">			result += checkNutrition(itr.next());</span>
+<span class="fc" id="L349">			result += &quot;\n&quot;;</span>
+<span class="fc" id="L350">			log.info(&quot;iterator : {}&quot;, result);</span>
+		}
+
+<span class="fc" id="L353">		result = result + &quot;my recommendation is: \n&quot; + findOptimal(id,foods);</span>
+<span class="fc" id="L354">        result = result + &quot;\n and my recommendation size is &quot;+ foodPortion(id,findOptimal(id,foods));</span>
+<span class="fc" id="L355">		log.info(&quot;printing result&quot;, result);</span>
+
+<span class="fc" id="L357">		return result;</span>
+    }
+
+    /**
+    * This method check whether a food is in the menu of a user
+    * @param id a user ID
+    * @param food name of the food
+    * @return boolean indicating the food is in or not
+    */
+    public static boolean FoodinMenu(String id, String food) {
+<span class="fc" id="L367">      ArrayList&lt;String&gt;foods = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L368">      foods = FoodDB.DBgetMenu(foods,id);</span>
+<span class="fc bfc" id="L369" title="All 2 branches covered.">      if (foods.contains(food)) {</span>
+<span class="fc" id="L370">      return true;</span>
+      }
+<span class="fc" id="L372">      else return false;</span>
+    }
+
+    /**
+    * This method return a string telling the user whether the his/her choice is healthy or not
+    * @param id a user ID
+    * @param food name of the food
+    * @return String a sentence
+    */
+    public static String WarningforFoodSelection(String id, String food) {
+<span class="fc" id="L382">        ArrayList&lt;String&gt;foods=new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L383">        foods = FoodDB.DBgetMenu(foods, id);</span>
+<span class="fc" id="L384">        String result = &quot; &quot;;</span>
+<span class="fc" id="L385">        float energy = getQuality(food)[0];</span>
+<span class="fc" id="L386">        float intake = User.getIdealDailyIntake(id);</span>
+<span class="fc" id="L387">        float optimal = getQuality(findOptimal(id,foods))[0];</span>
+<span class="fc bfc" id="L388" title="All 2 branches covered.">        if(energy==0)</span>
+<span class="fc" id="L389">            return &quot;We cannot find the food in our database&quot;;</span>
+<span class="fc" id="L390">        intake = intake/3;</span>
+<span class="fc bfc" id="L391" title="All 2 branches covered.">        if(energy &gt; intake) {</span>
+<span class="fc" id="L392">     result = &quot;Your selection is greater than your recommended intake, we suggest you to change your selection.&quot;;</span>
+    }
+<span class="pc bpc" id="L394" title="1 of 2 branches missed.">    else if(energy &lt; optimal) {</span>
+<span class="fc" id="L395">     result = &quot;It's okay to have this food, but its energy is less than the the food we recommended.&quot;;</span>
+    }
+
+    else
+<span class="nc" id="L399">     result = &quot;It's okay to have this food, but its energy is greater than the food we recommended.&quot;;</span>
+<span class="fc" id="L400">    return result;</span>
+    }
+
+    /**
+    * This method return a string telling the user how much portion to have regarding to a food
+    * @param id a user ID
+    * @param food name of the food
+    * @return String a quarter/a half/three quarters/all
+    */
+    public static String foodPortion(String id, String food) {
+
+<span class="fc" id="L411">        float energy = getQuality(food)[0];</span>
+<span class="fc" id="L412">        float intake = User.getIdealDailyIntake(id);</span>
+<span class="fc" id="L413">        intake = intake/3;</span>
+<span class="fc" id="L414">        float portion = intake/energy;</span>
+        String result;
+<span class="fc bfc" id="L416" title="All 2 branches covered.">        if(portion&lt;=0.25) {</span>
+<span class="fc" id="L417">         result = &quot;a quarter&quot;;</span>
+        }
+<span class="fc bfc" id="L419" title="All 2 branches covered.">        else if(portion&lt;0.5) {</span>
+<span class="fc" id="L420">         result = &quot;a half&quot;;</span>
+        }
+<span class="fc bfc" id="L422" title="All 2 branches covered.">        else if(portion&lt;=0.75) {</span>
+<span class="fc" id="L423">         result = &quot;three quarters&quot;;</span>
+        }
+        else {
+<span class="fc" id="L426">         result = &quot;all&quot;;</span>
+        }
+<span class="fc" id="L428">        return result;</span>
+     }
+
+    /**
+    * This method go to the database storing tips to retrieve a health tip
+    * @return String a healthy tip
+    */
+    public static String getTip(){
+
+<span class="fc" id="L437">    	Random rand = new Random();</span>
+<span class="fc" id="L438">		int  n = rand.nextInt(22) + 1;</span>
+
+<span class="fc" id="L440">		String result = &quot;Tips:\n&quot;;</span>
+
+<span class="fc" id="L442">		result = result + FoodDB.DBgetTip(n);</span>
+
+<span class="fc" id="L444">		return result;</span>
+    }
+
+    /**
+    * This method check whether a food is appropriate for a user to have
+    * @param id a user ID
+    * @param name name of the food
+    * @return String a sentence
+    */
+    public static String checkAppropriate(String id, String name){
+
+<span class="fc" id="L455">    	int ideal = User.getIdealDailyIntake(id);</span>
+<span class="fc" id="L456">    	float energy = getQuality(name)[0];</span>
+<span class="fc" id="L457">    	Date time = new Date();</span>
+<span class="fc" id="L458">    	SimpleDateFormat dateformat = new SimpleDateFormat(&quot;dd/MM/yyyy&quot;);</span>
+<span class="fc" id="L459">    	String search_date = dateformat.format(time);</span>
+
+    	//log.info(&quot;in appro: {}&quot;,search_date);
+
+<span class="fc" id="L463">    	int x = (int)User.getDailyIntake(id,search_date);</span>
+    	// if(x==0)
+    	// 	return &quot;It is totally fine that you have this today.&quot;;
+
+<span class="fc bfc" id="L467" title="All 2 branches covered.">    	if((x+energy)&gt;=ideal)</span>
+<span class="fc" id="L468">    		return &quot;This food is not appropriate for you to have today, since it will exceed your ideal intake.&quot;;</span>
+    	else
+<span class="fc" id="L470">    		return &quot;It is totally fine that you have this today.&quot;;</span>
+
+    }
+}
+
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.8.201612092310</span></div></body></html>
