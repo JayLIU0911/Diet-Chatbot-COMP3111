@@ -1,4 +1,4 @@
-/*
+ /*
  * Copyright 2016 LINE Corporation
  *
  * LINE Corporation licenses this file to you under the Apache License,
@@ -180,6 +180,7 @@ public class KitchenSinkController {
 	 		// reply(((MessageEvent) event).getReplyToken(), new ImageMessage(jpg.getUri(), jpg.getUri()));
 
 	 		String state = User.getUser(userID, "state");
+         
 	 		if (state == null) {
 	 			this.replyText(replyToken, "Get user state failed: " + userID);
 	 		}	else if (state.equals("menu jpeg")) {
@@ -236,10 +237,8 @@ public class KitchenSinkController {
 		log.info("unfollowed this bot: {}", event);
 
 		String userID = event.getSource().getUserId();
-		if (User.delete(userID))
-			log.info("Delete user succeeded: " + userID);
-		else
-			log.info("Delete user failed: " + userID);
+        User.delete(userID);
+	
 	}
 
     /**
@@ -488,8 +487,8 @@ public class KitchenSinkController {
 				this.replyText(replyToken, "Great! Nice to meet you! You can input anything at any time to wake me up ✧⁺⸜(●˙▾˙●)⸝⁺✧");
 				User.setUser(userID, "state", "0");
 
-                String[] Time = {"02:00:00", "06:00:00", "13:00:00"}; // set timeslots for remainding , format hh/mm/ss
-                Timer T1 = new Timer(userID, Time);
+                
+                Timer T1 = new Timer(userID);
                 T1.start();
 
 			}	else {
@@ -528,8 +527,17 @@ public class KitchenSinkController {
 				} else {
 					this.replyText(replyToken, "Update " + stateArr[1] + " failed");
 				}
-				User.setUser(userID, "state", "0");
 				
+                if (User.check_goal(userID)==1 || User.check_goal(userID)==2){
+                        push(userID, new TextMessage("You have successfully reached your target weight! \n What is your next target weight"));
+                    User.setUser(userID, "state", "update target_weight");}
+                else if (User.check_goal(userID)==3) {
+                    push(userID, new TextMessage("I'm sorry to inform you fail to reach your target weight within your planned period. \n Please update your new goal. \n What is your next target weight"));
+                    User.setUser(userID, "state", "update target_weight");
+                    }
+                else
+                    User.setUser(userID, "state", "0");
+      
 			}
 			else if(stateArr[1].equals("food")) {
 				if (User.updateRecord(userID, input)) {
@@ -858,9 +866,8 @@ if(stateArr[0].equals("set")) {
 
 
     /**
-     * The Timer class works as a remainder with two functions:
-     * 1. remaind user to update intaked food at specific time (hk time 9am, 2pm and 8pm)
-     * 2. remaind user to update their goal if they have achieved it or the goal fails to achieve with target days
+     * The Timer class works as a remainder with two functions to
+     * remaind user to update intaked food at specific time (hk time 10am, 2pm and 9pm)
      */
     private class Timer implements Runnable {
         
@@ -874,79 +881,138 @@ if(stateArr[0].equals("set")) {
          */
         private String userID;
         
-        /**
-         * specific time for remainding user
-         */
-        private String[] time;
+        
         
         /**
          * constructor for Timer class
          * @param userID This is the string input assigned to the data member userID
-         * @param Time This is the string array of specific time slots to remaind users
          */
-        Timer(String userID, String[] Time) {
+        Timer(String userID) {
             this.userID=userID;
-            t = new Thread (this, "Timer");
-            time = new String[Time.length];
-            for (int i=0; i<Time.length; i++){
-                time[i] = new String (Time[i]);
-            }
+            
+            
         }
         
         
         /**
-         * This method implements the functions of timer class. By checking the current time continuously,
-         * this function able to send update food remainder at specific time. Also, this method
-         * send update goal remainder to user once their goal has been achieved of failed.
+         * This method implements the functions of timer class. By checking the current time in specific time,
+         * this function able to send update food remainder at specific time.
          */
         public void run() {
             while(true){
                 Date current = new Date();
+                SimpleDateFormat minuteFormat = new SimpleDateFormat("mm");
+                SimpleDateFormat hourFormat = new SimpleDateFormat("HH");
                 SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
                 String current_time_string = timeFormat.format(current);
+                String current_minute_string = minuteFormat.format(current);
+                String current_hour_string = hourFormat.format(current);
+                int current_hour = Integer.parseInt(current_hour_string);
+                int current_minutes = Integer.parseInt(current_minute_string);
                 
-                //if (current_time_string.equals("02:53:00") || current_time_string.equals("02:54:00") || current_time_string.equals("02:55:00"))
-                for (String o: time){
-                    if (current_time_string.equals(o)){
-                        push(userID, new TextMessage("Please update food of your meal"));
+                int b_t=2;
+                int l_t=6;
+                int d_t = 13;
+                int target_min = 00;
+                
+                int breakfast_call_distant = b_t - current_hour;
+                int lunch_call_distant = l_t -current_hour;
+                int dinner_call_distant = d_t-current_hour;
+                
+                
+                
+                int waithour = 0;
+                int waitminute =0;
+                
+                
+                if (breakfast_call_distant==0 || lunch_call_distant==0 || dinner_call_distant==0){
+                    if(breakfast_call_distant==0) waithour = l_t - b_t -1;
+                    else if(lunch_call_distant==0) waithour = d_t - l_t -1;
+                    else waithour = 24 - d_t + b_t - 1;
+                    
+                }
+                
+                
+                else {
+                    
+                    if ( breakfast_call_distant < 0 && lunch_call_distant<0 && dinner_call_distant<0){
+                        waithour = b_t + 24 -current_hour-1;
+                    }
+                    
+                    else if ( breakfast_call_distant < 0 && lunch_call_distant<0 ){
+                        waithour =dinner_call_distant-1;
+                    }
+                    
+                    else if (breakfast_call_distant < 0){
+                        waithour=lunch_call_distant-1;
+                    }
+                    
+                    else
+                        waithour=breakfast_call_distant-1;
+                }
+                
+                
+                if (target_min==0){
+                    waitminute = 60 - current_minutes;
+                }
+                else if (current_minutes>target_min && target_min!=0){
+                    waitminute = current_minutes - target_min;
+                }
+                else
+                    waitminute = target_min - current_minutes;
+                
+                
+                
+                int totalSleepTime = (60*60*waithour+60*waitminute-2*60)*1000;
+                int totalmin=60*waithour+waitminute ;
+                
+                //push(userID, new TextMessage("sleep"+ Integer.toString(totalmin)));
+                
+                try {
+                    Thread.sleep(totalSleepTime);
+                } catch (Exception e) {
+                    log.info("thread fail");
+                  // push(userID, new TextMessage("fail"));
+                }
+                
+              // push(userID, new TextMessage("wake up"));
+              //  push(userID, new TextMessage(current_time_string));
+                while(true){
+                    Date current2 = new Date();
+                    current_time_string = timeFormat.format(current2);
+                   // push(userID, new TextMessage(current_time_string));
+                    if (current_time_string.equals("02:00:00") || current_time_string.equals("06:00:00") || current_time_string.equals("13:00:00")){
+                        
+                        
+                      push(userID, new TextMessage("Please update food of your last meal if you have not done yet."));
                         try {
                             Thread.sleep(1000); // thread to sleep for 1000 milliseconds
                         } catch (Exception e) {
                             log.info("thread fail");
                         }
-                        
+                        try {
+
+                        Thread.sleep(600000);
+                        } catch (Exception e) {
+                            log.info("thread fail");
+                        }
+                        break;
                     }
                 }
-                
-                String state = User.getUser(userID, "state");
-                if (!state.equals("0"))
-                    continue;
-                
-                
-                switch(User.check_goal(userID)){
-                    case 1:
-                    case 2:
-                        push(userID, new TextMessage("You have successfully reached your target weight! \n What is your next target weight"));
-                        User.setUser(userID, "state", "update target_weight");
-                        
-                        break;
-                        
-                        
-                    case 3:
-                        push(userID, new TextMessage("I'm sorry to inform you fail to reach your target weight within your planned period. \n Please update your new goal. \n What is your next target weight"));
-                        User.setUser(userID, "state", "update target_weight");
-                        break;
-                    default: break;
-                        
-                }
+ 
             }
         }
         
         /**
          * This method starts the new thread of the Timer class
          */
-        public void start () {
-            t.start ();
+        public void start() {
+            if (t==null){
+                t = new Thread (this, "Timer");
+            }
+            t.start();
             
         }
-    }}
+    }
+
+}
