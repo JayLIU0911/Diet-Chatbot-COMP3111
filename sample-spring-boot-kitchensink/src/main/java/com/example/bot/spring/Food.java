@@ -34,7 +34,7 @@ public class Food {
    /**
     * This method takes a food name and search it in the database, and return data
     * @param food a food name(can have more than one ingredients)
-    * @return ArrayList< ArrayList < String > > that stores the data of a given food
+    * @return result a 2D arraylist(String) that stores the data of a given food
     */
 	public static ArrayList<ArrayList<String>> searchFood(String food){
 
@@ -42,29 +42,58 @@ public class Food {
 
 		String[] words = food.split(" ");
 
-        for(int i=0;i<words.length;i++){
+        for(int i=1;i<words.length;i++){
             try{
+                String currentName = "";
                 ArrayList<String> temp = new ArrayList<String>();
+                StringJoiner joiner = new StringJoiner(" ");
+                joiner.add(words[i-1]);
+                joiner.add(words[i]);
+                currentName = joiner.toString();
+                log.info("now in search food, {}",currentName);
 
-                temp = FoodDB.DBSearchIngredient(words[i]);
-                if(temp.isEmpty())
-                    {continue;}
-                result.add(temp);
+                if(FoodDB.DBexist(currentName)){
+                    words[i]=currentName;
+                }
+                    
+                else{
+                    temp = FoodDB.DBSearchIngredient(words[i-1]);
+                    if(temp.get(0)==null)
+                        continue;
+                    result.add(temp);
+                    //temp.clear();
+                }
 
-            }catch(Exception e){
+             }catch(Exception e){
                 log.info("Exception while searching food: {}", e.toString());
-            }
+             }
         }
-        //String currentName = "";
-        //boolean[] flag = new boolean[words.length];
+
+        ArrayList<String> temp = new ArrayList<String>();
+        temp = FoodDB.DBSearchIngredient(words[words.length-1]);
+        if(temp.get(0)!=null){result.add(temp);}
+        
         if(result.isEmpty()){return null;}
         return result;
 	}
+    
+    //         
+    //     }
+                    // for(int j=0;j<words.length;j++){
+                    //     log.info("now print word,{}", words[j]);
+                    // }
+
+                // ArrayList<String> temp = new ArrayList<String>();
+
+                // temp = FoodDB.DBSearchIngredient(words[i]);
+                // if(temp.get(0)==null)
+                //     {continue;}
+                // result.add(temp);
 
     /**
     * This method takes a food name and return the energy, sodium, fatty data
     * @param name a food name(can have more than one ingredients)
-    * @return float[3] that stores the data of a given food in this order: energy, sodium, fatty
+    * @return quality float[3] that stores the data of a given food in this order: energy, sodium, fatty
     */
 	public static float[] getQuality(String name){
 
@@ -82,10 +111,6 @@ public class Food {
     	for(int i=0;i<food.size();i++){
     		//sum energy&sodium&fat
     		for(int j=0;j<3;j++){
-    			if(food.get(i).get(j+4).equals("--")){
-    				quality[j]+=0;
-    				continue;
-    			}
     			quality[j]+=Float.parseFloat(food.get(i).get(j+4));
     		}
     	}
@@ -109,7 +134,8 @@ public class Food {
 		boolean result = true;
         int items = 0;
         ArrayList<String> menu = new ArrayList<>();
-        try (Scanner scanner = new Scanner(txt)){
+        try {
+        	Scanner scanner = new Scanner(txt);
             while (scanner.hasNextLine()){
                 menu.add(scanner.nextLine());
                 items ++;
@@ -121,9 +147,9 @@ public class Food {
 
             for (int i=0; i < items; i++){
 
-                if(menu.get(i).contains("..")||menu.get(i).contains("--")||menu.get(i).matches(".*\\d+.*"))
+                if(menu.get(i).contains("..")||menu.get(i).contains("--"))
                     continue;
-
+                //menu.get(i).matches(".*\\d+.*")
                 String[] c = menu.get(i).split("\\s");
                 String[] chart = new String [c.length];
                 chart[c.length-1] = "";
@@ -222,12 +248,7 @@ public class Food {
             Ocr.setUp(); // one time setup
             Ocr ocr = new Ocr(); // create a new OCR engine
 
-            // ocr.setImagePreProcessingType(PROP_IMG_PREPROCESS_TYPE_CUSTOM);
-            // ocr.setCustomImagePreProcessing("scale(2);gayscale();sharpen()");
-
-            ocr.startEngine("eng", Ocr.SPEED_SLOW); // English
-
-            // String s = ocr.recognize(new URL[]{new URL(uri.toString())}, Ocr.RECOGNIZE_TYPE_ALL, Ocr.OUTPUT_FORMAT_PLAINTEXT, Ocr.PROP_IMG_PREPROCESS_TYPE="custom", Ocr.PROP_IMG_PREPROCESS_CUSTOM_CMDS="scale(2);gayscale();sharpen()");
+            ocr.startEngine("eng", Ocr.SPEED_FAST, "START_PROP_DICT_CUSTOM_DICT_FILE=dict.txt"); // English
 
             String s = ocr.recognize(new URL[]{new URL(uri.toString())}, Ocr.RECOGNIZE_TYPE_ALL, Ocr.OUTPUT_FORMAT_PLAINTEXT, "PROP_IMG_PREPROCESS_TYPE=custom|PROP_IMG_PREPROCESS_CUSTOM_CMDS=scale(2);gayscale();sharpen()");
             
@@ -252,7 +273,7 @@ public class Food {
     /**
     * This method find the most suitable food from the menu
     * @param id a user ID
-    * @param txt a url string that refers to the Image file
+    * @param foods a arraylist of food name
     * @return String the name of the best food
     */
     public static String findOptimal(String id, ArrayList<String> foods){
@@ -292,7 +313,7 @@ public class Food {
 	public static String checkNutrition(String name){
     	String result = "The nutrition for " + name + " is \n";
     	float[] qua = getQuality(name);
-        if(qua[0]==0&&qua[1]==0&&qua[2]==0){
+        if(qua[0]==0){
             result += "Not found... QAQ";
             return result;
         }
@@ -330,7 +351,7 @@ public class Food {
 		}
 
 		result = result + "my recommendation is: \n" + findOptimal(id,foods);
-        //result = result + "\n and my recommendation size is "+ foodPortion(id,foods);
+        result = result + "\n and my recommendation size is "+ foodPortion(id,findOptimal(id,foods));
 		log.info("printing result", result);
 
 		return result;
@@ -364,11 +385,13 @@ public class Food {
         float energy = getQuality(food)[0];
         float intake = User.getIdealDailyIntake(id);
         float optimal = getQuality(findOptimal(id,foods))[0];
+        if(energy==0)
+            return "We cannot find the food in our database";
         intake = intake/3;
         if(energy > intake) {
      result = "Your selection is greater than your recommended intake, we suggest you to change your selection.";
     }
-    else if(energy < intake && energy < optimal) {
+    else if(energy < optimal) {
      result = "It's okay to have this food, but its energy is less than the the food we recommended.";
     }
 
@@ -390,13 +413,13 @@ public class Food {
         intake = intake/3;
         float portion = intake/energy;
         String result;
-        if(0<portion&&portion<=0.25) {
+        if(portion<=0.25) {
          result = "a quarter";
         }
-        else if(0.25<portion&&portion<0.5) {
+        else if(portion<0.5) {
          result = "a half";
         }
-        else if(0.5<portion&&portion<=0.75) {
+        else if(portion<=0.75) {
          result = "three quarters";
         }
         else {
@@ -407,8 +430,6 @@ public class Food {
 
     /**
     * This method go to the database storing tips to retrieve a health tip
-    * @param id a user ID
-    * @param food name of the food
     * @return String a healthy tip
     */
     public static String getTip(){
@@ -426,7 +447,7 @@ public class Food {
     /**
     * This method check whether a food is appropriate for a user to have
     * @param id a user ID
-    * @param food name of the food
+    * @param name name of the food
     * @return String a sentence
     */
     public static String checkAppropriate(String id, String name){
@@ -440,8 +461,8 @@ public class Food {
     	//log.info("in appro: {}",search_date);
 
     	int x = (int)User.getDailyIntake(id,search_date);
-    	if(x==0)
-    		return "It is totally fine that you have this today.";
+    	// if(x==0)
+    	// 	return "It is totally fine that you have this today.";
 
     	if((x+energy)>=ideal)
     		return "This food is not appropriate for you to have today, since it will exceed your ideal intake.";
@@ -452,46 +473,3 @@ public class Food {
 }
 
 
-    //     if(words.length==1){
-    //         ArrayList<String> temp = new ArrayList<String>();
-    //         temp = FoodDB.DBSearchIngredient(words[0]);
-    //         if(temp.get(0)==null){return null;}
-    //         result.add(temp);
-    //         return result;
-    //     }
-    //     for(int i=1;i<words.length;i++){//try start from i=1
-    //         try{
-    //             ArrayList<String> temp = new ArrayList<String>();
-    //             // if(words[i].equals("and")|| words[i].equals("with")|| words[i] .equals("served")){
-    //             //  //flag[i]=false;
-    // //                 continue;
-    // //             }
-    //             //currentName = String.join(" ",temp,words[i]);
-    //             StringJoiner joiner = new StringJoiner(" ");
-    //             joiner.add(words[i-1]);
-    //             joiner.add(words[i]);
-    //             currentName = joiner.toString();
-    //             log.info("now in search food, {}",currentName);
-
-    //             if(FoodDB.DBexist(currentName)){
-    //                 words[i]=currentName;
-    //             }
-    //             //flag[i]=foodAdaptor.DBexist(words[i]));
-    //             else{
-    //                 words[i]="";
-    //                 temp = FoodDB.DBSearchIngredient(words[i-1]);
-    //                 if(temp!=null&&temp.get(0)==null)
-    //                     continue;
-    //                 result.add(temp);
-    //                 temp.clear();
-    //                 currentName = "";
-    //             }
-
-    //             for(int j=0;j<words.length;j++){
-    //                 log.info("now print word,{}", words[j]);
-    //             }
-
-    //         }catch(Exception e){
-    //             log.info("Exception while searching food: {}", e.toString());
-    //         }
-    //     }

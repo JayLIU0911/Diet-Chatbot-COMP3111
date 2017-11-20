@@ -96,6 +96,20 @@ public class UserDBTester {
 		} catch (Exception e) {
 			thrown = true;
 		}
+		this.userDB.drop_table("test-54321");
+		assertThat(!thrown).isEqualTo(true);
+	}
+
+	@Test
+	public void testCreateUsertableExist() throws Exception {
+		boolean thrown = false;
+		this.userDB.create_usertable("test-54321");
+		try{
+			this.userDB.create_usertable("test-54321");
+		} catch (Exception e) {
+			thrown = true;
+		}
+		this.userDB.drop_table("test-54321");
 		assertThat(!thrown).isEqualTo(true);
 	}
 
@@ -114,6 +128,7 @@ public class UserDBTester {
 	@Test
 	public void testDroptable() throws Exception {
 		boolean thrown = false;
+		this.userDB.create_usertable("test-54321");
 		
 		try{
 			this.userDB.drop_table("test-54321");
@@ -210,7 +225,7 @@ public class UserDBTester {
 		boolean result = false;
 		
 		try{
-			result = this.userDB.deleteRecord("test-88888","Pork");
+			result = this.userDB.deleteRecord("test","dhajkhdjk");
 		} catch (Exception e) {
 			thrown = true;
 		}

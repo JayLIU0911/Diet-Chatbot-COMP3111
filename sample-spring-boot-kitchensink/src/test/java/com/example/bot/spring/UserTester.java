@@ -71,6 +71,22 @@ public class UserTester {
 		assertThat(!thrown).isEqualTo(true);
 		assertThat(result).isEqualTo(true);
 	}
+
+	@Test
+	public void testInsertExist() throws Exception {
+		boolean thrown = false;
+		boolean result = false;
+		Calendar calendar = new GregorianCalendar(2017,10,03);
+		Date coupon_date =  calendar.getTime();
+		this.user.insert("test-111",coupon_date);
+		try {
+			result = this.user.insert("test-111",coupon_date);
+		} catch (Exception e) {
+			thrown = true;
+		}
+		assertThat(!thrown).isEqualTo(true);
+		assertThat(result).isEqualTo(true);
+	}
 	
 	@Test
 	public void testCheckFollowTimeYes() throws Exception {
@@ -237,14 +253,17 @@ public class UserTester {
 	public void testCheckDay() throws Exception {
 		boolean thrown = false;
 		int result = 0;
+		boolean a = false;
 		
 		try {
 			result = this.user.check_day("test-333");
+			if(result!=0)
+				a=true;
 		} catch (Exception e) {
 			thrown = true;
 		}
 		assertThat(!thrown).isEqualTo(true);
-		assertThat(result).isEqualTo(16);//update everyday!!!!
+		assertThat(a).isEqualTo(true);
 	}
 
 	@Test
@@ -276,6 +295,46 @@ public class UserTester {
 	}
 
 	@Test
+	public void testCheckGoal3() throws Exception {
+		boolean thrown = false;
+		int result = 0;
+
+		Date test = new Date();
+		this.user.insert("for-test",test);
+		this.user.setUser("for-test","weight","60");
+		this.user.setUser("for-test","target_weight","60");
+		
+		try {
+			result = this.user.check_goal("for-test");
+		} catch (Exception e) {
+			thrown = true;
+		}
+		this.user.delete("for-test");
+		assertThat(!thrown).isEqualTo(true);
+		assertThat(result).isEqualTo(1);
+	}
+
+	@Test
+	public void testCheckGoal4() throws Exception {
+		boolean thrown = false;
+		int result = 0;
+
+		Date test = new Date();
+		this.user.insert("for-test",test);
+		this.user.setUser("for-test","weight","60");
+		this.user.setUser("for-test","target_weight","65");
+		
+		try {
+			result = this.user.check_goal("for-test");
+		} catch (Exception e) {
+			thrown = true;
+		}
+		this.user.delete("for-test");
+		assertThat(!thrown).isEqualTo(true);
+		assertThat(result).isEqualTo(3);
+	}
+
+	@Test
 	public void testGetDailyIntake() throws Exception {
 		boolean thrown = false;
 		float result = 0;
@@ -290,17 +349,51 @@ public class UserTester {
 	}
 
 	@Test
-	public void testGetIdealDailyIntake() throws Exception {
+	public void testGetDailyIntakeNotFound() throws Exception {
 		boolean thrown = false;
-		int result = 0;
+		float result = 0;
 		
 		try {
-			result = this.user.getIdealDailyIntake("test-333");
+			result = this.user.getDailyIntake("test2","10/11/2017");
 		} catch (Exception e) {
 			thrown = true;
 		}
 		assertThat(!thrown).isEqualTo(true);
-		assertThat(result).isEqualTo(1684);
+		assertThat(result).isEqualTo(0);
+	}
+
+	@Test
+	public void testGetIdealDailyIntakeFemale() throws Exception {
+		boolean thrown = false;
+		int result = 0;
+		boolean a = false;
+		
+		try {
+			result = this.user.getIdealDailyIntake("test-333");
+			if(result!=0)
+				a=true;
+		} catch (Exception e) {
+			thrown = true;
+		}
+		assertThat(!thrown).isEqualTo(true);
+		assertThat(a).isEqualTo(true);
+	}
+
+	@Test
+	public void testGetIdealDailyIntakeMale() throws Exception {
+		boolean thrown = false;
+		int result = 0;
+		boolean a = false;
+		
+		try {
+			result = this.user.getIdealDailyIntake("test-222");
+			if(result!=0)
+				a=true;
+		} catch (Exception e) {
+			thrown = true;
+		}
+		assertThat(!thrown).isEqualTo(true);
+		assertThat(a).isEqualTo(true);
 	}
 
 	@Test

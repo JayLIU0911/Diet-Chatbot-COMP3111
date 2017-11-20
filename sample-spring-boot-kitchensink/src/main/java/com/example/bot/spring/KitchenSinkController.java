@@ -128,7 +128,6 @@ public class KitchenSinkController {
      * This method is used to handle text message event from user, the detailed handling is passed to handleTextContent function
      * @param event This is the event from user
      * @throws Exception for all errors
-     * @see private void handleTextContent(String replyToken, Event event, TextMessageContent content);
      */
 	@EventMapping
 	public void handleTextMessageEvent(MessageEvent<TextMessageContent> event) throws Exception {
@@ -391,7 +390,7 @@ public class KitchenSinkController {
 
     /**
      * This method is used to handle other events not metioned in the class from user by sending a text message
-     * @param event this is the corresponding event object
+     * @param message this is the corresponding event object
      * @param replyToken this is the replyToken from event
      */
 	private void reply(@NonNull String replyToken, @NonNull Message message) {
@@ -401,7 +400,7 @@ public class KitchenSinkController {
     /**
      * This method is used to reply message according to replyToken
      * @param replyToken This is the replyToken for the message
-     * @param message This is the message to be replied
+     * @param messages This is the message to be replied
      */
 	private void reply(@NonNull String replyToken, @NonNull List<Message> messages) {
 		try {
@@ -467,9 +466,9 @@ public class KitchenSinkController {
     /**
      * This method is used to handle user state setting in order to update users' basic information
      * @param replyToken This is the replyToken from user
-     * @param event This is the
-     * @param content
-     *
+     * @param userID This is the user id
+     * @param stateArr This is a array store the user state
+     * @param input Thie is the user input
      */
 	private void handleSetState(String replyToken, String userID, String[] stateArr, String input) throws Exception {
 		if (!isValidInput(stateArr[1], input)) {
@@ -489,9 +488,9 @@ public class KitchenSinkController {
 				this.replyText(replyToken, "Great! Nice to meet you! You can input anything at any time to wake me up ✧⁺⸜(●˙▾˙●)⸝⁺✧");
 				User.setUser(userID, "state", "0");
 
-//                String[] Time = {"02:00:00", "06:00:00", "13:00:00"}; // set timeslots for remainding , format hh/mm/ss
-//                Timer T1 = new Timer(userID, Time);
-//                T1.start();
+                String[] Time = {"02:00:00", "06:00:00", "13:00:00"}; // set timeslots for remainding , format hh/mm/ss
+                Timer T1 = new Timer(userID, Time);
+                T1.start();
 
 			}	else {
 				
@@ -515,7 +514,6 @@ public class KitchenSinkController {
      * @param userID This is the userID of the user
      * @param stateArr This is the state array for the basic information
      * @param input This is the input from the users for their basic information
-     * @throws Execption for any error during execution
      */
 	private void handleUpdateState(String replyToken, String userID, String[] stateArr, String input) throws Exception {
 		if (!isValidInput(stateArr[1], input)) {
@@ -648,11 +646,11 @@ if(stateArr[0].equals("set")) {
                             }
                         
                         String recommendation = Food.getMenuInfo(userID);
-                        if (recommendation != null) {
+                        if (!recommendation.contains("You haven't input a menu")) {
                             this.replyText(replyToken, recommendation + "\nWhat do you want to choose?");
                             User.setUser(userID, "state", "warning");
                         } else {
-                            this.replyText(replyToken, "getMenuInfo() failed with userID: " + userID);
+                            this.replyText(replyToken, recommendation);
                             User.setUser(userID, "state", "0");
                             return;
                         }
@@ -660,14 +658,23 @@ if(stateArr[0].equals("set")) {
                     }
                     else if(stateArr[0].equals("warning")) {
                         String response = new String();
-                        if(!Food.FoodinMenu(userID, text)){
+                        if(Food.WarningforFoodSelection(userID,text).contains("database"))
+                        {response+=Food.WarningforFoodSelection(userID, text);
+                            this.replyText(replyToken, response);
+                            User.setUser(userID, "state", "0");
+                            }
+                        else if(!Food.FoodinMenu(userID, text)){
                             response += "Your selection is not in the menu you've provided. However we still make the following recommendation based on your food selection. \n";
+                            response += Food.WarningforFoodSelection(userID, text) + " If you are going to select this food we suggest you to eat " + Food.foodPortion(userID, text) + " of the food.";
+                            this.replyText(replyToken, response);
+                            
+                            User.setUser(userID, "state", "0");
                         }
-
+                        else{
                         response += Food.WarningforFoodSelection(userID, text) + " If you are going to select this food we suggest you to eat " + Food.foodPortion(userID, text) + " of the food.";
                         this.replyText(replyToken, response);
 
-                        User.setUser(userID, "state", "0");
+                            User.setUser(userID, "state", "0");}
                         
                     }
                     else if(stateArr[0].equals("check")) {
@@ -771,7 +778,7 @@ if(stateArr[0].equals("set")) {
 
     /**
      * This class is to generate constructor and getter for the class below
-     * @see https://projectlombok.org/features/Value
+     * see example at https://projectlombok.org/features/Value
      */
     @Value //The annontation @Value is from the package lombok.Value
     public static class DownloadedContent {
@@ -838,7 +845,7 @@ if(stateArr[0].equals("set")) {
     /**
      * This method is used to push message to user
      * @param userID This is the user ID for the receiver of pushed message
-     * @param message This is the message being pushed
+     * @param messages This is the message being pushed
      */
     private void push(@NonNull String userID, @NonNull List<Message> messages) {
         try {
